@@ -1,12 +1,10 @@
 import { buttonVariants, cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
 import { CATEGORIES } from "../lib/categories";
+import { whatsappContactUrl } from "../lib/whatsapp";
 
-// The store number is a catalog setting (later feature); until then the link opens WhatsApp
-// without a prefilled recipient.
-const DEFAULT_WHATSAPP_HREF = "https://wa.me/";
-
-export function Topbar({ whatsappHref = DEFAULT_WHATSAPP_HREF }: { whatsappHref?: string }) {
+/** `whatsappNumber` is the catalog setting; without it the link opens WhatsApp with no recipient. */
+export function Topbar({ whatsappNumber = "" }: { whatsappNumber?: string }) {
   return (
     <header className="flex items-center justify-between gap-6 border-b border-line bg-surface px-6 py-4">
       <Link href="/" className="flex flex-col gap-1.5 text-ink">
@@ -23,7 +21,7 @@ export function Topbar({ whatsappHref = DEFAULT_WHATSAPP_HREF }: { whatsappHref?
         ))}
       </nav>
       <a
-        href={whatsappHref}
+        href={whatsappContactUrl(whatsappNumber)}
         target="_blank"
         rel="noopener noreferrer"
         className={cn(buttonVariants({ variant: "whatsapp", size: "sm" }))}

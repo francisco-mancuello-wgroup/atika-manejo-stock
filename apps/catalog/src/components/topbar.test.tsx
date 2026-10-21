@@ -20,7 +20,15 @@ describe("Topbar", () => {
   it("offers a WhatsApp contact link styled with the whatsapp variant", () => {
     render(<Topbar />);
     const link = screen.getByRole("link", { name: "Escribinos" });
-    expect(link).toHaveAttribute("href", expect.stringContaining("https://wa.me/"));
+    expect(link).toHaveAttribute("href", "https://wa.me/");
     expect(link).toHaveClass("bg-wa", "rounded-none");
+  });
+
+  it("points the contact link at the configured number", () => {
+    render(<Topbar whatsappNumber="+595 981 123 456" />);
+    expect(screen.getByRole("link", { name: "Escribinos" })).toHaveAttribute(
+      "href",
+      "https://wa.me/595981123456",
+    );
   });
 });
