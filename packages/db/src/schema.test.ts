@@ -5,6 +5,7 @@ import { createPrismaClient } from "./index";
 describe("schema", () => {
   it("defines every model the ERP and catalog need", () => {
     expect(Object.values(Prisma.ModelName).sort()).toEqual([
+      "AppSettings",
       "CatalogSettings",
       "Lot",
       "Product",
@@ -15,6 +16,12 @@ describe("schema", () => {
       "Supplier",
       "User",
     ]);
+  });
+
+  it("keeps the exchange rate of the day and the lot defaults in AppSettings", () => {
+    expect(Object.values(Prisma.AppSettingsScalarFieldEnum)).toEqual(
+      expect.arrayContaining(["id", "exchangeRate", "saleFactor", "vatRate", "costRate"]),
+    );
   });
 
   it("stores the pricing parameters on each lot", () => {

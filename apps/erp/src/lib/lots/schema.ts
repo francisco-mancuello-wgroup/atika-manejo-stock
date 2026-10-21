@@ -1,10 +1,5 @@
 import { z } from "zod";
-import { fieldErrors, numberField, roundTo } from "../form";
-
-const percent = (label: string) =>
-  numberField(label)
-    .pipe(z.number().min(0, { error: `${label} no puede ser negativo.` }))
-    .pipe(z.number().max(100, { error: `${label} no puede superar 100.` }));
+import { fieldErrors, numberField, percentField, roundTo } from "../form";
 
 /** Form values use percentages (10); the database stores fractions (0.1). */
 export const lotParamsSchema = z
@@ -15,8 +10,8 @@ export const lotParamsSchema = z
     saleFactor: numberField("El factor de venta").pipe(
       z.number().positive({ error: "El factor de venta debe ser mayor que 0." }),
     ),
-    vatPercent: percent("El IVA"),
-    costPercent: percent("El costo"),
+    vatPercent: percentField("El IVA"),
+    costPercent: percentField("El costo"),
     totalShippingUsd: numberField("El envío").pipe(
       z.number().min(0, { error: "El envío no puede ser negativo." }),
     ),
