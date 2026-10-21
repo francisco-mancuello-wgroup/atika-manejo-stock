@@ -14,7 +14,7 @@ export function Sidebar({ activeHref = "/" }: { activeHref?: string }) {
   return (
     <aside className="flex w-[232px] shrink-0 flex-col gap-8 border-r border-line bg-surface px-4 py-6">
       <div className="flex flex-col gap-2 px-3">
-        <Wordmark className="h-6 text-ink" />
+        <Wordmark className="h-6 self-start text-ink" />
         <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
           CASA ICONA
         </span>
