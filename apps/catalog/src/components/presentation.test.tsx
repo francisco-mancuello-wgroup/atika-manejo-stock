@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { PresentationCollection } from "../lib/presentation";
 import { Presentation } from "./presentation";
 
@@ -33,9 +33,15 @@ const collection: PresentationCollection = {
   ],
 };
 
+const contact = {
+  whatsappNumber: "+595 981 123 456",
+  messageTemplate: "Hola! Me interesa {producto} en talle {talle}.",
+  origin: "https://catalogo.test",
+};
+
 describe("Presentation", () => {
   it("has a fixed top bar with the way back and the collection name, and no site search", () => {
-    render(<Presentation collection={collection} />);
+    render(<Presentation collection={collection} {...contact} />);
     expect(screen.getByRole("link", { name: /Catálogos/ })).toHaveAttribute("href", "/");
     const bar = screen.getByRole("banner");
     expect(within(bar).getByText("Casa Icona")).toBeInTheDocument();
@@ -43,7 +49,7 @@ describe("Presentation", () => {
   });
 
   it("opens with a cover: wordmark, eyebrow, first photo, title and caption", () => {
-    render(<Presentation collection={collection} />);
+    render(<Presentation collection={collection} {...contact} />);
     const cover = screen.getByRole("region", { name: "Portada" });
     expect(cover).toHaveAttribute("id", "casa-icona-portada");
     expect(within(cover).getByText("Casa Icona")).toBeInTheDocument();
@@ -58,7 +64,7 @@ describe("Presentation", () => {
   });
 
   it("renders one full-height section per piece with anchor ids, names and numbering", () => {
-    render(<Presentation collection={collection} />);
+    render(<Presentation collection={collection} {...contact} />);
     const first = screen.getByRole("region", { name: "COSTA VINO" });
     expect(first).toHaveAttribute("id", "casa-icona-pagina-1");
     expect(first).toHaveClass("h-svh", "snap-start");
@@ -73,7 +79,7 @@ describe("Presentation", () => {
   });
 
   it("shows price, description and color with its swatch", () => {
-    render(<Presentation collection={collection} />);
+    render(<Presentation collection={collection} {...contact} />);
     const first = screen.getByRole("region", { name: "COSTA VINO" });
     expect(within(first).getByText("₲ 2.518.000")).toBeInTheDocument();
     expect(within(first).getByText("Prenda corta en tono vino")).toBeInTheDocument();
@@ -82,16 +88,29 @@ describe("Presentation", () => {
   });
 
   it("asks to consult the price, and shows neither color nor description when unknown", () => {
-    render(<Presentation collection={collection} />);
+    render(<Presentation collection={collection} {...contact} />);
     const second = screen.getByRole("region", { name: "NINA" });
     expect(within(second).getByText("Consultar precio")).toBeInTheDocument();
     expect(within(second).queryByTestId("swatch")).toBeNull();
   });
 
-  it("lists the sizes of the piece", () => {
-    render(<Presentation collection={collection} />);
+  it("offers the size picker and a WhatsApp consult that links to the piece anchor", () => {
+    render(<Presentation collection={collection} {...contact} />);
     const first = screen.getByRole("region", { name: "COSTA VINO" });
-    const sizes = within(first).getByRole("group", { name: "Talle" });
-    expect(within(sizes).getAllByText(/^(XS|S)$/)).toHaveLength(2);
+    expect(within(first).getAllByRole("radio")).toHaveLength(2);
+    fireEvent.click(within(first).getByRole("radio", { name: "S" }));
+    const href = within(first)
+      .getByRole("link", { name: "Consultar talle S" })
+      .getAttribute("href");
+    expect(new URL(href ?? "").searchParams.get("text")).toContain(
+      "https://catalogo.test/catalogos/casa-icona#casa-icona-pagina-1",
+    );
+    const second = screen.getByRole("region", { name: "NINA" });
+    expect(within(second).getByRole("radio", { name: "U" })).toBeChecked();
+    expect(
+      new URL(
+        within(second).getByRole("link", { name: "Consultar talle U" }).getAttribute("href") ?? "",
+      ).searchParams.get("text"),
+    ).toContain("casa-icona-pagina-2");
   });
 });

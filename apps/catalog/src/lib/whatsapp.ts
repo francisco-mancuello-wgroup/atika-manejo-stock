@@ -28,6 +28,13 @@ function withoutSize(template: string): string {
     .trim();
 }
 
+function fillTemplate(template: string, { producto, talle }: { producto: string; talle?: string }) {
+  const source = talle ? template : withoutSize(template);
+  return source.replace(/\{(producto|talle)\}/g, (_match, key: string) =>
+    key === "producto" ? producto : (talle ?? ""),
+  );
+}
+
 /**
  * `https://wa.me/<digits>?text=<message>` with `{producto}` and `{talle}` filled in. Without a
  * size the size clause of the template is dropped. Placeholders are replaced in a single pass,
@@ -36,11 +43,54 @@ function withoutSize(template: string): string {
 export function buildWhatsappUrl(
   number: string,
   template: string,
-  { producto, talle }: { producto: string; talle?: string },
+  piece: { producto: string; talle?: string },
 ): string {
-  const source = talle ? template : withoutSize(template);
-  const message = source.replace(/\{(producto|talle)\}/g, (_match, key: string) =>
-    key === "producto" ? producto : (talle ?? ""),
-  );
+  return `${whatsappContactUrl(number)}?text=${encodeURIComponent(fillTemplate(template, piece))}`;
+}
+
+/**
+ * Consult about one piece of a presentation page: the configured message for the chosen size,
+ * followed by " – <color> – <price> – <link to the piece>", leaving out what is unknown.
+ */
+export function buildPieceWhatsappUrl(
+  number: string,
+  template: string,
+  piece: {
+    producto: string;
+    talle: string;
+    color: string | null;
+    precio: string | null;
+    link: string | null;
+  },
+): string {
+  const message = [fillTemplate(template, piece), piece.color, piece.precio, piece.link]
+    .filter(Boolean)
+    .join(" – ");
   return `${whatsappContactUrl(number)}?text=${encodeURIComponent(message)}`;
+}
+
+/** Absolute link to a piece of a presentation page (relative when the origin is unknown). */
+export function pieceLink(origin: string, slug: string, number: number): string {
+  return `${origin}/catalogos/${slug}#${slug}-pagina-${number}`;
+}
+
+const HOST = /^[a-z0-9.-]+(?::\d{1,5})?$/i;
+const LOCAL_HOST = /^(?:localhost|127\.0\.0\.1|\[::1\]|[^:]+\.local)(?::\d+)?$/i;
+
+/**
+ * Origin the visitor reached the site on, from the request headers (`x-forwarded-*` behind a
+ * proxy, else `host`). Empty when there is no usable host, so links fall back to relative.
+ */
+export function requestOrigin(get: (name: string) => string | null | undefined): string {
+  const first = (name: string) => get(name)?.split(",")[0]?.trim() ?? "";
+  const host = first("x-forwarded-host") || first("host");
+  if (!HOST.test(host)) return "";
+  const forwarded = first("x-forwarded-proto");
+  const proto =
+    forwarded === "http" || forwarded === "https"
+      ? forwarded
+      : LOCAL_HOST.test(host)
+        ? "http"
+        : "https";
+  return `${proto}://${host}`;
 }
