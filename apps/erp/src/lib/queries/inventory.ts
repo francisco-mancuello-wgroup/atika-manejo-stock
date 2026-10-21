@@ -1,11 +1,7 @@
 import "server-only";
 import { getDb } from "../db";
+import type { InventoryFilters } from "../inventory-filters";
 import { type InventoryProduct, toInventoryProduct } from "../view-models";
-
-export interface InventoryFilters {
-  lotId?: string;
-  query?: string;
-}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

@@ -1,0 +1,81 @@
+import { render, screen, within } from "@testing-library/react";
+import type { InventoryProduct } from "../lib/view-models";
+import { InventarioView } from "./inventario-view";
+
+const products: InventoryProduct[] = [
+  {
+    id: "p1",
+    name: "Vestido Lino",
+    code: "A1",
+    color: "Blanco",
+    lotId: "lot-1",
+    lotName: "Casa Icona",
+    priceGs: 1_000_000,
+    sizes: [
+      { size: "S", stock: 0 },
+      { size: "M", stock: 3 },
+    ],
+    totalStock: 3,
+  },
+  {
+    id: "p2",
+    name: "Pantalón",
+    code: null,
+    color: null,
+    lotId: "lot-2",
+    lotName: "Milonga",
+    priceGs: 400_000,
+    sizes: [{ size: "U", stock: 5 }],
+    totalStock: 5,
+  },
+];
+
+const lots = [
+  { id: "lot-1", name: "Casa Icona" },
+  { id: "lot-2", name: "Milonga" },
+];
+
+describe("InventarioView", () => {
+  it("lists the products with lot, code, price and the count", () => {
+    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    expect(screen.getByRole("heading", { level: 1, name: "Inventario" })).toBeInTheDocument();
+    const row = screen.getByText("Vestido Lino").closest("tr") as HTMLElement;
+    expect(within(row).getByText("Casa Icona")).toBeInTheDocument();
+    expect(within(row).getByText("A1")).toBeInTheDocument();
+    expect(within(row).getByText("₲ 1.000.000")).toBeInTheDocument();
+    expect(screen.getByText("2 productos")).toBeInTheDocument();
+  });
+
+  it("shows a stock chip per size and marks sold-out sizes", () => {
+    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    const row = screen.getByText("Vestido Lino").closest("tr") as HTMLElement;
+    const soldOut = within(row).getByText("S 0");
+    expect(soldOut).toHaveClass("bg-warnbg", "text-warn");
+    const available = within(row).getByText("M 3");
+    expect(available).not.toHaveClass("bg-warnbg");
+  });
+
+  it("renders a GET filter form prefilled from the current filters", () => {
+    render(
+      <InventarioView
+        products={products}
+        lots={lots}
+        filters={{ lotId: "lot-2", query: "pant" }}
+      />,
+    );
+    // jsdom has no implicit role for <search>, so look the element up directly.
+    const search = screen.getByLabelText("Lote").closest("search") as HTMLElement;
+    expect(search).toBeInTheDocument();
+    expect(search.querySelector("form")).toHaveAttribute("method", "get");
+    const form = search;
+    expect(within(form).getByLabelText("Lote")).toHaveValue("lot-2");
+    expect(within(form).getByLabelText("Buscar")).toHaveValue("pant");
+    expect(within(form).getByRole("option", { name: "Todos los lotes" })).toHaveValue("");
+    expect(screen.getByRole("link", { name: "Limpiar" })).toHaveAttribute("href", "/inventario");
+  });
+
+  it("explains when nothing matches", () => {
+    render(<InventarioView products={[]} lots={lots} filters={{ query: "zzz" }} />);
+    expect(screen.getByText("No hay productos que coincidan con el filtro.")).toBeInTheDocument();
+  });
+});
