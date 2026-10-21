@@ -52,6 +52,7 @@ describe("Sidebar", () => {
       "Compras",
       "Ventas",
       "Catálogo web",
+      "Descuentos",
       "Parámetros",
     ]);
   });
