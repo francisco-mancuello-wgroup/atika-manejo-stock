@@ -11,6 +11,10 @@ const row = {
     { size: "M", stock: 3 },
     { size: "XS", stock: 1 },
   ],
+  images: [
+    { url: "/media/products/b.webp", position: 1 },
+    { url: "/media/products/a.webp", position: 0 },
+  ],
 };
 const open = { showPrices: true, showSoldOutSizes: false };
 
@@ -26,7 +30,13 @@ describe("toCatalogProduct", () => {
         { size: "M", available: true },
       ],
       inStock: true,
+      imageUrl: "/media/products/a.webp",
     });
+  });
+
+  it("uses the cover (lowest position) as the image, or null without photos", () => {
+    expect(toCatalogProduct(row, open).imageUrl).toBe("/media/products/a.webp");
+    expect(toCatalogProduct({ ...row, images: [] }, open).imageUrl).toBeNull();
   });
 
   it("includes sold-out sizes (marked unavailable) only when the setting allows it", () => {
@@ -55,12 +65,14 @@ describe("toCatalogProduct", () => {
       costRate: 0.5,
       lot: { name: "Secret lot", supplier: { name: "Secret supplier" } },
       sales: [{ quantity: 1 }],
+      images: [{ url: "/media/products/a.webp", position: 0, id: "img-secret", alt: "Alt secret" }],
       variants: row.variants.map((v) => ({ ...v, unitsBought: 9, stock: v.stock })),
     };
     const product = toCatalogProduct(wide, { ...open, showSoldOutSizes: true });
     expect(Object.keys(product).sort()).toEqual([
       "category",
       "id",
+      "imageUrl",
       "inStock",
       "name",
       "priceGs",
@@ -77,6 +89,8 @@ describe("toCatalogProduct", () => {
       "sales",
       "originalValue",
       "lot",
+      "img-secret",
+      "Alt secret",
     ]) {
       expect(json).not.toContain(secret);
     }

@@ -9,6 +9,7 @@ const make = (id: string): CatalogProduct => ({
   priceGs: 1000,
   sizes: [{ size: "M", available: true }],
   inStock: true,
+  imageUrl: null,
 });
 
 describe("ProductGrid", () => {

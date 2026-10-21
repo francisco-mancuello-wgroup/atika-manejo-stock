@@ -28,6 +28,8 @@ export interface CatalogProduct {
   sizes: CatalogSize[];
   /** At least one size is available. */
   inStock: boolean;
+  /** URL of the cover photo; the only thing the public site learns about product images. */
+  imageUrl: string | null;
 }
 
 export interface ProductSource {
@@ -36,6 +38,7 @@ export interface ProductSource {
   category: string | null;
   priceGs: number;
   variants: readonly { size: string; stock: number }[];
+  images: readonly { url: string; position: number }[];
 }
 
 export function toCatalogProduct(
@@ -47,6 +50,7 @@ export function toCatalogProduct(
     .sort((a, b) => order.indexOf(a.size) - order.indexOf(b.size))
     .map((variant) => ({ size: variant.size, available: variant.stock > 0 }));
   const available = sizes.filter((size) => size.available);
+  const cover = [...product.images].sort((a, b) => a.position - b.position)[0];
   return {
     id: product.id,
     name: product.name,
@@ -54,5 +58,6 @@ export function toCatalogProduct(
     priceGs: settings.showPrices ? product.priceGs : null,
     sizes: settings.showSoldOutSizes ? sizes : available,
     inStock: available.length > 0,
+    imageUrl: cover?.url ?? null,
   };
 }

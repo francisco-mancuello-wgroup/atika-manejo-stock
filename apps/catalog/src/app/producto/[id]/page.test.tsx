@@ -26,6 +26,7 @@ const product: CatalogProduct = {
     { size: "L", available: false },
   ],
   inStock: true,
+  imageUrl: null,
 };
 
 const getProduct = vi.fn(async (): Promise<CatalogProduct | null> => product);
@@ -55,6 +56,19 @@ describe("catalog product page", () => {
       "href",
       expect.stringContaining("https://wa.me/595981123456?text="),
     );
+  });
+
+  it("shows the cover photo when the product has one, a placeholder otherwise", async () => {
+    getProduct.mockResolvedValueOnce({ ...product, imageUrl: "/media/products/atika/top.webp" });
+    const { unmount } = render(await ProductPage({ params }));
+    expect(screen.getByRole("img", { name: "Vestido Lino" }).getAttribute("src")).toContain(
+      encodeURIComponent("/media/products/atika/top.webp"),
+    );
+    unmount();
+
+    const { container } = render(await ProductPage({ params }));
+    expect(screen.queryByRole("img")).toBeNull();
+    expect(container.querySelector(".bg-sand")).not.toBeNull();
   });
 
   it("asks to consult the price when the price is hidden", async () => {

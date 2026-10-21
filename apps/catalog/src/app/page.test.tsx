@@ -18,6 +18,7 @@ const products: CatalogProduct[] = [
     priceGs: 1000,
     sizes: [{ size: "M", available: true }],
     inStock: true,
+    imageUrl: null,
   },
 ];
 

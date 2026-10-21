@@ -23,7 +23,11 @@ export async function getInventory(filters: InventoryFilters): Promise<Inventory
         : {}),
     },
     orderBy: [{ name: "asc" }],
-    include: { lot: { select: { id: true, name: true } }, variants: true },
+    include: {
+      lot: { select: { id: true, name: true } },
+      variants: true,
+      images: { select: { url: true, position: true }, orderBy: { position: "asc" }, take: 1 },
+    },
   });
   return products.map((product) => toInventoryProduct(product, product.lot));
 }
