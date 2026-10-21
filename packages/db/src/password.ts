@@ -1,5 +1,8 @@
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 
+/** Owner decision (2026-10-21): 8 is the minimum; longer passphrases are still recommended. */
+export const MIN_PASSWORD_LENGTH = 8;
+
 // Stored format: scrypt$N$r$p$saltBase64$hashBase64 (parameters travel with the hash so they can
 // be raised later without invalidating existing passwords).
 const N = 32_768;
