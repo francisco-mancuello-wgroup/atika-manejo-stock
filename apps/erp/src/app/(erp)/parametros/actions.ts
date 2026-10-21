@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { type FormState, formValues } from "../../../lib/action-state";
+import { requireSession } from "../../../lib/auth/session";
 import { getDb } from "../../../lib/db";
 import { applySettingsToAllLots, saveAppSettings } from "../../../lib/settings/save";
 
@@ -14,6 +15,7 @@ export async function saveSettingsAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
   const values = formValues(formData);
   try {
     const state = await saveAppSettings(getDb(), values);
@@ -30,6 +32,7 @@ export async function saveSettingsAction(
 }
 
 export async function applyToAllLotsAction(): Promise<FormState> {
+  await requireSession();
   try {
     const state = await applySettingsToAllLots(getDb());
     if (state.status === "success") revalidateEverything();

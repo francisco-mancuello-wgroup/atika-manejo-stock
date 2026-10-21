@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { type FormState, formValues } from "../../../lib/action-state";
+import { requireSession } from "../../../lib/auth/session";
 import { getDb } from "../../../lib/db";
 import { registerSaleFromForm } from "../../../lib/sales/register";
 
@@ -9,6 +10,7 @@ export async function registerSaleAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
   const values = formValues(formData);
   try {
     const { state, lotId } = await registerSaleFromForm(getDb(), values);
