@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/catalogo-web", label: "Catálogo web" },
   { href: "/descuentos", label: "Descuentos" },
   { href: "/parametros", label: "Parámetros" },
+  { href: "/seguridad", label: "Seguridad" },
 ] as const;
 
 function isActive(href: string, currentPath: string): boolean {
