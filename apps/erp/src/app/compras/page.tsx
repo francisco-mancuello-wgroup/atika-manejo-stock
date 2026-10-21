@@ -1,5 +1,8 @@
-import { SectionPlaceholder } from "../../components/section-placeholder";
+import { ComprasView } from "../../components/compras-view";
+import { getLotSummaries } from "../../lib/queries/lots";
 
-export default function ComprasPage() {
-  return <SectionPlaceholder title="Compras" />;
+export const dynamic = "force-dynamic";
+
+export default async function ComprasPage() {
+  return <ComprasView lots={await getLotSummaries()} />;
 }
