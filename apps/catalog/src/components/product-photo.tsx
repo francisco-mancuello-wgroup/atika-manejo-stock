@@ -6,13 +6,14 @@ interface ProductPhotoProps {
   alt: string;
   /** `sizes` hint so the browser downloads a width that matches the layout. */
   sizes: string;
-  /** Card (small offset on mobile, 10px on desktop) or page (large) offset. */
-  size?: "card" | "page";
+  /** Offset of the sand block: list row (6px), detail sheet (8px) or product page (12px). */
+  size?: "row" | "sheet" | "page";
   priority?: boolean;
 }
 
 const OFFSETS = {
-  card: "shadow-[6px_6px_0_0_var(--color-sand)] md:shadow-[10px_10px_0_0_var(--color-sand)]",
+  row: "shadow-[6px_6px_0_0_var(--color-sand)]",
+  sheet: "shadow-[8px_8px_0_0_var(--color-sand)]",
   page: "shadow-[12px_12px_0_0_var(--color-sand)]",
 } as const;
 
@@ -20,7 +21,7 @@ const OFFSETS = {
  * Product photo at 3:4 with a hard sand block offset behind it (no blur). Without a photo the
  * same box is filled with the subtle surface and nothing inside.
  */
-export function ProductPhoto({ src, alt, sizes, size = "card", priority }: ProductPhotoProps) {
+export function ProductPhoto({ src, alt, sizes, size = "row", priority }: ProductPhotoProps) {
   const frame = `relative aspect-[3/4] ${OFFSETS[size]}`;
   if (src === null) {
     return <div className={`${frame} bg-subtle`} />;

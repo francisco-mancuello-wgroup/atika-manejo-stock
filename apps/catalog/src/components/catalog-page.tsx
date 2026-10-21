@@ -3,7 +3,7 @@ import { getDb } from "../lib/db";
 import { countProductsByCategory, getCatalogSettings, listProducts } from "../lib/queries";
 import { CatalogEmpty } from "./catalog-empty";
 import { CatalogLayout } from "./catalog-layout";
-import { ProductGrid } from "./product-grid";
+import { ProductRows } from "./product-rows";
 
 /** Server component behind `/` and `/[categoria]`: reads the filters of the URL and lists. */
 export async function CatalogPage({
@@ -26,7 +26,14 @@ export async function CatalogPage({
       {products.length === 0 ? (
         <CatalogEmpty slug={slug} filters={filters} />
       ) : (
-        <ProductGrid products={products} />
+        <ProductRows
+          products={products}
+          slug={slug}
+          filters={filters}
+          selectedId={filters.p}
+          whatsappNumber={settings.whatsappNumber}
+          messageTemplate={settings.messageTemplate}
+        />
       )}
     </CatalogLayout>
   );
