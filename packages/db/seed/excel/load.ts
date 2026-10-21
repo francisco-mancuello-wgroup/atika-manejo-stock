@@ -54,12 +54,14 @@ export const WORKBOOK_SOURCES: readonly WorkbookSource[] = [
   },
 ];
 
-/** Reads every configured workbook from `dir` and parses it into a lot. */
-export async function loadLots(dir: string): Promise<ParsedLot[]> {
+/** Opens every configured workbook from `dir`, in `WORKBOOK_SOURCES` order. */
+export async function readWorkbooks(
+  dir: string,
+): Promise<{ source: WorkbookSource; workbook: ExcelJS.Workbook }[]> {
   const files = (await readdir(dir)).filter(
     (file) => file.toLowerCase().endsWith(".xlsx") && !file.startsWith("~$"),
   );
-  const lots: ParsedLot[] = [];
+  const workbooks: { source: WorkbookSource; workbook: ExcelJS.Workbook }[] = [];
   for (const source of WORKBOOK_SOURCES) {
     const matches = files.filter((file) => normalizeLabel(file).includes(source.fileMatch));
     const [file] = matches;
@@ -70,7 +72,13 @@ export async function loadLots(dir: string): Promise<ParsedLot[]> {
     }
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(join(dir, file));
-    lots.push(parseInventoryWorkbook(workbook, source.options));
+    workbooks.push({ source, workbook });
   }
-  return lots;
+  return workbooks;
+}
+
+/** Reads every configured workbook from `dir` and parses it into a lot. */
+export async function loadLots(dir: string): Promise<ParsedLot[]> {
+  const workbooks = await readWorkbooks(dir);
+  return workbooks.map(({ source, workbook }) => parseInventoryWorkbook(workbook, source.options));
 }

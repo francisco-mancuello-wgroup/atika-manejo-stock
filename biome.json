@@ -9,6 +9,7 @@
     "includes": [
       "**",
       "!**/.atl",
+      "!data/product-images",
       "!**/prisma/migrations",
       "!pnpm-lock.yaml",
       "!pnpm-workspace.yaml"

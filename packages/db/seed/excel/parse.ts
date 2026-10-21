@@ -43,6 +43,8 @@ export interface ParsedProduct {
   color: string | null;
   originalValueUsd: number;
   variants: ParsedVariant[];
+  /** Worksheet rows (1-based) the product was read from; images anchored there belong to it. */
+  sourceRows: number[];
 }
 
 export interface ParsedSale {
@@ -388,6 +390,13 @@ function resolveSales(entry: Entry, productIndex: number): ParsedSale[] {
   return sales;
 }
 
+/** The sheet the parser reads: the first one with data. Images are exported from the same sheet. */
+export function findDataSheet(workbook: ExcelJS.Workbook): ExcelJS.Worksheet {
+  const sheet = workbook.worksheets.find((s) => s.rowCount > 0);
+  if (!sheet) throw new Error("Workbook has no sheet with data");
+  return sheet;
+}
+
 /**
  * Normalizes one inventory workbook into a lot. Pure: no I/O, no database.
  *
@@ -395,8 +404,7 @@ function resolveSales(entry: Entry, productIndex: number): ParsedSale[] {
  * column, and one row per model with a column per size.
  */
 export function parseInventoryWorkbook(workbook: ExcelJS.Workbook, options: LotOptions): ParsedLot {
-  const sheet = workbook.worksheets.find((s) => s.rowCount > 0);
-  if (!sheet) throw new Error("Workbook has no sheet with data");
+  const sheet = findDataSheet(workbook);
 
   const warnings: string[] = [];
   const columns = detectColumns(sheet);
@@ -424,12 +432,14 @@ export function parseInventoryWorkbook(workbook: ExcelJS.Workbook, options: LotO
         color: entry.color,
         originalValueUsd: original,
         variants: [],
+        sourceRows: [],
       });
       lastKey = key;
     }
     const productIndex = products.length - 1;
     const product = products[productIndex];
     if (!product) continue;
+    product.sourceRows.push(entry.row);
     const entrySales = resolveSales(entry, productIndex);
     for (const { size, units } of entry.sizes) {
       const sold = entrySales
