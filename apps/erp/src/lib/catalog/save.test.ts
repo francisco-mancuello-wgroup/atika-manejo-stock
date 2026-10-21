@@ -9,6 +9,7 @@ import {
 import {
   publishAllInStock,
   saveCatalogSettings,
+  saveProductLookbook,
   setProductCategory,
   setProductsVisibility,
   setProductVisibility,
@@ -135,6 +136,71 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
       expect(await setProductsVisibility(dbOver(tx), ["nope"], true)).toMatchObject({
         status: "error",
       });
+    });
+  });
+
+  it("saves the lookbook placement and reprices the product from its US$ sale price", async () => {
+    await withRollback(async (tx) => {
+      const { products } = await createFixtureLot(tx, [
+        { name: "A", originalValueUsd: 10, variants: [["M", 1, 1]] },
+        { name: "B", originalValueUsd: 10, variants: [["M", 1, 1]] },
+      ]);
+      const id = products[0]?.id ?? "";
+      const state = await saveProductLookbook(dbOver(tx), {
+        productId: id,
+        catalog: "sordo",
+        catalogOrder: "3",
+        catalogSection: "Aros",
+        catalogName: "Cubagua",
+        salePriceUsd: "380",
+      });
+      expect(state).toMatchObject({ status: "success" });
+      const stored = await tx.product.findUniqueOrThrow({ where: { id } });
+      expect(stored).toMatchObject({
+        catalog: "sordo",
+        catalogOrder: 3,
+        catalogSection: "Aros",
+        catalogName: "Cubagua",
+        name: "A",
+      });
+      expect(stored.salePriceUsd?.toNumber()).toBe(380);
+      // 380 US$ x 7000 Gs/US$ (fixture lot), rounded to 1.000.
+      expect(stored.priceGs).toBe(2_660_000);
+    });
+  });
+
+  it("clearing the sale price goes back to the lot formula", async () => {
+    await withRollback(async (tx) => {
+      const { products } = await createFixtureLot(tx, [
+        { name: "A", originalValueUsd: 10, variants: [["M", 1, 1]] },
+      ]);
+      const id = products[0]?.id ?? "";
+      await saveProductLookbook(dbOver(tx), { productId: id, salePriceUsd: "380" });
+      expect(
+        await saveProductLookbook(dbOver(tx), { productId: id, salePriceUsd: "" }),
+      ).toMatchObject({ status: "success" });
+      const stored = await tx.product.findUniqueOrThrow({ where: { id } });
+      expect(stored.salePriceUsd).toBeNull();
+      expect(stored.priceGs).not.toBe(2_660_000);
+      expect(stored.priceGs % 1000).toBe(0);
+    });
+  });
+
+  it("rejects invalid lookbook fields and unknown products without writing", async () => {
+    await withRollback(async (tx) => {
+      const { products } = await createFixtureLot(tx, [
+        { name: "A", originalValueUsd: 10, variants: [["M", 1, 1]] },
+      ]);
+      const id = products[0]?.id ?? "";
+      expect(
+        await saveProductLookbook(dbOver(tx), { productId: id, catalogOrder: "0" }),
+      ).toMatchObject({ status: "error", fieldErrors: { catalogOrder: expect.any(String) } });
+      expect((await tx.product.findUniqueOrThrow({ where: { id } })).catalogOrder).toBeNull();
+      expect(
+        await saveProductLookbook(dbOver(tx), {
+          productId: "00000000-0000-7000-8000-000000000000",
+        }),
+      ).toMatchObject({ status: "error" });
     });
   });
 });

@@ -5,6 +5,7 @@ import { type FormState, formValues } from "../../lib/action-state";
 import {
   publishAllInStock,
   saveCatalogSettings,
+  saveProductLookbook,
   setProductCategory,
   setProductsVisibility,
   setProductVisibility,
@@ -81,6 +82,21 @@ export async function saveCatalogSettingsAction(
     return state;
   } catch (error) {
     console.error("saveCatalogSettingsAction failed", error);
+    return { ...FAILED, values };
+  }
+}
+
+export async function saveLookbookAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = formValues(formData);
+  try {
+    const state = await saveProductLookbook(getDb(), values);
+    if (state.status === "success") revalidateCatalogAdmin();
+    return state;
+  } catch (error) {
+    console.error("saveLookbookAction failed", error);
     return { ...FAILED, values };
   }
 }
