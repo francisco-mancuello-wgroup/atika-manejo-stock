@@ -1,12 +1,18 @@
 import { Button, cn, Input } from "@atika/ui";
 import Link from "next/link";
 import type { FormState } from "../lib/action-state";
-import { CATALOG_STATUSES, type CatalogFilters, catalogHref } from "../lib/catalog/filters";
-import { formatGs } from "../lib/format";
+import {
+  CATALOG_STATUSES,
+  type CatalogFilters,
+  catalogHref,
+  LOOKBOOK_FILTERS,
+} from "../lib/catalog/filters";
+import { formatGs, formatUsd } from "../lib/format";
 import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog";
 import { BulkVisibilitySwitch } from "./bulk-visibility-switch";
 import { CatalogSettingsForm } from "./catalog-settings-form";
 import { Field } from "./form-controls";
+import { LookbookForm } from "./lookbook-form";
 import { PageHeader } from "./page-header";
 import { CategorySelect, VisibilitySwitch } from "./product-controls";
 import { ProductThumb } from "./product-thumb";
@@ -21,6 +27,7 @@ export interface CatalogActions {
   setVisibilityMany: (productIds: string[], isPublished: boolean) => Promise<FormState>;
   publishAll: FormAction;
   saveSettings: FormAction;
+  saveLookbook: FormAction;
 }
 
 const STATUS_LABELS = {
@@ -29,6 +36,19 @@ const STATUS_LABELS = {
   ocultos: "Ocultos",
   "sin-stock": "Sin stock",
 } as const;
+
+const LOOKBOOK_LABELS = {
+  "casa-icona": "Casa Icona",
+  milonga: "Milonga",
+  sordo: "Sordo",
+  ninguno: "Fuera del lookbook",
+} as const;
+
+const filterLink = (active: boolean) =>
+  cn(
+    "border border-line px-3 py-1.5 text-sm",
+    active ? "border-ink bg-ink text-surface" : "bg-surface text-muted hover:text-ink",
+  );
 
 export function CatalogoWebView({
   products,
@@ -45,7 +65,7 @@ export function CatalogoWebView({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Catálogo web"
-        description="Elegí qué prendas se ven en el catálogo público. Los cambios se aplican al instante."
+        description="Elegí qué prendas se ven en el catálogo público, en qué lookbook y página, y su precio de venta en US$. Los cambios se aplican al instante."
         actions={<PublishAllForm action={actions.publishAll} />}
       />
 
@@ -58,14 +78,25 @@ export function CatalogoWebView({
                 key={status}
                 href={catalogHref({ ...filters, status })}
                 aria-current={active ? "page" : undefined}
-                className={cn(
-                  "border border-line px-3 py-1.5 text-sm",
-                  active
-                    ? "border-ink bg-ink text-surface"
-                    : "bg-surface text-muted hover:text-ink",
-                )}
+                className={filterLink(active)}
               >
                 {STATUS_LABELS[status]}
+              </Link>
+            );
+          })}
+        </nav>
+        <nav aria-label="Filtro por lookbook" className="flex flex-wrap gap-1">
+          {[undefined, ...LOOKBOOK_FILTERS].map((catalog) => {
+            const active = filters.catalog === catalog;
+            const { catalog: _omit, ...rest } = filters;
+            return (
+              <Link
+                key={catalog ?? "todos"}
+                href={catalogHref(catalog ? { ...rest, catalog } : rest)}
+                aria-current={active ? "page" : undefined}
+                className={filterLink(active)}
+              >
+                {catalog ? LOOKBOOK_LABELS[catalog] : "Todos"}
               </Link>
             );
           })}
@@ -74,6 +105,9 @@ export function CatalogoWebView({
           <form method="get" action="/catalogo-web" className="flex items-end gap-3">
             {filters.status !== "todos" ? (
               <input type="hidden" name="estado" value={filters.status} />
+            ) : null}
+            {filters.catalog ? (
+              <input type="hidden" name="catalogo" value={filters.catalog} />
             ) : null}
             <div className="w-64">
               <Field label="Buscar" htmlFor="q">
@@ -109,6 +143,7 @@ export function CatalogoWebView({
                 <th className={table.th}>Talles disponibles</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>
                 <th className={table.th}>Categoría</th>
+                <th className={table.th}>Lookbook y precio US$</th>
                 <th className={table.th}>
                   <div className="flex items-center gap-3">
                     Visible
@@ -138,7 +173,16 @@ export function CatalogoWebView({
                       <span className="bg-warnbg px-2 py-0.5 text-xs text-warn">Sin stock</span>
                     )}
                   </td>
-                  <td className={`${table.td} ${table.num}`}>{formatGs(product.priceGs)}</td>
+                  <td className={`${table.td} ${table.num}`}>
+                    <div className="flex flex-col items-end gap-0.5">
+                      {formatGs(product.priceGs)}
+                      {product.salePriceUsd !== null ? (
+                        <span className="text-xs text-muted">
+                          US$ fijo {formatUsd(product.salePriceUsd)}
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
                   <td className={table.td}>
                     <CategorySelect
                       productId={product.id}
@@ -146,6 +190,9 @@ export function CatalogoWebView({
                       category={product.category}
                       action={actions.setCategory}
                     />
+                  </td>
+                  <td className={table.td}>
+                    <LookbookForm product={product} action={actions.saveLookbook} />
                   </td>
                   <td className={table.td}>
                     <VisibilitySwitch

@@ -1,9 +1,12 @@
 import type { FormState } from "../action-state";
+import { formatGs } from "../format";
+import { recalculateLot } from "../lots/recalculate";
 import type { TransactionRunner } from "../lots/save";
-import { parseCatalogSettings, parseCategory } from "./schema";
+import { parseCatalogSettings, parseCategory, parseLookbook } from "./schema";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const NOT_FOUND: FormState = { status: "error", message: "No se encontró el producto." };
+const NOT_FOUND_MESSAGE = "No se encontró el producto.";
+const NOT_FOUND: FormState = { status: "error", message: NOT_FOUND_MESSAGE };
 
 export async function saveCatalogSettings(
   db: TransactionRunner,
@@ -89,4 +92,59 @@ export async function setProductsVisibility(
     ? `Se hicieron visibles ${result.count} ${noun}.`
     : `Se ocultaron ${result.count} ${noun}.`;
   return { status: "success", message };
+}
+
+/**
+ * Saves one product's lookbook placement and the owner's US$ sale price. When the sale price
+ * changes (set or cleared), the product's lot is repriced in the same transaction, so `priceGs`
+ * follows at once and shipping proration stays consistent with the lot screen.
+ */
+export async function saveProductLookbook(
+  db: TransactionRunner,
+  raw: Record<string, string>,
+): Promise<FormState> {
+  const productId = raw.productId ?? "";
+  if (!UUID.test(productId)) return { status: "error", message: NOT_FOUND_MESSAGE, values: raw };
+  const parsed = parseLookbook(raw);
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "Revisá los campos marcados.",
+      fieldErrors: parsed.fieldErrors,
+      values: raw,
+    };
+  }
+  const data = parsed.data;
+
+  const outcome = await db.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id: productId },
+      select: { salePriceUsd: true, lot: true },
+    });
+    if (!product) return null;
+    await tx.product.update({ where: { id: productId }, data });
+    const priceChanged = (product.salePriceUsd?.toNumber() ?? null) !== data.salePriceUsd;
+    if (priceChanged) {
+      const { lot } = product;
+      await recalculateLot(tx, lot.id, {
+        exchangeRate: lot.exchangeRate.toNumber(),
+        saleFactor: lot.saleFactor.toNumber(),
+        vatRate: lot.vatRate.toNumber(),
+        costRate: lot.costRate.toNumber(),
+        totalShippingUsd: lot.totalShippingUsd.toNumber(),
+      });
+    }
+    const { priceGs } = await tx.product.findUniqueOrThrow({
+      where: { id: productId },
+      select: { priceGs: true },
+    });
+    return { priceChanged, priceGs };
+  });
+  if (!outcome) return { status: "error", message: NOT_FOUND_MESSAGE, values: raw };
+  return {
+    status: "success",
+    message: outcome.priceChanged
+      ? `Guardado. Nuevo precio: ${formatGs(outcome.priceGs)}.`
+      : "Guardado.",
+  };
 }

@@ -4,6 +4,7 @@ import { getCatalogProducts, getCatalogSettings } from "../../../lib/queries/cat
 import {
   publishAllAction,
   saveCatalogSettingsAction,
+  saveLookbookAction,
   setCategoryAction,
   setVisibilityAction,
   setVisibilityManyAction,
@@ -32,6 +33,7 @@ export default async function CatalogoWebPage({
         setVisibilityMany: setVisibilityManyAction,
         publishAll: publishAllAction,
         saveSettings: saveCatalogSettingsAction,
+        saveLookbook: saveLookbookAction,
       }}
     />
   );

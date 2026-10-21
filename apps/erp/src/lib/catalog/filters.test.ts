@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogFilters } from "./filters";
+import { catalogHref, parseCatalogFilters } from "./filters";
 
 describe("parseCatalogFilters", () => {
   it("defaults to every product", () => {
@@ -22,5 +22,26 @@ describe("parseCatalogFilters", () => {
       query: "a",
     });
     expect(parseCatalogFilters({ q: "   " })).toEqual({ status: "todos" });
+  });
+
+  it("reads the lookbook filter and ignores unknown catalogs", () => {
+    expect(parseCatalogFilters({ catalogo: "casa-icona" })).toEqual({
+      status: "todos",
+      catalog: "casa-icona",
+    });
+    expect(parseCatalogFilters({ catalogo: "ninguno" })).toEqual({
+      status: "todos",
+      catalog: "ninguno",
+    });
+    expect(parseCatalogFilters({ catalogo: "verano" })).toEqual({ status: "todos" });
+  });
+});
+
+describe("catalogHref", () => {
+  it("keeps the lookbook filter next to the status and search", () => {
+    expect(catalogHref({ status: "visibles", query: "top", catalog: "sordo" })).toBe(
+      "/catalogo-web?estado=visibles&catalogo=sordo&q=top",
+    );
+    expect(catalogHref({ status: "todos" })).toBe("/catalogo-web");
   });
 });

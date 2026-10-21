@@ -3,8 +3,16 @@ import { config } from "dotenv";
 import { createPrismaClient } from "../src/index";
 import { upsertAdmin } from "./admin";
 import { buildReport, type CategoryReport, formatReport, planChoices } from "./categories/choices";
+import {
+  EMPTY_LOOKBOOK_PLAN,
+  formatLookbookReport,
+  type LookbookPlan,
+  lookbookImages,
+  planLookbook,
+  readLookbook,
+} from "./categories/lookbook";
 import { type Look, readLooks } from "./categories/looks";
-import { CASA_ICONA_LOOKS_FILE } from "./categories/paths";
+import { CASA_ICONA_LOOKS_FILE, LOOKBOOK_FILE } from "./categories/paths";
 import { readPreserved } from "./categories/preserve";
 import { loadLots } from "./excel/load";
 import type { ParsedLot } from "./excel/parse";
@@ -55,10 +63,11 @@ async function reload(
   lots: ParsedLot[],
   images: ImagePlan,
   looks: Look[],
+  lookbook: LookbookPlan,
 ): Promise<{ totals: LotTotals[]; report: CategoryReport }> {
   return prisma.$transaction(
     async (tx) => {
-      const choices = planChoices(lots, looks, await readPreserved(tx));
+      const choices = planChoices(lots, looks, await readPreserved(tx), lookbook);
       await clearImported(tx);
       const totals: LotTotals[] = [];
       for (const parsed of lots) totals.push(await importLot(tx, parsed, images, choices));
@@ -75,7 +84,8 @@ async function reload(
       });
       return { totals, report: buildReport(lots, choices) };
     },
-    { timeout: 120_000 },
+    // maxWait: a remote pooler (Supabase) can take longer than the 2 s default to open it.
+    { timeout: 120_000, maxWait: 30_000 },
   );
 }
 
@@ -91,7 +101,15 @@ async function main(): Promise<void> {
   const pdfImages = pdfManifest
     ? planProductImages(pdfManifest, lots, BRAND_PDF_MEDIA_SUBDIR)
     : EMPTY_IMAGE_PLAN;
-  const images = mergeImagePlans(pdfImages, workbookImages);
+  const lookbookData = await readLookbook(LOOKBOOK_FILE);
+  const lookbook = lookbookData ? planLookbook(lots, lookbookData) : EMPTY_LOOKBOOK_PLAN;
+  if (!lookbookData)
+    console.warn("No data/catalogs/lookbook.json: lookbook placements are not set");
+  // PDF page photos of the lookbook come first (Milonga pages, Casa Icona looks without a caption).
+  const images = mergeImagePlans(
+    lookbookImages(lookbook, BRAND_PDF_MEDIA_SUBDIR),
+    mergeImagePlans(pdfImages, workbookImages),
+  );
   if (!manifest) console.warn("No data/product-images manifest: workbook photos are not used");
   if (!pdfManifest)
     console.warn("No data/product-images-new manifest: brand PDF photos are not used");
@@ -102,7 +120,7 @@ async function main(): Promise<void> {
 
   const prisma = createPrismaClient(requireEnv("DATABASE_URL"));
   try {
-    const { totals, report } = await reload(prisma, lots, images, looks ?? []);
+    const { totals, report } = await reload(prisma, lots, images, looks ?? [], lookbook);
     await upsertAdmin(prisma, requireEnv("ADMIN_EMAIL"), requireEnv("ADMIN_PASSWORD"));
     if (manifest || pdfManifest) {
       const files = mediaFilesFor(images, lots, [
@@ -117,6 +135,7 @@ async function main(): Promise<void> {
       );
     }
     console.log(formatReport(report));
+    console.log(formatLookbookReport(lookbook));
     console.table(
       totals.map((t) => ({
         ...t,

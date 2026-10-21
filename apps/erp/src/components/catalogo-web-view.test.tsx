@@ -14,6 +14,11 @@ const products: CatalogProduct[] = [
     isPublished: true,
     sizes: ["S", "M"],
     imageUrl: "/media/products/casa-icona/vestido-lino.webp",
+    catalog: "casa_icona",
+    catalogOrder: 4,
+    catalogSection: "Vestidos",
+    catalogName: "Vestido Lino Icona",
+    salePriceUsd: 64,
   },
   {
     id: "p2",
@@ -24,6 +29,11 @@ const products: CatalogProduct[] = [
     isPublished: false,
     sizes: [],
     imageUrl: null,
+    catalog: null,
+    catalogOrder: null,
+    catalogSection: null,
+    catalogName: null,
+    salePriceUsd: null,
   },
 ];
 
@@ -43,6 +53,7 @@ const actions = {
   setVisibilityMany: vi.fn(idleAction),
   publishAll: idleAction,
   saveSettings: idleAction,
+  saveLookbook: idleAction,
 };
 
 describe("CatalogoWebView", () => {
@@ -60,10 +71,12 @@ describe("CatalogoWebView", () => {
     expect(rows).toHaveLength(2);
     const first = within(rows[0] as HTMLElement);
     expect(first.getByText("Vestido Lino")).toBeInTheDocument();
-    expect(first.getByText("Casa Icona")).toBeInTheDocument();
+    expect(first.getByText("Casa Icona", { selector: "td" })).toBeInTheDocument();
     expect(first.getByText("S · M")).toBeInTheDocument();
     expect(first.getByText(/450\.000/)).toBeInTheDocument();
-    expect(first.getByRole("combobox")).toHaveValue("vestidos");
+    expect(first.getByRole("combobox", { name: "Categoría: Vestido Lino" })).toHaveValue(
+      "vestidos",
+    );
     expect(first.getByRole("switch")).toHaveAttribute("aria-checked", "true");
     expect(within(rows[1] as HTMLElement).getByText("Sin stock")).toBeInTheDocument();
   });
@@ -197,5 +210,86 @@ describe("CatalogoWebView", () => {
     expect(bulk).toHaveAttribute("aria-checked", "false");
     fireEvent.click(bulk);
     expect(actions.setVisibilityMany).toHaveBeenCalledWith(["p1", "p2"], true);
+  });
+
+  it("shows each product's lookbook placement and US$ sale price", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+      />,
+    );
+    const rows = screen.getAllByRole("row").slice(1);
+    const first = within(rows[0] as HTMLElement);
+    expect(first.getByLabelText("Catálogo")).toHaveValue("casa_icona");
+    expect(first.getByLabelText("Página")).toHaveValue("4");
+    expect(first.getByLabelText("Sección")).toHaveValue("Vestidos");
+    expect(first.getByLabelText("Nombre en el lookbook")).toHaveValue("Vestido Lino Icona");
+    expect(first.getByLabelText("Precio de venta US$")).toHaveValue("64");
+    expect(first.getByText(/US\$ fijo/)).toBeInTheDocument();
+    const second = within(rows[1] as HTMLElement);
+    expect(second.getByLabelText("Catálogo")).toHaveValue("");
+    expect(second.getByLabelText("Precio de venta US$")).toHaveValue("");
+    expect(
+      within(second.getByLabelText("Catálogo"))
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Fuera del lookbook", "Casa Icona", "Milonga", "Sordo"]);
+  });
+
+  it("submits the lookbook fields of one product", async () => {
+    const saveLookbook = vi.fn(
+      async (_p: FormState, _d: FormData): Promise<FormState> => ({
+        status: "success",
+        message: "Lookbook guardado.",
+      }),
+    );
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={{ ...actions, saveLookbook }}
+      />,
+    );
+    const row = within(screen.getAllByRole("row")[2] as HTMLElement);
+    fireEvent.change(row.getByLabelText("Catálogo"), { target: { value: "sordo" } });
+    fireEvent.change(row.getByLabelText("Página"), { target: { value: "2" } });
+    fireEvent.change(row.getByLabelText("Precio de venta US$"), { target: { value: "380" } });
+    fireEvent.click(row.getByRole("button", { name: "Guardar lookbook: Top Seda" }));
+    expect(await row.findByRole("status")).toHaveTextContent("Lookbook guardado.");
+    const data = saveLookbook.mock.calls[0]?.[1] as FormData;
+    expect(data.get("productId")).toBe("p2");
+    expect(data.get("catalog")).toBe("sordo");
+    expect(data.get("catalogOrder")).toBe("2");
+    expect(data.get("salePriceUsd")).toBe("380");
+    expect(data.get("catalogSection")).toBe("");
+  });
+
+  it("filters by lookbook with links that keep the other filters", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "visibles", catalog: "milonga" }}
+        actions={actions}
+      />,
+    );
+    const nav = screen.getByRole("navigation", { name: "Filtro por lookbook" });
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((l) => l.textContent),
+    ).toEqual(["Todos", "Casa Icona", "Milonga", "Sordo", "Fuera del lookbook"]);
+    expect(within(nav).getByRole("link", { name: "Milonga" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(nav).getByRole("link", { name: "Sordo" })).toHaveAttribute(
+      "href",
+      "/catalogo-web?estado=visibles&catalogo=sordo",
+    );
   });
 });

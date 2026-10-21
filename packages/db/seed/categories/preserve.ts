@@ -2,7 +2,7 @@ import type { Prisma } from "../../src/index";
 import { type Preserved, productKeys } from "./choices";
 
 /**
- * Publication state and category of every stored product, keyed like `productKeys`. Read before
+ * Publication state, category, lookbook placement and owner price of every stored product, keyed like `productKeys`. Read before
  * the reload deletes the products, in import (id) order so identical products keep their place.
  */
 export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<string, Preserved>> {
@@ -13,6 +13,11 @@ export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<s
       code: true,
       isPublished: true,
       category: true,
+      catalog: true,
+      catalogOrder: true,
+      catalogSection: true,
+      catalogName: true,
+      salePriceUsd: true,
       lot: { select: { name: true } },
     },
   });
@@ -23,7 +28,18 @@ export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<s
   for (const [lotName, products] of byLot) {
     for (const [i, key] of productKeys(lotName, products).entries()) {
       const row = products[i];
-      if (row) preserved.set(key, { isPublished: row.isPublished, category: row.category });
+      if (!row) continue;
+      preserved.set(key, {
+        isPublished: row.isPublished,
+        category: row.category,
+        lookbook: {
+          catalog: row.catalog,
+          catalogOrder: row.catalogOrder,
+          catalogSection: row.catalogSection,
+          catalogName: row.catalogName,
+          salePriceUsd: row.salePriceUsd?.toNumber() ?? null,
+        },
+      });
     }
   }
   return preserved;

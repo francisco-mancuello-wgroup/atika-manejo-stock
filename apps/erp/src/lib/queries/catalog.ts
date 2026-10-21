@@ -1,5 +1,5 @@
 import "server-only";
-import type { Prisma } from "@atika/db";
+import type { Catalog, Prisma } from "@atika/db";
 import type { CatalogFilters } from "../catalog/filters";
 import { coverUrl } from "../cover";
 import { getDb } from "../db";
@@ -16,6 +16,13 @@ export interface CatalogProduct {
   sizes: string[];
   /** Cover photo URL, or null. */
   imageUrl: string | null;
+  /** Lookbook placement; null catalog = not shown in any lookbook. */
+  catalog: Catalog | null;
+  catalogOrder: number | null;
+  catalogSection: string | null;
+  catalogName: string | null;
+  /** Owner's final price in US$ (IVA included); null = lot formula. */
+  salePriceUsd: number | null;
 }
 
 export interface CatalogSettingsView {
@@ -37,8 +44,15 @@ function whereFor(filters: CatalogFilters): Prisma.ProductWhereInput {
         : filters.status === "sin-stock"
           ? { variants: { none: { stock: { gt: 0 } } } }
           : {};
+  const lookbook: Prisma.ProductWhereInput =
+    filters.catalog === "ninguno"
+      ? { catalog: null }
+      : filters.catalog
+        ? { catalog: filters.catalog === "casa-icona" ? "casa_icona" : filters.catalog }
+        : {};
   return {
     ...status,
+    ...lookbook,
     ...(query
       ? {
           OR: [
@@ -55,7 +69,10 @@ function whereFor(filters: CatalogFilters): Prisma.ProductWhereInput {
 export async function getCatalogProducts(filters: CatalogFilters): Promise<CatalogProduct[]> {
   const products = await getDb().product.findMany({
     where: whereFor(filters),
-    orderBy: [{ name: "asc" }],
+    orderBy:
+      filters.catalog && filters.catalog !== "ninguno"
+        ? [{ catalogOrder: { sort: "asc", nulls: "last" } }, { name: "asc" }]
+        : [{ name: "asc" }],
     include: {
       lot: { select: { name: true } },
       variants: true,
@@ -71,6 +88,11 @@ export async function getCatalogProducts(filters: CatalogFilters): Promise<Catal
     isPublished: product.isPublished,
     sizes: sortSizes(product.variants.filter((v) => v.stock > 0).map((v) => v.size)),
     imageUrl: coverUrl(product.images),
+    catalog: product.catalog,
+    catalogOrder: product.catalogOrder,
+    catalogSection: product.catalogSection,
+    catalogName: product.catalogName,
+    salePriceUsd: product.salePriceUsd?.toNumber() ?? null,
   }));
 }
 
