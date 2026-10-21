@@ -135,6 +135,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@atika/pricing':
+        specifier: workspace:*
+        version: link:../pricing
       '@prisma/adapter-pg':
         specifier: 7.10.1
         version: 7.10.1

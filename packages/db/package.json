@@ -12,9 +12,11 @@
     "db:migration:sql": "prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script",
     "db:migrate": "prisma migrate deploy",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:seed": "tsx seed/seed.ts"
   },
   "dependencies": {
+    "@atika/pricing": "workspace:*",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "exceljs": "4.4.0",
