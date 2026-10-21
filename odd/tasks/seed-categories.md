@@ -51,12 +51,12 @@ All 123 products have no category, so category pages are empty. Re-running the s
 
 ### Final rule table
 
-| Category | Words (whole word, case/accent-insensitive) |
-| --- | --- |
-| vestidos | vestido(s), dress(es), minidress; weak (only without a garment noun): maxi, midi |
-| tops | top(s), blusa(s), camisa(s), shirt, crop, remera |
-| faldas-y-shorts | falda(s), pollera, skirt, short(s) |
-| accesorios | aros, aro, earcuff(s), collar, pulsera, anillo, cartera, bolso, bag, cinturon |
+| Category               | Words (whole word, case/accent-insensitive)                                                                           |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| vestidos               | vestido(s), dress(es), minidress; weak (only without a garment noun): maxi, midi                                      |
+| tops                   | top(s), blusa(s), camisa(s), shirt, crop, remera                                                                      |
+| faldas-y-shorts        | falda(s), pollera, skirt, short(s)                                                                                    |
+| accesorios             | aros, aro, earcuff(s), collar, pulsera, anillo, cartera, bolso, bag, cinturon                                         |
 | no category (reported) | pantalon(es)/pants/jean(s)/leggings; cardigan/poncho/abrigo/campera/chaqueta/saco/blazer/tapado; bikini/malla/banador |
 
 Order: name, then product description, then Casa Icona look description; strong words before weak. Two categories in one source is a conflict: none.
