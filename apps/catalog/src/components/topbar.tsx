@@ -16,8 +16,11 @@ const DEFAULT_WHATSAPP_HREF = "https://wa.me/";
 export function Topbar({ whatsappHref = DEFAULT_WHATSAPP_HREF }: { whatsappHref?: string }) {
   return (
     <header className="flex items-center justify-between gap-6 border-b border-line bg-surface px-6 py-4">
-      <Link href="/" className="font-display text-2xl text-ink">
-        atika
+      <Link href="/" className="flex flex-col gap-0.5 text-ink">
+        <span className="font-logo text-2xl font-light tracking-wide">átika</span>
+        <span className="hidden text-[10px] font-medium uppercase tracking-[0.2em] text-muted md:block">
+          CASA ICONA
+        </span>
       </Link>
       <nav aria-label="Categorías" className="hidden items-center gap-6 text-sm text-muted md:flex">
         {CATEGORIES.map((category) => (
