@@ -3,6 +3,7 @@
 import { cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { formatInteger } from "../lib/format";
 
 const NAV_ITEMS = [
   { href: "/", label: "Resumen" },
@@ -19,7 +20,14 @@ function isActive(href: string, currentPath: string): boolean {
     : currentPath === href || currentPath.startsWith(`${href}/`);
 }
 
-export function Sidebar({ activeHref }: { activeHref?: string }) {
+export function Sidebar({
+  activeHref,
+  exchangeRate,
+}: {
+  activeHref?: string;
+  /** Guaraníes per US dollar (AppSettings); a dash is shown when it could not be read. */
+  exchangeRate?: number;
+}) {
   const pathname = usePathname();
   const currentPath = activeHref ?? pathname ?? "/";
   return (
@@ -54,7 +62,7 @@ export function Sidebar({ activeHref }: { activeHref?: string }) {
         <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
           TC DEL DÍA
         </span>
-        <span className="font-display text-xl text-ink">₲ 7.400 / US$</span>
+        <span className="font-display text-xl text-ink">{`₲ ${exchangeRate === undefined ? "–" : formatInteger(exchangeRate)} / US$`}</span>
       </div>
     </aside>
   );

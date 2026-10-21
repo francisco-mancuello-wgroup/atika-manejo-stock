@@ -9,7 +9,7 @@ excel/notes.ts    parser for the free-text "VENTAS (fecha)" notes
 excel/sizes.ts    size normalization
 excel/parse.ts    pure workbook -> lot normalization (tested with in-memory workbooks)
 excel/load.ts     reads the workbooks from disk and holds per-lot facts the files do not carry
-seed.ts           transactional reload: suppliers, lots, products, variants, sales, settings, admin
+seed.ts           transactional reload: suppliers, lots, products, variants, sales, catalog settings, app settings, admin
 password.ts       scrypt hashing helper (shared with the ERP login)
 ```
 
@@ -60,6 +60,11 @@ Data rules applied (see `odd/tasks/excel-import.md`):
 | Milonga    | one row per model | `REFERENCIA` code, colour, combined sizes, struck cells plus sized notes, shipping in Gs |
 | Zunilda    | one row per model | code and colour, struck size cells, notes `SIZE -date`, shipping in Gs                   |
 | Átika      | one row per model | brand column, unit cost in USD and Gs (rate per row), `Date` sale cells, no shipping     |
+
+## Settings rows
+
+`CatalogSettings` is reset on every seed. `AppSettings` (exchange rate 7400, sale factor 2.5, IVA 0.10,
+cost 1.0, stored as fractions) is only created when missing, so values edited in the ERP survive a reseed.
 
 ## Environment
 

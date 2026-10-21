@@ -26,3 +26,10 @@ export function roundTo(value: number, decimals: number): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
+
+/** A percentage between 0 and 100 typed in a form (the database stores fractions). */
+export function percentField(label: string) {
+  return numberField(label)
+    .pipe(z.number().min(0, { error: `${label} no puede ser negativo.` }))
+    .pipe(z.number().max(100, { error: `${label} no puede superar 100.` }));
+}

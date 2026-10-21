@@ -14,6 +14,9 @@ const CATALOG_SETTINGS = {
   heroText: "Prendas seleccionadas, piezas únicas.",
 };
 
+/** Defaults for new lots (fractions). An existing row is kept: the ERP owns it afterwards. */
+const APP_SETTINGS = { exchangeRate: 7400, saleFactor: 2.5, vatRate: 0.1, costRate: 1 };
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is required (set it in the root .env)`);
@@ -152,6 +155,11 @@ async function reload(prisma: Client, lots: ParsedLot[]): Promise<LotTotals[]> {
         where: { id: 1 },
         create: { id: 1, ...CATALOG_SETTINGS },
         update: CATALOG_SETTINGS,
+      });
+      await tx.appSettings.upsert({
+        where: { id: 1 },
+        create: { id: 1, ...APP_SETTINGS },
+        update: {},
       });
       return totals;
     },

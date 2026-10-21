@@ -126,6 +126,21 @@ model CatalogSettings {
   @@map("catalog_settings")
 }
 
+/// Single row (id = 1) with the exchange rate of the day and the defaults for new lots.
+model AppSettings {
+  id           Int      @id @default(1)
+  /// Guaraníes per US dollar.
+  exchangeRate Decimal  @db.Decimal(10, 2)
+  saleFactor   Decimal  @db.Decimal(6, 3)
+  /// Fraction, 0.1 = 10 %.
+  vatRate      Decimal  @db.Decimal(5, 4)
+  /// Share of the original value actually paid, fraction.
+  costRate     Decimal  @db.Decimal(5, 4)
+  updatedAt    DateTime @updatedAt
+
+  @@map("app_settings")
+}
+
 model User {
   id           String    @id @default(uuid(7)) @db.Uuid
   email        String    @unique

@@ -17,10 +17,15 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Inventario" })).not.toHaveAttribute("aria-current");
   });
 
-  it("shows the exchange rate footer with a serif figure", () => {
-    render(<Sidebar />);
+  it("shows the exchange rate of the day with a serif figure", () => {
+    render(<Sidebar exchangeRate={7450} />);
     expect(screen.getByText("TC DEL DÍA")).toBeInTheDocument();
-    expect(screen.getByText("₲ 7.400 / US$")).toHaveClass("font-display");
+    expect(screen.getByText("₲ 7.450 / US$")).toHaveClass("font-display");
+  });
+
+  it("shows a dash when the exchange rate is unavailable", () => {
+    render(<Sidebar />);
+    expect(screen.getByText("₲ – / US$")).toBeInTheDocument();
   });
 
   it("lists the ERP sections in order inside a labelled navigation", () => {
