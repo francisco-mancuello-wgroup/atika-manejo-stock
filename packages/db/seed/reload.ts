@@ -1,5 +1,6 @@
 import { priceLot } from "@atika/pricing";
 import type { Prisma } from "../src/index";
+import type { ChoicePlan } from "./categories/choices";
 import type { ParsedLot } from "./excel/parse";
 import type { ImagePlan } from "./images/seed-images";
 
@@ -30,7 +31,12 @@ export async function clearImported(tx: Tx): Promise<void> {
 }
 
 /** Creates one parsed lot with its supplier, products, variants, images and sales. */
-export async function importLot(tx: Tx, parsed: ParsedLot, images: ImagePlan): Promise<LotTotals> {
+export async function importLot(
+  tx: Tx,
+  parsed: ParsedLot,
+  images: ImagePlan,
+  choices?: ChoicePlan,
+): Promise<LotTotals> {
   if (!parsed.purchasedAt) throw new Error(`${parsed.lotName}: no purchase date available`);
   const supplier = await tx.supplier.create({ data: { name: parsed.supplier } });
   const lot = await tx.lot.create({
@@ -77,6 +83,7 @@ export async function importLot(tx: Tx, parsed: ParsedLot, images: ImagePlan): P
     const price = priced[index]?.priceGs;
     if (price === undefined) throw new Error(`${parsed.lotName}: no price for product ${index}`);
     prices.push(price);
+    const choice = choices?.get(parsed.lotName, index);
     const created = await tx.product.create({
       data: {
         lotId: lot.id,
@@ -86,6 +93,8 @@ export async function importLot(tx: Tx, parsed: ParsedLot, images: ImagePlan): P
         color: product.color,
         originalValueUsd: product.originalValueUsd,
         priceGs: price,
+        isPublished: choice?.isPublished ?? false,
+        category: choice?.category ?? null,
         variants: {
           create: product.variants.map((variant) => ({
             size: variant.size,

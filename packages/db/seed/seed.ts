@@ -1,6 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
 import { createPrismaClient } from "../src/index";
+import { buildReport, type CategoryReport, formatReport, planChoices } from "./categories/choices";
+import { type Look, readLooks } from "./categories/looks";
+import { CASA_ICONA_LOOKS_FILE } from "./categories/paths";
+import { readPreserved } from "./categories/preserve";
 import { loadLots } from "./excel/load";
 import type { ParsedLot } from "./excel/parse";
 import {
@@ -42,13 +46,22 @@ function requireEnv(name: string): string {
 
 type Client = ReturnType<typeof createPrismaClient>;
 
-/** Replaces every imported row with the parsed lots in a single transaction. */
-async function reload(prisma: Client, lots: ParsedLot[], images: ImagePlan): Promise<LotTotals[]> {
+/**
+ * Replaces every imported row with the parsed lots in a single transaction. Publication state and
+ * categories chosen in the admin survive: they are read before the delete and restored by key.
+ */
+async function reload(
+  prisma: Client,
+  lots: ParsedLot[],
+  images: ImagePlan,
+  looks: Look[],
+): Promise<{ totals: LotTotals[]; report: CategoryReport }> {
   return prisma.$transaction(
     async (tx) => {
+      const choices = planChoices(lots, looks, await readPreserved(tx));
       await clearImported(tx);
       const totals: LotTotals[] = [];
-      for (const parsed of lots) totals.push(await importLot(tx, parsed, images));
+      for (const parsed of lots) totals.push(await importLot(tx, parsed, images, choices));
 
       await tx.catalogSettings.upsert({
         where: { id: 1 },
@@ -60,7 +73,7 @@ async function reload(prisma: Client, lots: ParsedLot[], images: ImagePlan): Pro
         create: { id: 1, ...APP_SETTINGS },
         update: {},
       });
-      return totals;
+      return { totals, report: buildReport(lots, choices) };
     },
     { timeout: 120_000 },
   );
@@ -93,9 +106,13 @@ async function main(): Promise<void> {
   if (!pdfManifest)
     console.warn("No data/product-images-new manifest: brand PDF photos are not used");
 
+  const looks = await readLooks(CASA_ICONA_LOOKS_FILE);
+  if (!looks)
+    console.warn("No data/catalog-categories looks: Casa Icona categories are not inferred");
+
   const prisma = createPrismaClient(requireEnv("DATABASE_URL"));
   try {
-    const totals = await reload(prisma, lots, images);
+    const { totals, report } = await reload(prisma, lots, images, looks ?? []);
     await upsertAdmin(prisma);
     if (manifest || pdfManifest) {
       const files = mediaFilesFor(images, lots, [
@@ -109,6 +126,7 @@ async function main(): Promise<void> {
           `(${fromPdf} from brand PDFs, ${files.length - fromPdf} from workbooks)`,
       );
     }
+    console.log(formatReport(report));
     console.table(
       totals.map((t) => ({
         ...t,
