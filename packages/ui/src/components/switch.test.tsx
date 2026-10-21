@@ -48,3 +48,10 @@ describe("Switch", () => {
     expect(onCheckedChange).not.toHaveBeenCalled();
   });
 });
+
+describe("Switch shape", () => {
+  it("keeps its pill track", () => {
+    render(<Switch checked={false} onCheckedChange={() => {}} />);
+    expect(screen.getByRole("switch")).toHaveClass("rounded-full");
+  });
+});
