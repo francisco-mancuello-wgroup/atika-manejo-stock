@@ -45,12 +45,17 @@ export async function createProducts(
     isPublished?: boolean;
     category?: string;
     priceGs?: number;
+    color?: string;
+    description?: string;
+    /** Photo URLs, first one is the cover. */
+    photos?: string[];
     variants: [string, number][];
   }[],
+  supplierName?: string,
 ): Promise<string[]> {
   counter += 1;
   const supplier = await tx.supplier.create({
-    data: { name: `Catalog test supplier ${counter}-${Date.now()}` },
+    data: { name: supplierName ?? `Catalog test supplier ${counter}-${Date.now()}` },
   });
   const lot = await tx.lot.create({
     data: {
@@ -74,10 +79,15 @@ export async function createProducts(
         originalValueUsd: 77.77,
         priceGs: product.priceGs ?? 100_000,
         isPublished: product.isPublished ?? true,
+        color: product.color ?? null,
+        description: product.description ?? null,
         // Explicit, strictly increasing timestamps keep "newest first" deterministic.
         createdAt: new Date(Date.UTC(2030, 0, 1 + index)),
         variants: {
           create: product.variants.map(([size, stock]) => ({ size, unitsBought: stock, stock })),
+        },
+        images: {
+          create: (product.photos ?? []).map((url, position) => ({ url, position })),
         },
       },
     });

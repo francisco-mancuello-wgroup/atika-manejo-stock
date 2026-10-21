@@ -3,8 +3,10 @@ import { createProducts, disconnectTestDb, hasDatabase, withRollback } from "../
 import {
   countProductsByCategory,
   getCatalogSettings,
+  getCollectionPresentation,
   getProduct,
   getProductDetail,
+  listCollections,
   listProducts,
 } from "./queries";
 
@@ -272,6 +274,60 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
         expect(await getProductDetail(tx, open, hidden ?? "")).toBeNull();
         expect(await getProductDetail(tx, open, "nope")).toBeNull();
         expect(await getProductDetail(tx, open, "00000000-0000-7000-8000-000000000000")).toBeNull();
+      });
+    });
+  });
+
+  describe("collections", () => {
+    const unique = () => `Colección ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    it("groups visible products by supplier, with count and cover of the first photo", async () => {
+      await withRollback(async (tx) => {
+        await tx.product.updateMany({ data: { isPublished: false } });
+        const name = unique();
+        await createProducts(
+          tx,
+          [
+            { name: "Sin foto", variants: [["M", 1]] },
+            { name: "Con foto", photos: ["/media/a.webp", "/media/b.webp"], variants: [["M", 1]] },
+            { name: "Oculta", isPublished: false, variants: [["M", 1]] },
+            { name: "Agotada", variants: [["M", 0]] },
+          ],
+          name,
+        );
+        const list = await listCollections(tx, open);
+        expect(list).toEqual([
+          { slug: expect.any(String), name, count: 2, coverUrl: "/media/a.webp" },
+        ]);
+        const all = await listCollections(tx, { ...open, hideOutOfStock: false });
+        expect(all[0]?.count).toBe(3);
+      });
+    });
+
+    it("presents the pieces of one collection in import order with every photo", async () => {
+      await withRollback(async (tx) => {
+        await tx.product.updateMany({ data: { isPublished: false } });
+        const name = unique();
+        await createProducts(
+          tx,
+          [
+            { name: "Primera", photos: ["/media/1.webp", "/media/1b.webp"], variants: [["S", 1]] },
+            { name: "Segunda NEGRO", color: "", variants: [["M", 2]] },
+            { name: "Fuera", isPublished: false, variants: [["M", 1]] },
+          ],
+          name,
+        );
+        await createProducts(tx, [{ name: "Otra colección", variants: [["M", 1]] }]);
+        const slug = (await listCollections(tx, open)).find((c) => c.name === name)?.slug ?? "";
+        const collection = await getCollectionPresentation(tx, open, slug);
+        expect(collection?.name).toBe(name);
+        expect(collection?.pieces.map((p) => p.name)).toEqual(["Primera", "Segunda NEGRO"]);
+        expect(collection?.pieces[0]?.photos.map((p) => p.url)).toEqual([
+          "/media/1.webp",
+          "/media/1b.webp",
+        ]);
+        expect(collection?.pieces[1]?.color?.label).toBe("Negro");
+        expect(await getCollectionPresentation(tx, open, "no-existe")).toBeNull();
       });
     });
   });
