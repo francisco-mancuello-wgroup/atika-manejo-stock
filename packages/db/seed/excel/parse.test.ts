@@ -87,6 +87,11 @@ describe("parseInventoryWorkbook, one row per size", () => {
     expect(parseInventoryWorkbook(rowPerSizeSheet(), OPTIONS).products).toHaveLength(2);
   });
 
+  it("records the worksheet rows each product was read from", () => {
+    const lot = parseInventoryWorkbook(rowPerSizeSheet(), OPTIONS);
+    expect(lot.products.map((p) => p.sourceRows)).toEqual([[3, 4], [5]]);
+  });
+
   it("falls back to cost rate 1 and the unit cost when ratios differ", () => {
     const workbook = buildWorkbook([
       ROW_PER_SIZE_HEADER,

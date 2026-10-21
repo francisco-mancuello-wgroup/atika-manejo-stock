@@ -14,14 +14,16 @@
     "db:migrate": "prisma migrate deploy",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "db:seed": "tsx seed/seed.ts"
+    "db:seed": "tsx seed/seed.ts",
+    "db:export-images": "tsx seed/images/export-images.ts"
   },
   "dependencies": {
     "@atika/pricing": "workspace:*",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "exceljs": "4.4.0",
-    "pg": "8.23.1"
+    "pg": "8.23.1",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@atika/config": "workspace:*",
