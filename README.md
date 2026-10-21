@@ -30,6 +30,16 @@ pnpm format     # Biome with fixes
 pnpm build
 ```
 
+## Local database
+
+A single `.env` at the repository root is shared by the Prisma CLI, the seed and the apps. Copy `.env.example` to `.env` and adjust it.
+
+```bash
+pnpm db:up       # start the atika-postgres container (postgres:18, host port 5436)
+pnpm db:migrate  # apply migrations (prisma migrate deploy)
+pnpm db:seed     # reset and reload data from the inventory workbooks in ATIKA_EXCEL_DIR
+```
+
 ## Pricing
 
 Parameters are set per purchase lot and recalculated on save:

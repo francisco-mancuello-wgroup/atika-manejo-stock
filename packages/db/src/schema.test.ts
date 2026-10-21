@@ -54,4 +54,9 @@ describe("createPrismaClient", () => {
   it("requires a connection string", () => {
     expect(() => createPrismaClient("")).toThrow("DATABASE_URL");
   });
+
+  it("builds a client for a local Postgres connection string without connecting", () => {
+    const client = createPrismaClient("postgresql://atika:atika@localhost:5436/atika");
+    expect(typeof client.$disconnect).toBe("function");
+  });
 });
