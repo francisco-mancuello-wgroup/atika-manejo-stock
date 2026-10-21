@@ -11,6 +11,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const productSelect = {
   id: true,
   name: true,
+  brand: true,
+  lot: { select: { supplier: { select: { name: true } } } },
   category: true,
   priceGs: true,
   variants: { select: { size: true, stock: true } },

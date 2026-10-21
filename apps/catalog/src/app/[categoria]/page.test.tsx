@@ -24,6 +24,7 @@ const dress: CatalogProduct = {
   sizes: [{ size: "M", available: true }],
   inStock: true,
   imageUrl: null,
+  brand: null,
 };
 
 const listProducts = vi.fn(

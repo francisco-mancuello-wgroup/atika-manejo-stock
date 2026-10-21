@@ -6,7 +6,7 @@ export function ProductGrid({ products }: { products: CatalogProduct[] }) {
     return <p className="text-sm text-muted">Todavía no hay prendas publicadas.</p>;
   }
   return (
-    <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-6 md:gap-y-10 lg:grid-cols-4">
       {products.map((product) => (
         <li key={product.id}>
           <ProductCard product={product} />

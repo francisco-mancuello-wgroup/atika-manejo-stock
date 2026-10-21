@@ -28,8 +28,10 @@ export default async function CategoryPage({ params }: { params: Params }) {
     category.slug === "novedades" ? null : category.slug,
   );
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16">
-      <h1 className="mb-10 font-display text-5xl leading-tight text-ink">{category.label}</h1>
+    <section className="mx-auto max-w-[1440px] px-5 py-10 md:px-16 md:py-14">
+      <h1 className="mb-8 font-display text-4xl font-medium leading-[1.05] text-ink md:mb-10 md:text-[57px]">
+        {category.label}
+      </h1>
       <ProductGrid products={products} />
     </section>
   );
