@@ -51,7 +51,7 @@ describe("ProductRows", () => {
     renderRows([product], { filters: "talle=S&q=lino&orden=precio-asc" });
     expect(screen.getByRole("link", { name: "Vestido Lino" })).toHaveAttribute(
       "href",
-      "/vestidos?talle=S&q=lino&orden=precio-asc&p=abc",
+      "/ver-todo/vestidos?talle=S&q=lino&orden=precio-asc&p=abc",
     );
   });
 

@@ -28,11 +28,11 @@ describe("CatalogLayout rail", () => {
       .getAllByRole("link")
       .map((link) => [link.textContent, link.getAttribute("href")]);
     expect(items).toEqual([
-      ["Novedades113", "/novedades"],
-      ["Vestidos40", "/vestidos"],
-      ["Tops25", "/tops"],
-      ["Faldas y shorts0", "/faldas-y-shorts"],
-      ["Accesorios12", "/accesorios"],
+      ["Novedades113", "/ver-todo"],
+      ["Vestidos40", "/ver-todo/vestidos"],
+      ["Tops25", "/ver-todo/tops"],
+      ["Faldas y shorts0", "/ver-todo/faldas-y-shorts"],
+      ["Accesorios12", "/ver-todo/accesorios"],
     ]);
   });
 
@@ -48,7 +48,7 @@ describe("CatalogLayout rail", () => {
     );
     expect(within(rail).getByRole("link", { name: /Vestidos/ })).toHaveAttribute(
       "href",
-      "/vestidos?talle=S&q=lino&orden=precio-asc",
+      "/ver-todo/vestidos?talle=S&q=lino&orden=precio-asc",
     );
   });
 
@@ -60,11 +60,11 @@ describe("CatalogLayout rail", () => {
     expect(within(group).getByRole("link", { name: "S" })).toHaveAttribute("aria-current", "true");
     expect(within(group).getByRole("link", { name: "S" })).toHaveAttribute(
       "href",
-      "/vestidos?q=lino",
+      "/ver-todo/vestidos?q=lino",
     );
     expect(within(group).getByRole("link", { name: "M" })).toHaveAttribute(
       "href",
-      "/vestidos?talle=M&q=lino",
+      "/ver-todo/vestidos?talle=M&q=lino",
     );
   });
 
@@ -99,7 +99,10 @@ describe("CatalogLayout compact navigation", () => {
         .getAllByRole("link")
         .map((link) => link.textContent),
     ).toEqual(["Todos", "XS", "S", "M", "L", "XL", "U"]);
-    expect(within(row).getByRole("link", { name: "Todos" })).toHaveAttribute("href", "/tops");
+    expect(within(row).getByRole("link", { name: "Todos" })).toHaveAttribute(
+      "href",
+      "/ver-todo/tops",
+    );
     expect(within(row).getByRole("link", { name: "M" })).toHaveAttribute("aria-current", "true");
   });
 });
@@ -123,10 +126,10 @@ describe("CatalogLayout header", () => {
     expect(button).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(button);
     const cheap = screen.getByRole("link", { name: "Precio: menor a mayor" });
-    expect(cheap).toHaveAttribute("href", "/tops?talle=S&orden=precio-asc");
+    expect(cheap).toHaveAttribute("href", "/ver-todo/tops?talle=S&orden=precio-asc");
     expect(screen.getByRole("link", { name: "Más recientes" })).toHaveAttribute(
       "href",
-      "/tops?talle=S",
+      "/ver-todo/tops?talle=S",
     );
   });
 

@@ -33,7 +33,7 @@ function renderSheet(overrides: Partial<CatalogProductDetail> = {}) {
       product={{ ...product, ...overrides }}
       whatsappNumber="+595 981 123 456"
       messageTemplate="Hola! {producto} talle {talle}"
-      closeHref="/vestidos?talle=S"
+      closeHref="/ver-todo/vestidos?talle=S"
     />,
   );
 }
@@ -122,14 +122,14 @@ describe("ProductSheet", () => {
   it("closes with Escape through router.replace to the list URL", () => {
     renderSheet();
     fireEvent.keyDown(document, { key: "Escape" });
-    expect(replace).toHaveBeenCalledWith("/vestidos?talle=S", { scroll: false });
+    expect(replace).toHaveBeenCalledWith("/ver-todo/vestidos?talle=S", { scroll: false });
   });
 
   it("closes from the scrim and the close button, both plain links to the list URL", () => {
     renderSheet();
     const links = screen.getAllByRole("link", { name: "Cerrar" });
     expect(links).toHaveLength(2);
-    for (const link of links) expect(link).toHaveAttribute("href", "/vestidos?talle=S");
+    for (const link of links) expect(link).toHaveAttribute("href", "/ver-todo/vestidos?talle=S");
   });
 
   it("moves focus into the dialog and gives it back to the opener on close", () => {

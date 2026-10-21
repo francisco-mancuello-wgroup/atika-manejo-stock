@@ -22,8 +22,8 @@ export function TopbarSearch() {
     if (open) input.current?.focus();
   }, [open]);
 
-  const slug = pathname.split("/")[1] ?? "";
-  const action = findCategory(slug) ? `/${slug}` : "/";
+  const [root, slug = ""] = pathname.split("/").slice(1);
+  const action = root === "ver-todo" && findCategory(slug) ? `/ver-todo/${slug}` : "/ver-todo";
 
   return (
     <>
