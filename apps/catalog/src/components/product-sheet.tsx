@@ -191,7 +191,7 @@ export function ProductSheet({
           className="mt-auto flex h-14 w-full items-center justify-center gap-2 bg-wa text-base font-medium text-surface hover:bg-wa/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           <WhatsappIcon className="size-5" />
-          {size ? `Consultar talle ${size} por WhatsApp` : "Consultar por WhatsApp"}
+          {size ? "Realizar pedido" : "Consultar por WhatsApp"}
         </a>
       </div>
     </div>

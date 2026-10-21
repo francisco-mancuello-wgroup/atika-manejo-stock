@@ -92,7 +92,7 @@ describe("ProductSheet", () => {
     expect(without).toHaveClass("bg-wa", "w-full");
 
     fireEvent.click(screen.getByRole("button", { name: "S" }));
-    const withSize = screen.getByRole("link", { name: "Consultar talle S por WhatsApp" });
+    const withSize = screen.getByRole("link", { name: "Realizar pedido" });
     expect(textOf(withSize)).toBe("Hola! Vestido Lino talle S");
   });
 

@@ -99,9 +99,7 @@ describe("Presentation", () => {
     const first = screen.getByRole("region", { name: "COSTA VINO" });
     expect(within(first).getAllByRole("radio")).toHaveLength(2);
     fireEvent.click(within(first).getByRole("radio", { name: "S" }));
-    const href = within(first)
-      .getByRole("link", { name: "Consultar talle S" })
-      .getAttribute("href");
+    const href = within(first).getByRole("link", { name: "Realizar pedido" }).getAttribute("href");
     expect(new URL(href ?? "").searchParams.get("text")).toContain(
       "https://catalogo.test/catalogos/casa-icona#casa-icona-pagina-1",
     );
@@ -109,7 +107,7 @@ describe("Presentation", () => {
     expect(within(second).getByRole("radio", { name: "U" })).toBeChecked();
     expect(
       new URL(
-        within(second).getByRole("link", { name: "Consultar talle U" }).getAttribute("href") ?? "",
+        within(second).getByRole("link", { name: "Realizar pedido" }).getAttribute("href") ?? "",
       ).searchParams.get("text"),
     ).toContain("casa-icona-pagina-2");
   });
