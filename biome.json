@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/.atl", "!**/drizzle", "!pnpm-lock.yaml"]
+    "includes": ["**", "!**/.atl", "!**/prisma/migrations", "!pnpm-lock.yaml"]
   },
   "formatter": {
     "indentStyle": "space",

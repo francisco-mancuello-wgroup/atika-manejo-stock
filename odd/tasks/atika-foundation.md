@@ -17,7 +17,7 @@ Two apps read the same data and the same price formula. If the formula or schema
 - pnpm workspace + Turborepo monorepo.
 - `apps/erp` and `apps/catalog` as Next.js App Router apps (empty shells that build and render).
 - `packages/pricing`: pure, framework-free price calculation.
-- `packages/db`: Drizzle schema + migrations for Postgres.
+- `packages/db`: Prisma schema + migrations for Postgres, generated client exported to both apps.
 - `packages/ui`: Tailwind v4 theme tokens taken from `atika.pen` (bg, surface, line, ink, muted, subtle, accent, warn, warnbg, ok, wa; Inter + Fraunces).
 - `packages/config`: shared tsconfig and Biome config.
 
@@ -38,7 +38,7 @@ Two apps read the same data and the same price formula. If the formula or schema
 | Monorepo    | pnpm 11 workspaces + Turborepo 2                                                                                                        |
 | Apps        | Next.js 16 (App Router, Server Actions), React, TypeScript                                                                              |
 | Styling     | Tailwind CSS 4 + shadcn/ui                                                                                                              |
-| Database    | Postgres (Neon, provisioned via Vercel Marketplace) + Drizzle ORM / drizzle-kit                                                         |
+| Database    | Postgres (Neon, via Vercel Marketplace) + Prisma 7.10.1 (`@prisma/adapter-neon`)                                                        |
 | Validation  | Zod 4                                                                                                                                   |
 | Images      | Vercel Blob (catalog feature)                                                                                                           |
 | Auth (ERP)  | Own tables (`users`, `sessions`), password hashed with Node `crypto.scrypt`, opaque session token in httpOnly cookie (ERP auth feature) |
@@ -76,8 +76,8 @@ Two apps read the same data and the same price formula. If the formula or schema
   - Note: TypeScript pinned to 6.0.3 — `typescript@7.0.2` on npm ships no `main` (no JS compiler API), which Next.js build-time type checking requires.
 - [ ] T2 — `packages/pricing` (TDD): `shippingPerUnit`, `unitCostUsd`, `priceGs`, `roundGs`, `priceLot(params, models)`.
   - Accept: Vitest covers the formula with the Casa Icona example (TC 7.400, factor 2,5, IVA 10 %, shipping 2.265,12 / 57 u.), zero-unit guard, rounding edge cases.
-- [ ] T3 — `packages/db`: Drizzle schema (`suppliers`, `lots` with pricing params, `products`, `product_variants` (size + stock), `sales`, `product_images`, `catalog_settings`, `users` (email, password_hash), `sessions` (token_hash, user_id, expires_at)), first migration, typed client.
-  - Accept: `drizzle-kit generate` produces a migration; schema test validates relations; provisioning Neon is done with user approval.
+- [ ] T3 — `packages/db`: Prisma schema (`suppliers`, `lots` with pricing params, `products`, `product_variants` (size + stock), `sales`, `product_images`, `catalog_settings`, `users` (email, password_hash), `sessions` (token_hash, user_id, expires_at)), first migration, typed client.
+  - Accept: `prisma migrate dev --create-only` produces a migration; `prisma generate` runs as a Turbo task before build/typecheck; schema test validates relations; provisioning Neon is done with user approval.
 - [ ] T4 — `packages/ui`: Tailwind v4 theme with atika tokens + fonts, shadcn init, Button/Input/Toggle primitives.
   - Accept: both apps import the theme and build.
 - [ ] T5 — `apps/erp` and `apps/catalog` shells: Next.js 16 apps wired to `pricing`, `db`, `ui`; ERP layout with sidebar, catalog layout with topbar.
@@ -87,11 +87,12 @@ Two apps read the same data and the same price formula. If the formula or schema
 
 - 2026-10-21: Feature document created. No task started.
 - 2026-10-21: Auth changed from Better Auth to own `users`/`sessions` tables (user request: simple, managed with our tables). Tables added to T3; flow stays in `erp-auth` feature.
+- 2026-10-21: ORM changed from Drizzle to Prisma (user decision). Pin 7.10.1: npm `prisma@latest` currently points to 8.0.0-rc.24 while `@prisma/client@latest` is 7.10.1.
 
 ## Verification evidence
 
-- T1 (2026-10-21): `pnpm install` → done (pnpm 11.22.0); `pnpm lint` → "Checked 10 files. No fixes applied." exit 0; `pnpm typecheck` → exit 0, 0 tasks (no TS packages yet — real coverage starts in T2). TDD: not applicable (config only, no behavior).
+- T1 (2026-10-21): `pnpm install` → done (pnpm 11.22.0); `pnpm lint` → "Checked 10 files. No fixes applied." exit 0; `pnpm typecheck` → exit 0, 0 tasks (no TS packages yet — real coverage starts in T2). TDD: not applicable (config only, no behavior). Commit `3c66640`. RDD: off (global) → no review.
 
 ## Next step
 
-T3 ORM decision pending (Drizzle vs Prisma, user asked); then T2.
+Start T2 (`packages/pricing`, TDD).

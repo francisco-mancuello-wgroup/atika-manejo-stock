@@ -9,7 +9,7 @@ Clothing stock management for atika: an admin ERP and a public catalog that shar
 | `apps/erp`         | Admin ERP: lots, inventory by size, sales, catalog settings |
 | `apps/catalog`     | Public catalog; customers contact via WhatsApp              |
 | `packages/pricing` | Price formula (single source of truth)                      |
-| `packages/db`      | Drizzle schema, migrations and client                       |
+| `packages/db`      | Prisma schema, migrations and client                        |
 | `packages/ui`      | Tailwind theme tokens and shared components                 |
 | `packages/config`  | Shared TypeScript configs                                   |
 
