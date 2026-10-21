@@ -27,12 +27,21 @@ export interface PdfManifestImage {
   sourceBytes: number;
 }
 
+/** A photo that matched no product; saved under `sin-asignar/` and never linked by the seed. */
+export interface PdfManifestUnmatched {
+  page: number;
+  caption: string | null;
+  reason: string;
+  /** Path under the export folder, `sin-asignar/<pdf-slug>/<file>.webp`. */
+  file: string;
+}
+
 export interface PdfManifestLot {
   lot: string;
   slug: string;
   pdf: string;
   images: PdfManifestImage[];
-  unmatchedImages: { page: number; caption: string | null; reason: string }[];
+  unmatchedImages: PdfManifestUnmatched[];
   captionsWithoutImage: { page: number; caption: string }[];
   productsWithoutImage: { productIndex: number; name: string }[];
   stats: { imagesFound: number; logosSkipped: number; matched: number; unmatched: number };
@@ -44,6 +53,7 @@ export interface PdfManifest {
 }
 
 const SAFE_FILE = /^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*\.webp$/;
+const SAFE_UNASSIGNED_FILE = /^sin-asignar\/[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*\.webp$/;
 const RULES: readonly string[] = ["exact", "alias", "token-subset"];
 
 function bool(raw: Raw, key: string): boolean {
@@ -100,10 +110,15 @@ export function parsePdfManifest(json: unknown): PdfManifest {
       images: list(lot.images, "images").map(parseImage),
       unmatchedImages: list(lot.unmatchedImages, "unmatchedImages").map((entry) => {
         const item = record(entry, "unmatched image");
+        const file = str(item, "file");
+        if (!SAFE_UNASSIGNED_FILE.test(file)) {
+          throw new Error(`Invalid manifest: unsafe file "${file}"`);
+        }
         return {
           page: int(item, "page"),
           caption: nullableStr(item, "caption"),
           reason: str(item, "reason"),
+          file,
         };
       }),
       captionsWithoutImage: list(lot.captionsWithoutImage, "captionsWithoutImage").map((entry) => {

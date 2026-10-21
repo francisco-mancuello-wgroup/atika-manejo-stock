@@ -50,12 +50,15 @@ The workbook photos (`data/product-images`) are low resolution, especially Casa 
 - Matching tiers (first tier with a hit; exactly one product required; a product claimed by two captions is ambiguous): exact normalized name; alias (colour translation black->negro and white->blanco, generic words dress/mini/tamano dropped); token-subset (every caption word, at least two, appears in one product name).
 - **Aros PDF note: every page states "Imágenes recreadas digitalmente". The 8 Sordo photos are digitally recreated images, not photographs of the real pieces.** They are flagged `recreated: true` in the manifest and a test asserts it.
 - The Milonga editorial has no product names or codes (pages only say "Vestidos", "Salidas De Playa Y Ponchos", "Bikinis Y Mallas" and "NN / 36"), so none of its 37 photos can be matched without guessing.
+- Unassigned photos (follow-up): the export now also saves the unmatched photos to `data/product-images-new/sin-asignar/<pdf-slug>/p<NN>-<caption|sin-texto>[-n].webp` (0100f4c code+tests, 2596bf4 data). Manifest `unmatchedImages[].file` points to them; the seed still links only matched photos (test in `pdf-precedence.test.ts`). Counts: atika 5, atika-catalogo-aros 1, atika-milonga-catalogo-editorial 37 (43 files); `data/product-images-new` is now 5.8 MB. Two consecutive exports gave the same sha256 of the whole folder.
 
 ## Verification evidence
 
 TDD (strict, Vitest 5):
 - RED: `seed/images-pdf/*.test.ts` (normalize, layout, captions, pair, match-names, plan, pdf-manifest, export-pdf): 8 test files failed with "Cannot find module" before the modules existed -> GREEN, 36 passing.
 - RED (T2): `seed-images.test.ts` (new copy signature) and `pdf-precedence.test.ts`: 7 failures (`mergeImagePlans`, `mediaFilesFor`, `readPdfManifest` not functions; `copyProductImages` got an object as path) -> GREEN: 110 passing in `seed`, including the rolled-back DB test "stores the brand PDF photo as the cover and workbook photos only where there is none".
+
+- RED (unassigned photos): plan, export-pdf, pdf-manifest and pdf-precedence tests: 7 failures (`file` undefined on unmatched entries, no `sin-asignar` folder, unsafe/missing `file` not rejected) -> GREEN after the change; `data.test.ts` checks every unassigned file exists. lint, typecheck, test and `env -u DATABASE_URL pnpm build` pass.
 
 Commands (worktree root):
 - `pnpm db:export-images-pdf` run three times: identical sha256 over all files (02933762...462d) and no git diff against the committed folder.

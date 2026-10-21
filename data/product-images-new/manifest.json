@@ -235,27 +235,32 @@
         {
           "page": 1,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika/p01-sin-texto.webp"
         },
         {
           "page": 10,
           "caption": "Vestido largo bicolor",
-          "reason": "no-product"
+          "reason": "no-product",
+          "file": "sin-asignar/atika/p10-vestido-largo-bicolor.webp"
         },
         {
           "page": 12,
           "caption": "Vestido corto negro",
-          "reason": "no-product"
+          "reason": "no-product",
+          "file": "sin-asignar/atika/p12-vestido-corto-negro.webp"
         },
         {
           "page": 17,
           "caption": "Cora · Black",
-          "reason": "no-product"
+          "reason": "no-product",
+          "file": "sin-asignar/atika/p17-cora-black.webp"
         },
         {
           "page": 20,
           "caption": "Vitta White Cut-Out",
-          "reason": "no-product"
+          "reason": "no-product",
+          "file": "sin-asignar/atika/p20-vitta-white-cut-out.webp"
         }
       ],
       "captionsWithoutImage": [],
@@ -422,7 +427,8 @@
         {
           "page": 1,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-catalogo-aros/p01-sin-texto.webp"
         }
       ],
       "captionsWithoutImage": [],
@@ -452,187 +458,224 @@
         {
           "page": 1,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p01-sin-texto.webp"
         },
         {
           "page": 2,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p02-sin-texto.webp"
         },
         {
           "page": 3,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p03-sin-texto.webp"
         },
         {
           "page": 4,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p04-sin-texto.webp"
         },
         {
           "page": 5,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p05-sin-texto.webp"
         },
         {
           "page": 6,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p06-sin-texto.webp"
         },
         {
           "page": 7,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p07-sin-texto.webp"
         },
         {
           "page": 8,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p08-sin-texto.webp"
         },
         {
           "page": 9,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p09-sin-texto.webp"
         },
         {
           "page": 10,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p10-sin-texto.webp"
         },
         {
           "page": 11,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p11-sin-texto.webp"
         },
         {
           "page": 12,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p12-sin-texto.webp"
         },
         {
           "page": 13,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p13-sin-texto.webp"
         },
         {
           "page": 14,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p14-sin-texto.webp"
         },
         {
           "page": 15,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p15-sin-texto.webp"
         },
         {
           "page": 16,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p16-sin-texto.webp"
         },
         {
           "page": 17,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p17-sin-texto.webp"
         },
         {
           "page": 18,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p18-sin-texto.webp"
         },
         {
           "page": 19,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p19-sin-texto.webp"
         },
         {
           "page": 20,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p20-sin-texto.webp"
         },
         {
           "page": 21,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p21-sin-texto.webp"
         },
         {
           "page": 22,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p22-sin-texto.webp"
         },
         {
           "page": 23,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p23-sin-texto.webp"
         },
         {
           "page": 24,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p24-sin-texto.webp"
         },
         {
           "page": 25,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p25-sin-texto.webp"
         },
         {
           "page": 26,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p26-sin-texto.webp"
         },
         {
           "page": 27,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p27-sin-texto.webp"
         },
         {
           "page": 28,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p28-sin-texto.webp"
         },
         {
           "page": 29,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p29-sin-texto.webp"
         },
         {
           "page": 30,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p30-sin-texto.webp"
         },
         {
           "page": 31,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p31-sin-texto.webp"
         },
         {
           "page": 32,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p32-sin-texto.webp"
         },
         {
           "page": 33,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p33-sin-texto.webp"
         },
         {
           "page": 34,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p34-sin-texto.webp"
         },
         {
           "page": 35,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p35-sin-texto.webp"
         },
         {
           "page": 36,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p36-sin-texto.webp"
         },
         {
           "page": 37,
           "caption": null,
-          "reason": "no-caption"
+          "reason": "no-caption",
+          "file": "sin-asignar/atika-milonga-catalogo-editorial/p37-sin-texto.webp"
         }
       ],
       "captionsWithoutImage": [],

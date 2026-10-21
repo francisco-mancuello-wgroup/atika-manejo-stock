@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ParsedLot, ParsedProduct } from "../excel/parse";
+import { parsePdfManifest } from "../images-pdf/pdf-manifest";
 import type { Manifest, ManifestImage } from "./manifest";
 import { mediaFilesFor, mergeImagePlans, planProductImages, readPdfManifest } from "./seed-images";
 
@@ -76,6 +77,43 @@ describe("brand PDF photos in the seed", () => {
       { from: "/pdf/atika/top-pdf.webp", to: "brand-pdf/atika/top-pdf.webp" },
       { from: "/wb/atika/falda.webp", to: "atika/falda.webp" },
     ]);
+  });
+
+  it("ignores unassigned PDF photos: only matched ones are linked and copied", () => {
+    const plan = planProductImages(
+      manifest([image({ file: "atika/top-pdf.webp" })]),
+      lots,
+      "brand-pdf",
+    );
+    // The PDF manifest lists unassigned photos under sin-asignar/, but the seed reads `images` only.
+    const pdfManifest = {
+      version: 1,
+      lots: [
+        {
+          lot: "Átika",
+          slug: "atika",
+          pdf: "a.pdf",
+          images: [],
+          unmatchedImages: [
+            {
+              page: 1,
+              caption: null,
+              reason: "no-caption",
+              file: "sin-asignar/atika/p01-sin-texto.webp",
+            },
+          ],
+          captionsWithoutImage: [],
+          productsWithoutImage: [],
+          stats: { imagesFound: 1, logosSkipped: 0, matched: 0, unmatched: 1 },
+        },
+      ],
+    };
+    expect(parsePdfManifest(pdfManifest).lots[0]?.unmatchedImages).toHaveLength(1);
+    const files = mediaFilesFor(plan, lots, [
+      { urlPrefix: "/media/products/brand-pdf", dir: "/pdf" },
+    ]);
+    expect(files.map((f) => f.to)).toEqual(["brand-pdf/atika/top-pdf.webp"]);
+    expect(files.some((f) => f.to.includes("sin-asignar"))).toBe(false);
   });
 
   it("refuses a photo url that no source folder serves", () => {

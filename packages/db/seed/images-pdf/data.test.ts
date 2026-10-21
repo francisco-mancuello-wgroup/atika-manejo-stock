@@ -30,6 +30,21 @@ describe.skipIf(!exists)("committed data/product-images-new", () => {
     expect(files.size).toBeGreaterThan(0);
   });
 
+  it("saves every unassigned photo under sin-asignar/, apart from the matched ones", async () => {
+    const manifest = parsePdfManifest(
+      JSON.parse(await readFile(join(PRODUCT_IMAGES_NEW_DIR, "manifest.json"), "utf8")),
+    );
+    const matched = new Set(manifest.lots.flatMap((lot) => lot.images.map((i) => i.file)));
+    for (const lot of manifest.lots) {
+      expect(lot.stats.unmatched).toBe(lot.unmatchedImages.length);
+      for (const image of lot.unmatchedImages) {
+        expect(image.file.startsWith("sin-asignar/")).toBe(true);
+        expect(matched.has(image.file)).toBe(false);
+        await access(join(PRODUCT_IMAGES_NEW_DIR, image.file));
+      }
+    }
+  });
+
   it("marks every Sordo photo as digitally recreated", async () => {
     const manifest = parsePdfManifest(
       JSON.parse(await readFile(join(PRODUCT_IMAGES_NEW_DIR, "manifest.json"), "utf8")),

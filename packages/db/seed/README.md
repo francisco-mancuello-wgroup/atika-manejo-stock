@@ -93,6 +93,11 @@ works as before.
 with the PDFs) and `ATIKA_EXCEL_DIR` in the root `.env`. It needs poppler (`pdftohtml`) installed.
 The folder is emptied first, so re-running gives byte-identical output.
 
+Photos that match no product are saved too (same WebP optimization) as
+`data/product-images-new/sin-asignar/<pdf-slug>/p<NN>-<caption or sin-texto>[-n].webp`, and each
+`unmatchedImages` entry of the manifest carries that `file`. The seed ignores `sin-asignar/`: only
+matched photos are linked. Logos and decoration are never saved.
+
 ```
 images-pdf/layout.ts       parses `pdftohtml -xml` (page text with positions, images)
 images-pdf/captions.ts     reads product captions per PDF style (numbered looks, sections, none)

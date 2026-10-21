@@ -96,7 +96,18 @@ describe("writePdfExport", () => {
       height: 1600,
     });
     expect(lot?.productsWithoutImage).toEqual([{ productIndex: 1, name: "NINA" }]);
-    expect(lot?.unmatchedImages).toEqual([{ page: 1, caption: null, reason: "no-caption" }]);
+    expect(lot?.unmatchedImages).toEqual([
+      {
+        page: 1,
+        caption: null,
+        reason: "no-caption",
+        file: "sin-asignar/atika/p01-sin-texto.webp",
+      },
+    ]);
+    const unassigned = await sharp(
+      join(dir, "sin-asignar", "atika", "p01-sin-texto.webp"),
+    ).metadata();
+    expect(unassigned.format).toBe("webp");
     expect(lot?.stats).toEqual({ imagesFound: 2, logosSkipped: 1, matched: 1, unmatched: 1 });
   });
 
@@ -106,7 +117,7 @@ describe("writePdfExport", () => {
     const first = await hashFolder(dir);
     await writeFile(join(dir, "stale.webp"), "old");
     await writePdfExport(dir, [plan], read);
-    expect((await readdir(dir)).sort()).toEqual(["casa-icona", "manifest.json"]);
+    expect((await readdir(dir)).sort()).toEqual(["casa-icona", "manifest.json", "sin-asignar"]);
     expect(await hashFolder(dir)).toBe(first);
   });
 });

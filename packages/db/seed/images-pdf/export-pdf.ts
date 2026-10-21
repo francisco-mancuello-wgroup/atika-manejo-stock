@@ -6,6 +6,7 @@ import {
   type PdfManifest,
   type PdfManifestImage,
   type PdfManifestLot,
+  type PdfManifestUnmatched,
 } from "./pdf-manifest";
 import type { PdfLotPlan } from "./plan";
 
@@ -49,16 +50,25 @@ export async function writePdfExport(
         sourceBytes: source.length,
       });
     }
+    const unmatchedImages: PdfManifestUnmatched[] = [];
+    for (const image of plan.unmatchedImages) {
+      const optimized = await optimize(await readPhoto(image.src));
+      const target = join(outDir, image.file);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, optimized.data);
+      unmatchedImages.push({
+        page: image.page,
+        caption: image.caption,
+        reason: image.reason,
+        file: image.file,
+      });
+    }
     lots.push({
       lot: plan.lot,
       slug: plan.slug,
       pdf: plan.pdf,
       images,
-      unmatchedImages: plan.unmatchedImages.map(({ page, caption, reason }) => ({
-        page,
-        caption,
-        reason,
-      })),
+      unmatchedImages,
       captionsWithoutImage: plan.captionsWithoutImage,
       productsWithoutImage: plan.productsWithoutImage,
       stats: plan.stats,
