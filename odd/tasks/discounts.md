@@ -52,14 +52,12 @@ Let the owner create percentage discounts from the ERP, applied to every product
 ## Verification evidence
 
 RED recorded before each implementation (failing run, then GREEN):
-
 - T1 pricing: `discount.test.ts` 12 failed (helpers missing) -> 27 passed. Schema test 2 failed (models missing) -> 188 passed in `@atika/db` after `prisma generate` + migration.
 - T2: `schema.test.ts`/`save.test.ts`/`discounts.db.test.ts` failed on unresolved imports; `actions-guard.test.ts` module list failed (1 failed) and sidebar test failed (1 failed, "Descuentos" missing); component tests failed on unresolved imports -> 344 passed in `@atika/erp`.
 - T3: 23 failed (view models, price helpers, components, DB queries) -> 203 passed in `@atika/catalog`.
 - T4: 4 failed (register, sale form, sellable query) -> 349 passed in `@atika/erp`.
 
 Repo root, final state:
-
 - `pnpm lint`: 370 files, no errors (1 pre-existing warning in `next-path.ts`).
 - `pnpm typecheck`: 6/6 tasks successful.
 - `pnpm test`: ui 36, pricing 27, db 188, catalog 203, erp 349 tests passed.
