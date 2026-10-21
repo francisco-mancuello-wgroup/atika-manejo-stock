@@ -1,0 +1,21 @@
+services:
+  atika-postgres:
+    image: postgres:18-alpine
+    container_name: atika-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: atika
+      POSTGRES_PASSWORD: atika
+      POSTGRES_DB: atika
+    ports:
+      - "5436:5432"
+    volumes:
+      - atika-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atika -d atika"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  atika-postgres-data:
