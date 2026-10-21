@@ -16,6 +16,8 @@ export interface LotModel {
   originalValueUsd: number;
   /** Units bought in the lot (not current stock): shipping is prorated over them. */
   units: number;
+  /** Final sale price set by the owner (IVA included); replaces the formula when present. */
+  salePriceUsd?: number | null;
 }
 
 export interface PricedModel {
@@ -73,6 +75,13 @@ export function priceGs(
   return roundGs(costUsd * params.saleFactor * (1 + params.vatRate) * params.exchangeRate);
 }
 
+/** Guaraníes for a final price in US$ (IVA already included), rounded like the formula. */
+export function salePriceGs(salePriceUsd: number, exchangeRate: number): number {
+  assertNonNegative("salePriceUsd", salePriceUsd);
+  assertPositive("exchangeRate", exchangeRate);
+  return roundGs(salePriceUsd * exchangeRate);
+}
+
 /** Prices every model of a lot; call it again after saving new parameters. */
 export function priceLot(params: LotPricingParams, models: readonly LotModel[]): PricedModel[] {
   if (models.length === 0) return [];
@@ -86,7 +95,10 @@ export function priceLot(params: LotPricingParams, models: readonly LotModel[]):
       id: model.id,
       shippingPerUnitUsd: shipping,
       unitCostUsd: cost,
-      priceGs: priceGs(cost, params),
+      priceGs:
+        model.salePriceUsd == null
+          ? priceGs(cost, params)
+          : salePriceGs(model.salePriceUsd, params.exchangeRate),
     };
   });
 }

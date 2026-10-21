@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { createPrismaClient, type Prisma } from "../src/index";
-import { type ChoicePlan, productKeys } from "./categories/choices";
+import { type ChoicePlan, NO_LOOKBOOK, productKeys } from "./categories/choices";
 import { readPreserved } from "./categories/preserve";
 import type { ParsedLot } from "./excel/parse";
 import { type ImagePlan, mergeImagePlans } from "./images/seed-images";
@@ -124,8 +124,8 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
     const choices: ChoicePlan = {
       get: (_lotName, index) =>
         index === 0
-          ? { isPublished: true, category: "vestidos", reason: "test" }
-          : { isPublished: false, category: null, reason: "test" },
+          ? { isPublished: true, category: "vestidos", lookbook: NO_LOOKBOOK, reason: "test" }
+          : { isPublished: false, category: null, lookbook: NO_LOOKBOOK, reason: "test" },
     };
     await withRollback(async (tx) => {
       await importLot(tx, lot, images, choices);
@@ -146,13 +146,61 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
         get: (_lotName, index) => ({
           isPublished: index === 1,
           category: index === 0 ? "tops" : null,
+          lookbook: NO_LOOKBOOK,
           reason: "test",
         }),
       });
       const preserved = await readPreserved(tx);
       const keys = productKeys(lot.lotName, lot.products);
-      expect(preserved.get(keys[0] ?? "")).toEqual({ isPublished: false, category: "tops" });
-      expect(preserved.get(keys[1] ?? "")).toEqual({ isPublished: true, category: null });
+      expect(preserved.get(keys[0] ?? "")).toEqual({
+        isPublished: false,
+        category: "tops",
+        lookbook: NO_LOOKBOOK,
+      });
+      expect(preserved.get(keys[1] ?? "")).toEqual({
+        isPublished: true,
+        category: null,
+        lookbook: NO_LOOKBOOK,
+      });
+    });
+  });
+
+  it("keeps the lookbook placement and owner price, and prices with that US$ price", async () => {
+    const lookbook = {
+      catalog: "sordo" as const,
+      catalogOrder: 3,
+      catalogSection: "Aros",
+      catalogName: "Cubagua",
+      salePriceUsd: 380,
+    };
+    await withRollback(async (tx) => {
+      await importLot(tx, lot, images, {
+        get: (_lotName, index) => ({
+          isPublished: true,
+          category: null,
+          lookbook: index === 0 ? lookbook : NO_LOOKBOOK,
+          reason: "test",
+        }),
+      });
+      const [first] = await tx.product.findMany({
+        where: { lot: { name: lot.lotName } },
+        orderBy: { id: "asc" },
+        include: { lot: true },
+      });
+      expect(first).toMatchObject({
+        catalog: "sordo",
+        catalogOrder: 3,
+        catalogSection: "Aros",
+        catalogName: "Cubagua",
+      });
+      expect(first?.salePriceUsd?.toNumber()).toBe(380);
+      expect(first?.priceGs).toBe(
+        Math.round((380 * (first?.lot.exchangeRate.toNumber() ?? 0)) / 1000) * 1000,
+      );
+      const preserved = await readPreserved(tx);
+      expect(preserved.get(productKeys(lot.lotName, lot.products)[0] ?? "")?.lookbook).toEqual(
+        lookbook,
+      );
     });
   });
 });

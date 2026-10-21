@@ -3,15 +3,34 @@ import type { ParsedLot } from "../excel/parse";
 import { inferCategory } from "./infer";
 import { LOOKS_LOT, type Look, matchLooks } from "./looks";
 
+/** Lookbook placement and owner price, edited in the ERP and kept across re-seeds. */
+export interface Lookbook {
+  catalog: "casa_icona" | "milonga" | "sordo" | null;
+  catalogOrder: number | null;
+  catalogSection: string | null;
+  catalogName: string | null;
+  salePriceUsd: number | null;
+}
+
+export const NO_LOOKBOOK: Lookbook = {
+  catalog: null,
+  catalogOrder: null,
+  catalogSection: null,
+  catalogName: null,
+  salePriceUsd: null,
+};
+
 /** What a re-seed must keep of a product the admin may have edited. */
 export interface Preserved {
   isPublished: boolean;
   category: string | null;
+  lookbook?: Lookbook;
 }
 
 export interface ProductChoice {
   isPublished: boolean;
   category: string | null;
+  lookbook: Lookbook;
   /** Where the category came from, or why there is none. */
   reason: string;
 }
@@ -59,8 +78,14 @@ export function planChoices(
         const kept = preserved.get(keys[index] ?? "");
         const look = lotLooks[index] ?? null;
         const isPublished = kept?.isPublished ?? false;
+        const lookbook = kept?.lookbook ?? NO_LOOKBOOK;
         if (kept?.category) {
-          return { isPublished, category: kept.category, reason: "preserved from the database" };
+          return {
+            isPublished,
+            category: kept.category,
+            lookbook,
+            reason: "preserved from the database",
+          };
         }
         const inferred = inferCategory({
           name: product.name,
@@ -68,13 +93,23 @@ export function planChoices(
         });
         if (inferred.category) {
           const via = look ? ` (look ${look.number} "${look.name}")` : "";
-          return { isPublished, category: inferred.category, reason: `${inferred.reason}${via}` };
+          return {
+            isPublished,
+            category: inferred.category,
+            lookbook,
+            reason: `${inferred.reason}${via}`,
+          };
         }
         const missingLook =
           lot.lotName === LOOKS_LOT && !look
             ? "; no look in the atika.pdf index names this product"
             : "";
-        return { isPublished, category: null, reason: `${inferred.reason}${missingLook}` };
+        return {
+          isPublished,
+          category: null,
+          lookbook,
+          reason: `${inferred.reason}${missingLook}`,
+        };
       }),
     );
   }
