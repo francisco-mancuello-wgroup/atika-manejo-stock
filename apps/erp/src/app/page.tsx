@@ -1,3 +1,9 @@
-export default function HomePage() {
-  return <h1 className="text-2xl font-semibold text-ink">Resumen</h1>;
+import { ResumenView } from "../components/resumen-view";
+import { getResumen } from "../lib/queries/summary";
+
+// Reads the database on every request; never prerendered (build has no DATABASE_URL).
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  return <ResumenView data={await getResumen()} />;
 }
