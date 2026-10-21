@@ -3,14 +3,23 @@ import { config } from "dotenv";
 import { createPrismaClient } from "../src/index";
 import { loadLots } from "./excel/load";
 import type { ParsedLot } from "./excel/parse";
-import { APP_MEDIA_DIRS, PRODUCT_IMAGES_DIR } from "./images/paths";
+import {
+  APP_MEDIA_DIRS,
+  BRAND_PDF_MEDIA_SUBDIR,
+  MEDIA_URL_PREFIX,
+  PRODUCT_IMAGES_DIR,
+} from "./images/paths";
 import {
   copyProductImages,
   EMPTY_IMAGE_PLAN,
   type ImagePlan,
+  mediaFilesFor,
+  mergeImagePlans,
   planProductImages,
   readManifest,
+  readPdfManifest,
 } from "./images/seed-images";
+import { PRODUCT_IMAGES_NEW_DIR } from "./images-pdf/paths";
 import { hashPassword } from "./password";
 import { clearImported, importLot, type LotTotals } from "./reload";
 
@@ -72,18 +81,33 @@ async function main(): Promise<void> {
   for (const lot of lots)
     for (const warning of lot.warnings) console.warn(`[${lot.lotName}] ${warning}`);
 
+  // Brand PDF photos (data/product-images-new) win; workbook photos fill the products without one.
   const manifest = await readManifest(PRODUCT_IMAGES_DIR);
-  const images = manifest ? planProductImages(manifest, lots) : EMPTY_IMAGE_PLAN;
-  if (!manifest) console.warn("No data/product-images manifest: seeding without product photos");
+  const pdfManifest = await readPdfManifest(PRODUCT_IMAGES_NEW_DIR);
+  const workbookImages = manifest ? planProductImages(manifest, lots) : EMPTY_IMAGE_PLAN;
+  const pdfImages = pdfManifest
+    ? planProductImages(pdfManifest, lots, BRAND_PDF_MEDIA_SUBDIR)
+    : EMPTY_IMAGE_PLAN;
+  const images = mergeImagePlans(pdfImages, workbookImages);
+  if (!manifest) console.warn("No data/product-images manifest: workbook photos are not used");
+  if (!pdfManifest)
+    console.warn("No data/product-images-new manifest: brand PDF photos are not used");
 
   const prisma = createPrismaClient(requireEnv("DATABASE_URL"));
   try {
     const totals = await reload(prisma, lots, images);
     await upsertAdmin(prisma);
-    if (manifest) {
-      const files = manifest.lots.flatMap((lot) => lot.images.map((image) => image.file));
-      await copyProductImages(PRODUCT_IMAGES_DIR, APP_MEDIA_DIRS, files);
-      console.log(`${files.length} product images linked and copied to the apps' public/media`);
+    if (manifest || pdfManifest) {
+      const files = mediaFilesFor(images, lots, [
+        { urlPrefix: `${MEDIA_URL_PREFIX}/${BRAND_PDF_MEDIA_SUBDIR}`, dir: PRODUCT_IMAGES_NEW_DIR },
+        { urlPrefix: MEDIA_URL_PREFIX, dir: PRODUCT_IMAGES_DIR },
+      ]);
+      await copyProductImages(APP_MEDIA_DIRS, files);
+      const fromPdf = files.filter((f) => f.to.startsWith(`${BRAND_PDF_MEDIA_SUBDIR}/`)).length;
+      console.log(
+        `${files.length} product images linked and copied to the apps' public/media ` +
+          `(${fromPdf} from brand PDFs, ${files.length - fromPdf} from workbooks)`,
+      );
     }
     console.table(
       totals.map((t) => ({
