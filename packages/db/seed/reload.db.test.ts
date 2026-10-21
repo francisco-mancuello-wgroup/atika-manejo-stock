@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { createPrismaClient, type Prisma } from "../src/index";
 import type { ParsedLot } from "./excel/parse";
-import type { ImagePlan } from "./images/seed-images";
+import { type ImagePlan, mergeImagePlans } from "./images/seed-images";
 import { importLot } from "./reload";
 
 const hasDatabase = Boolean(process.env.DATABASE_URL);
@@ -67,6 +67,39 @@ const images: ImagePlan = {
 describe.skipIf(!hasDatabase)("importLot images (database)", () => {
   afterAll(async () => {
     await client?.$disconnect();
+  });
+
+  it("stores the brand PDF photo as the cover and workbook photos only where there is none", async () => {
+    const pdf: ImagePlan = {
+      get: (lotName, index) =>
+        lotName === lot.lotName && index === 0
+          ? [{ url: "/media/products/brand-pdf/test/a.webp", alt: "With photos", position: 0 }]
+          : [],
+    };
+    const workbook: ImagePlan = {
+      get: (lotName, index) =>
+        lotName !== lot.lotName
+          ? []
+          : [
+              { url: `/media/products/test/wb-${index}.webp`, alt: "workbook", position: 0 },
+              { url: `/media/products/test/wb-${index}-2.webp`, alt: "workbook", position: 1 },
+            ],
+    };
+    await withRollback(async (tx) => {
+      await importLot(tx, lot, mergeImagePlans(pdf, workbook));
+      const products = await tx.product.findMany({
+        where: { lot: { name: lot.lotName } },
+        orderBy: { createdAt: "asc" },
+        include: { images: { orderBy: { position: "asc" } } },
+      });
+      expect(products[0]?.images.map((i) => [i.position, i.url])).toEqual([
+        [0, "/media/products/brand-pdf/test/a.webp"],
+      ]);
+      expect(products[1]?.images.map((i) => [i.position, i.url])).toEqual([
+        [0, "/media/products/test/wb-1.webp"],
+        [1, "/media/products/test/wb-1-2.webp"],
+      ]);
+    });
   });
 
   it("creates ProductImage rows for products with photos and none for the rest", async () => {

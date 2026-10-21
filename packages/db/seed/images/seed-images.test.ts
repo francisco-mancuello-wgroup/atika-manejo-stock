@@ -111,9 +111,9 @@ describe("files", () => {
     await mkdir(target, { recursive: true });
     await writeFile(join(target, "stale.webp"), "old");
 
-    const files = ["atika/top.webp"];
-    await copyProductImages(source, [target], files);
-    await copyProductImages(source, [target], files);
+    const files = [{ from: join(source, "atika", "top.webp"), to: "atika/top.webp" }];
+    await copyProductImages([target], files);
+    await copyProductImages([target], files);
 
     expect(await readdir(target)).toEqual(["atika"]);
     expect(await readFile(join(target, "atika", "top.webp"), "utf8")).toBe("bytes");

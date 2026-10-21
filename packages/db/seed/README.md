@@ -85,6 +85,39 @@ url `/media/products/<lot-slug>/<file>.webp`) and copies the files to `apps/cata
 and `apps/erp/public/media/products` (gitignored, emptied before each copy). Without a manifest the seed
 works as before.
 
+## Brand PDF photos
+
+`pnpm db:export-images-pdf` extracts the photos of the three brand PDFs (`atika.pdf` Casa Icona,
+`Atika-Catalogo-Aros.pdf` Sordo, `Atika_Milonga_Catalogo_Editorial.pdf`) into
+`data/product-images-new/<lot-slug>/<product>.webp` plus `manifest.json`. Set `ATIKA_PDF_DIR` (folder
+with the PDFs) and `ATIKA_EXCEL_DIR` in the root `.env`. It needs poppler (`pdftohtml`) installed.
+The folder is emptied first, so re-running gives byte-identical output.
+
+```
+images-pdf/layout.ts       parses `pdftohtml -xml` (page text with positions, images)
+images-pdf/captions.ts     reads product captions per PDF style (numbered looks, sections, none)
+images-pdf/pair.ts         photo vs logo filter; pairs photos and captions top to bottom
+images-pdf/normalize.ts    name normalization (case, accents, punctuation, trailing letter, colours)
+images-pdf/match-names.ts  caption -> product name matching (exact, alias, token-subset)
+images-pdf/plan.ts         pure plan: which photo goes to which product, plus the unmatched report
+images-pdf/export-pdf.ts   writes the WebP files and manifest (same product key as the workbook export)
+```
+
+Matching never guesses: a photo is attached only when its caption names exactly one product of the
+right lot (Casa Icona PDF -> Casa Icona, aros PDF -> Sordo products of the Átika lot). A product
+claimed by two captions, a caption matching two products, a page whose photo and caption counts differ,
+and any photo without a caption are all reported and left unassigned. Every manifest image records its
+`page`, `caption` and the `rule` that matched it. The Milonga editorial has no product names (pages
+only carry section titles such as "Vestidos"), so none of its photos can be matched.
+
+The aros PDF states "Imágenes recreadas digitalmente" on every page: its photos are digitally
+recreated, not photographs of the pieces. They are marked `recreated: true` in the manifest.
+
+Seed precedence: a product with a brand PDF photo gets only the PDF photos (position 0 = cover);
+products without one keep their workbook photos. The two are not mixed because the workbook photos
+are small thumbnails (Casa Icona 60-130 px) and would only add a blurry look next to the real one.
+PDF files are served from `/media/products/brand-pdf/...`; only the files in use are copied.
+
 ## Settings rows
 
 `CatalogSettings` is reset on every seed. `AppSettings` (exchange rate 7400, sale factor 2.5, IVA 0.10,

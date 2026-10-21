@@ -12,3 +12,6 @@ export const APP_MEDIA_DIRS = ["catalog", "erp"].map((app) =>
 
 /** Public URL prefix of the copied files. */
 export const MEDIA_URL_PREFIX = "/media/products";
+
+/** Folder under the media root for the brand PDF photos, so they never collide with workbook files. */
+export const BRAND_PDF_MEDIA_SUBDIR = "brand-pdf";
