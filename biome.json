@@ -10,6 +10,7 @@
       "**",
       "!**/.atl",
       "!data/product-images",
+      "!data/product-images-new",
       "!**/prisma/migrations",
       "!pnpm-lock.yaml",
       "!pnpm-workspace.yaml"
