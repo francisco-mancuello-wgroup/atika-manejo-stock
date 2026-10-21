@@ -1,6 +1,6 @@
 import "@atika/ui/globals.css";
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Bodoni_Moda, Jost } from "next/font/google";
 import type { ReactNode } from "react";
 import { Topbar } from "../components/topbar";
 import { getDb } from "../lib/db";
@@ -19,12 +19,8 @@ async function loadWhatsappNumber(): Promise<string> {
   }
 }
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-cormorant",
-});
+const jost = Jost({ subsets: ["latin"], variable: "--font-jost" });
+const bodoni = Bodoni_Moda({ subsets: ["latin"], variable: "--font-bodoni" });
 
 export const metadata: Metadata = {
   title: "atika · Prendas seleccionadas",
@@ -33,7 +29,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${cormorant.variable}`}>
+    <html lang="es" className={`${jost.variable} ${bodoni.variable}`}>
       <body className="min-h-screen">
         <Topbar whatsappNumber={await loadWhatsappNumber()} />
         <main>{children}</main>
