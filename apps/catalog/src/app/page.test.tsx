@@ -1,5 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import type { CatalogProduct, CatalogSettingsView } from "../lib/catalog-view";
+import type {
+  CatalogProduct,
+  CatalogProductDetail,
+  CatalogSettingsView,
+} from "../lib/catalog-view";
 import HomePage, { dynamic } from "./page";
 
 const settings: CatalogSettingsView = {
@@ -25,6 +29,15 @@ const products: CatalogProduct[] = [
 ];
 
 const listProducts = vi.fn(async (..._args: unknown[]): Promise<CatalogProduct[]> => products);
+const detail = {
+  ...products[0],
+  color: null,
+  description: "Lino fresco",
+  images: [],
+} as CatalogProductDetail;
+const getProductDetail = vi.fn(
+  async (..._args: unknown[]): Promise<CatalogProductDetail | null> => detail,
+);
 const countProductsByCategory = vi.fn(async (..._args: unknown[]) => ({
   novedades: 1,
   vestidos: 1,
@@ -32,10 +45,12 @@ const countProductsByCategory = vi.fn(async (..._args: unknown[]) => ({
   "faldas-y-shorts": 0,
   accesorios: 0,
 }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock("../lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("../lib/queries", () => ({
   getCatalogSettings: async () => settings,
   listProducts: (...args: unknown[]) => listProducts(...args),
+  getProductDetail: (...args: unknown[]) => getProductDetail(...args),
   countProductsByCategory: (...args: unknown[]) => countProductsByCategory(...args),
 }));
 
@@ -101,5 +116,33 @@ describe("Catalog home page", () => {
       "href",
       "/novedades",
     );
+  });
+
+  it("opens the detail sheet over the list when ?p= names a published product", async () => {
+    render(await HomePage({ searchParams: searchParams({ p: "1", talle: "M" }) }));
+    expect(getProductDetail.mock.calls.at(-1)?.[2]).toBe("1");
+    const dialog = screen.getByRole("dialog", { name: "Vestido Lino" });
+    expect(dialog).toBeInTheDocument();
+    // Closing returns to the same list without p.
+    expect(screen.getAllByRole("link", { name: "Cerrar" })[0]).toHaveAttribute(
+      "href",
+      "/novedades?talle=M",
+    );
+    // The list is still rendered behind it, with its row highlighted.
+    expect(screen.getByRole("link", { name: "Vestido Lino" })).toBeInTheDocument();
+  });
+
+  it("ignores ?p= when the product is unknown or unpublished", async () => {
+    getProductDetail.mockResolvedValueOnce(null);
+    render(await HomePage({ searchParams: searchParams({ p: "nope" }) }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByText("Vestido Lino")).toBeInTheDocument();
+  });
+
+  it("does not look for a product when ?p= is absent", async () => {
+    getProductDetail.mockClear();
+    render(await HomePage({ searchParams: searchParams() }));
+    expect(getProductDetail).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
