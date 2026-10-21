@@ -64,10 +64,10 @@ Order: name, then product description, then Casa Icona look description; strong 
 ### Uncategorized (60)
 
 - Casa Icona (10): COSTA SOLEIL, COSTA BLACK, COSTA RAMBUTAN, COSTA VINO, COSTA BLANCO (look descriptions "Look corto"/"Prenda corta" name no garment); COSTA COCO (look "Blusa clara y short": conflict top + short, a set); ISSA NEGRO, ISSA BLANCO, NINA, ZAMBA PITAYA (no look in the index names them).
-- Milonga (46): Cardigan A x16 and Poncho A x2 (outerwear, no category); abbreviations never guessed: T BSC M A x6, S PANTA A x3, Bot Amar A x7, SALIDA S A x2 and SALIDA B A x1, ENTERO A x3, Triangulo A x5 (no garment word).
+- Milonga (41): Cardigan A x14 and Poncho A x2 (outerwear, no category); abbreviations never guessed: T BSC M A x4, S PANTA A x3, Bot Amar A x7, SALIDA S A x2 and SALIDA B A x1, ENTERO A x3, Triangulo A x5 (no garment word).
 - Átika (9 incl. non-garments): Poncho Marfil (outerwear), Begonia/Mimosa Wide Leg Pants (pants), Sabrina Triangle Bikini (swimwear), Sin nombre x5 (Zunilda Gutierrez x2, Casa Icona x2, Sordo).
 - Zunilda: all 17 categorized.
-- Candidate new categories for the user: abrigos (cardigan/poncho, 19 products), pantalones (2), trajes de baño (bikini + Triangulo?).
+- Candidate new categories for the user: abrigos (cardigan/poncho, 17 products), pantalones (2), trajes de baño (bikini + Triangulo?).
 
 ## Next step
 
