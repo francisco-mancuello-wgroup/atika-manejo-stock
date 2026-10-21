@@ -1,6 +1,6 @@
-import { CatalogoWebView } from "../../components/catalogo-web-view";
-import { parseCatalogFilters } from "../../lib/catalog/filters";
-import { getCatalogProducts, getCatalogSettings } from "../../lib/queries/catalog";
+import { CatalogoWebView } from "../../../components/catalogo-web-view";
+import { parseCatalogFilters } from "../../../lib/catalog/filters";
+import { getCatalogProducts, getCatalogSettings } from "../../../lib/queries/catalog";
 import {
   publishAllAction,
   saveCatalogSettingsAction,

@@ -1,15 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { type FormState, formValues } from "../../lib/action-state";
+import { type FormState, formValues } from "../../../lib/action-state";
 import {
   publishAllInStock,
   saveCatalogSettings,
   setProductCategory,
   setProductsVisibility,
   setProductVisibility,
-} from "../../lib/catalog/save";
-import { getDb } from "../../lib/db";
+} from "../../../lib/catalog/save";
+import { getDb } from "../../../lib/db";
 
 const FAILED = {
   status: "error",

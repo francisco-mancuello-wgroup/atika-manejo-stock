@@ -1,6 +1,6 @@
-import { PageHeader } from "../../components/page-header";
-import { SettingsForms } from "../../components/settings-forms";
-import { getAppSettings } from "../../lib/queries/settings";
+import { PageHeader } from "../../../components/page-header";
+import { SettingsForms } from "../../../components/settings-forms";
+import { getAppSettings } from "../../../lib/queries/settings";
 import { applyToAllLotsAction, saveSettingsAction } from "./actions";
 
 export const dynamic = "force-dynamic";

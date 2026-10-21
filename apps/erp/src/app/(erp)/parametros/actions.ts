@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { type FormState, formValues } from "../../lib/action-state";
-import { getDb } from "../../lib/db";
-import { applySettingsToAllLots, saveAppSettings } from "../../lib/settings/save";
+import { type FormState, formValues } from "../../../lib/action-state";
+import { getDb } from "../../../lib/db";
+import { applySettingsToAllLots, saveAppSettings } from "../../../lib/settings/save";
 
 /** The exchange rate shows in the sidebar of every page, so the whole layout is revalidated. */
 function revalidateEverything() {
