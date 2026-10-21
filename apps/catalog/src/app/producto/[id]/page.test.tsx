@@ -27,6 +27,7 @@ const product: CatalogProduct = {
   ],
   inStock: true,
   imageUrl: null,
+  detail: null,
   brand: null,
 };
 

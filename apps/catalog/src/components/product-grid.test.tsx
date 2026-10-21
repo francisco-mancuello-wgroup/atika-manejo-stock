@@ -10,6 +10,7 @@ const make = (id: string): CatalogProduct => ({
   sizes: [{ size: "M", available: true }],
   inStock: true,
   imageUrl: null,
+  detail: null,
   brand: null,
 });
 
