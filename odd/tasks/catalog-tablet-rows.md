@@ -51,7 +51,6 @@ The catalog is a 4-column grid designed for desktop; the store uses it mainly on
 Resolved TDD: strict, Vitest + Testing Library (`apps/catalog`, `npx vitest run`).
 
 RED observed before each implementation:
-
 - T1: `catalog-filters.test.ts` failed to import; 12 tests failed across `catalog-filters`, `catalog-view` (detail line, sheet detail, key lists) and `queries.db` (filters, counts, `getProductDetail` "is not a function"). GREEN: 43 tests in `src/lib` (DB-backed tests run in rolled-back transactions).
 - T2: `catalog-layout.test.tsx` failed to import; 6 topbar tests failed (nav still present, no search box); 7 page tests failed (no rail, filters not forwarded, no empty-state link). GREEN: 96 catalog tests.
 - T3: `product-rows.test.tsx` failed to import. GREEN: 100 catalog tests.
@@ -62,7 +61,6 @@ Final checks (repo root): `pnpm exec biome check apps packages` clean; `pnpm typ
 Manual checks against the local database (113 published products, 40 given temporary categories and restored to none afterwards): `?talle=S`, `?talle=XL` (empty state), `?q=aros`, `?q=zzzz`, `?orden=precio-asc`, `/tops?talle=S&orden=precio-desc`, invalid `talle`/`orden` (fall back to no filter), unknown `?p=` (no sheet), `/producto/[id]` (still renders).
 
 Screenshots (headless Chrome, reviewed against `odd/specs/catalog-tablet-c.md`):
-
 - 1180x820: topbar with centered search and WhatsApp button; 220px rail with category counts, size grid and note; Cormorant title with count and sort control; rows with offset photo, eyebrow, name, size chips, price + "IVA incluido" column and 56px green WhatsApp button. With `?p=`: scrim and 480px sheet from the right with thumbnails, photo, name, price, size buttons, description and full-width WhatsApp button.
 - 820x1180: search icon button, category tabs, title with count and sort, size chip row ("Todos" first), compact rows with name and price on one line and a "Consultar" button; sheet 560px max.
 - 390x844: same as portrait with tighter padding and horizontally scrollable tabs and chips; sheet full width.
