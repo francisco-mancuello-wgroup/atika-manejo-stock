@@ -31,27 +31,27 @@ export interface Manifest {
   lots: ManifestLot[];
 }
 
-type Raw = Record<string, unknown>;
+export type Raw = Record<string, unknown>;
 
-function record(value: unknown, what: string): Raw {
+export function record(value: unknown, what: string): Raw {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`Invalid manifest: ${what} must be an object`);
   }
   return value as Raw;
 }
 
-function list(value: unknown, what: string): unknown[] {
+export function list(value: unknown, what: string): unknown[] {
   if (!Array.isArray(value)) throw new Error(`Invalid manifest: ${what} must be a list`);
   return value;
 }
 
-function str(raw: Raw, key: string): string {
+export function str(raw: Raw, key: string): string {
   const value = raw[key];
   if (typeof value !== "string") throw new Error(`Invalid manifest: ${key} must be a string`);
   return value;
 }
 
-function int(raw: Raw, key: string): number {
+export function int(raw: Raw, key: string): number {
   const value = raw[key];
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
     throw new Error(`Invalid manifest: ${key} must be a non-negative integer`);
