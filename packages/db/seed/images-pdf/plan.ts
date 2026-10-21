@@ -57,6 +57,8 @@ export interface UnmatchedPdfImage {
   src: string;
   caption: string | null;
   reason: UnmatchedReason;
+  /** Where the export saves this photo: `sin-asignar/<pdf-slug>/p<NN>-<caption>[-n].webp`. */
+  file: string;
 }
 
 export interface PdfLotPlan {
@@ -68,6 +70,24 @@ export interface PdfLotPlan {
   captionsWithoutImage: { page: number; caption: string }[];
   productsWithoutImage: { productIndex: number; name: string }[];
   stats: { imagesFound: number; logosSkipped: number; matched: number; unmatched: number };
+}
+
+export const UNASSIGNED_DIR = "sin-asignar";
+
+/** Deterministic names for the photos that match no product, in the order given. */
+function unassignedFileNames(
+  pdf: string,
+  items: readonly { page: number; caption: string | null }[],
+): string[] {
+  const pdfSlug = slugify(pdf.replace(/\.pdf$/i, ""));
+  const used = new Map<string, number>();
+  return items.map(({ page, caption }) => {
+    const text = caption ? slugify(caption) : "sin-texto";
+    const stem = `p${String(page).padStart(2, "0")}-${text}`;
+    const count = (used.get(stem) ?? 0) + 1;
+    used.set(stem, count);
+    return `${UNASSIGNED_DIR}/${pdfSlug}/${count === 1 ? stem : `${stem}-${count}`}.webp`;
+  });
 }
 
 interface Paired {
@@ -94,7 +114,7 @@ export function planPdfLot(
   );
 
   const paired: Paired[] = [];
-  const unmatchedImages: UnmatchedPdfImage[] = [];
+  const unmatchedImages: Omit<UnmatchedPdfImage, "file">[] = [];
   const captionsWithoutImage: { page: number; caption: string }[] = [];
   let imagesFound = 0;
   let logosSkipped = 0;
@@ -171,12 +191,17 @@ export function planPdfLot(
   }
 
   unmatchedImages.sort((a, b) => a.page - b.page);
+  const unassignedFiles = unassignedFileNames(source.pdf, unmatchedImages);
+  const unassigned = unmatchedImages.map((image, index) => ({
+    ...image,
+    file: unassignedFiles[index] as string,
+  }));
   return {
     lot: source.lotName,
     slug,
     pdf: source.pdf,
     entries,
-    unmatchedImages,
+    unmatchedImages: unassigned,
     captionsWithoutImage,
     productsWithoutImage: candidates
       .filter((c) => !perProduct.has(c.productIndex))
@@ -185,7 +210,7 @@ export function planPdfLot(
       imagesFound,
       logosSkipped,
       matched: entries.length,
-      unmatched: unmatchedImages.length,
+      unmatched: unassigned.length,
     },
   };
 }

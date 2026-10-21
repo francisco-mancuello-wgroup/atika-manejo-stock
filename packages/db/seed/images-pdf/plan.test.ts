@@ -61,8 +61,20 @@ describe("planPdfLot", () => {
   it("reports photos without a product and products without a photo, never guessing", () => {
     const plan = planPdfLot(source, products, pages);
     expect(plan.unmatchedImages).toEqual([
-      { page: 1, src: "cover.jpg", caption: null, reason: "no-caption" },
-      { page: 5, src: "c.jpg", caption: "Vestido largo bicolor", reason: "no-product" },
+      {
+        page: 1,
+        src: "cover.jpg",
+        caption: null,
+        reason: "no-caption",
+        file: "sin-asignar/atika/p01-sin-texto.webp",
+      },
+      {
+        page: 5,
+        src: "c.jpg",
+        caption: "Vestido largo bicolor",
+        reason: "no-product",
+        file: "sin-asignar/atika/p05-vestido-largo-bicolor.webp",
+      },
     ]);
     expect(plan.productsWithoutImage).toEqual([{ productIndex: 2, name: "NINA" }]);
     expect(plan.stats).toEqual({ imagesFound: 4, logosSkipped: 3, matched: 2, unmatched: 2 });
@@ -136,11 +148,36 @@ describe("planPdfLot", () => {
     const plan = planPdfLot(aros, arosProducts, [arosPage([photo("one.jpg", 162, 54)])]);
     expect(plan.entries).toEqual([]);
     expect(plan.unmatchedImages).toEqual([
-      { page: 2, src: "one.jpg", caption: null, reason: "count-mismatch" },
+      {
+        page: 2,
+        src: "one.jpg",
+        caption: null,
+        reason: "count-mismatch",
+        file: "sin-asignar/aros/p02-sin-texto.webp",
+      },
     ]);
     expect(plan.captionsWithoutImage).toEqual([
       { page: 2, caption: "Aros Oriente" },
       { page: 2, caption: "Aros Puerto" },
+    ]);
+  });
+
+  it("names unassigned photos by pdf, page and caption, numbering duplicates", () => {
+    const named = {
+      pdf: "Atika-Catalogo-Aros.pdf",
+      lotName: "Átika",
+      captions: "none",
+    } as const;
+    const page = (n: number, srcs: string[]): PdfPageInput => ({
+      layout: { page: n, texts: [], images: [] },
+      photos: srcs.map((src) => photo(src)),
+      logosSkipped: 0,
+    });
+    const plan = planPdfLot(named, [], [page(12, ["a.jpg", "b.jpg"]), page(3, ["c.jpg"])]);
+    expect(plan.unmatchedImages.map((u) => [u.src, u.file])).toEqual([
+      ["c.jpg", "sin-asignar/atika-catalogo-aros/p03-sin-texto.webp"],
+      ["a.jpg", "sin-asignar/atika-catalogo-aros/p12-sin-texto.webp"],
+      ["b.jpg", "sin-asignar/atika-catalogo-aros/p12-sin-texto-2.webp"],
     ]);
   });
 });
