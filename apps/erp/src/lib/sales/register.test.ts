@@ -19,7 +19,9 @@ const input = {
   notes: undefined,
 };
 
-function fakeTx(options: { variant?: object | null; updated?: number }) {
+const NOW = new Date("2026-10-21T15:00:00.000Z");
+
+function fakeTx(options: { variant?: object | null; updated?: number; discounts?: object[] }) {
   const variant =
     options.variant === undefined
       ? { id: "v1", stock: 3, product: { priceGs: 500_000, lotId: "lot-1" } }
@@ -29,6 +31,7 @@ function fakeTx(options: { variant?: object | null; updated?: number }) {
   const tx = {
     productVariant: { findUnique: vi.fn(async () => variant), updateMany },
     sale: { create },
+    discount: { findMany: vi.fn(async () => options.discounts ?? []) },
   } as unknown as SaleTx;
   return { tx, updateMany, create };
 }
@@ -44,6 +47,43 @@ describe("registerSale (stock guard)", () => {
     });
     expect(create).toHaveBeenCalledWith({
       data: expect.objectContaining({ variantId: "v1", quantity: 2, listPriceGs: 500_000 }),
+    });
+  });
+
+  it("records the discounted price as the list price when a discount applies", async () => {
+    const discounts = [
+      { percent: 10, isActive: true, startsAt: null, endsAt: null, scope: "all", products: [] },
+      {
+        percent: 20,
+        isActive: true,
+        startsAt: null,
+        endsAt: null,
+        scope: "selected",
+        products: [{ productId: input.productId }],
+      },
+    ];
+    const { tx, create } = fakeTx({ discounts });
+    await registerSale(tx, input, NOW);
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ listPriceGs: 400_000 }),
+    });
+  });
+
+  it("ignores discounts outside their window", async () => {
+    const discounts = [
+      {
+        percent: 50,
+        isActive: true,
+        startsAt: null,
+        endsAt: new Date("2026-10-20T00:00:00.000Z"),
+        scope: "all",
+        products: [],
+      },
+    ];
+    const { tx, create } = fakeTx({ discounts });
+    await registerSale(tx, input, NOW);
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ listPriceGs: 500_000 }),
     });
   });
 
@@ -73,6 +113,7 @@ describe.skipIf(!hasDatabase)("registerSale (database)", () => {
   afterAll(disconnectTestDb);
 
   async function fixture(tx: Prisma.TransactionClient, stock: number) {
+    await tx.discount.deleteMany();
     const { products } = await createFixtureLot(tx, [
       { name: "Sale test", originalValueUsd: 50, priceGs: 320_000, variants: [["M", 5, stock]] },
     ]);
@@ -92,6 +133,26 @@ describe.skipIf(!hasDatabase)("registerSale (database)", () => {
       const sale = await tx.sale.findFirstOrThrow({ where: { variantId: variant.id } });
       expect(sale).toMatchObject({ quantity: 2, listPriceGs: 320_000, chargedGs: null });
       expect(sale.soldAt.toISOString()).toBe("2026-10-21T00:00:00.000Z");
+    });
+  });
+
+  it("sells at the discounted price when the product has a discount", async () => {
+    await withRollback(async (tx) => {
+      const product = await fixture(tx, 3);
+      await tx.discount.create({
+        data: {
+          name: "Test",
+          percent: 20,
+          scope: "selected",
+          products: { create: [{ productId: product.id }] },
+        },
+      });
+      await registerSale(tx, { ...input, productId: product.id, quantity: 1 });
+      const variant = await tx.productVariant.findFirstOrThrow({
+        where: { productId: product.id },
+      });
+      const sale = await tx.sale.findFirstOrThrow({ where: { variantId: variant.id } });
+      expect(sale.listPriceGs).toBe(256_000);
     });
   });
 

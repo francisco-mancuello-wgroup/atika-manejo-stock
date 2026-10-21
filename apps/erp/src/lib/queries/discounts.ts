@@ -93,7 +93,9 @@ export async function getPickerProducts(db: Reader): Promise<PickerProduct[]> {
 }
 
 /** Active discounts as pricing rules; the date window is judged by `effectiveDiscount`. */
-export async function getActiveDiscountRules(db: Reader): Promise<DiscountRule[]> {
+export async function getActiveDiscountRules(
+  db: Pick<Reader, "discount">,
+): Promise<DiscountRule[]> {
   const rows = await db.discount.findMany({
     where: { isActive: true },
     include: { products: { select: { productId: true } } },

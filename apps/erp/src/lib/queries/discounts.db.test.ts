@@ -6,6 +6,7 @@ import {
   getDiscountList,
   getPickerProducts,
 } from "./discounts";
+import { getSellableProducts } from "./sales";
 
 describe.skipIf(!hasDatabase)("discount queries (database)", () => {
   afterAll(disconnectTestDb);
@@ -133,6 +134,37 @@ describe.skipIf(!hasDatabase)("discount queries (database)", () => {
         productIds: [products[0]?.id],
       });
       expect(on.id).toBeTruthy();
+    });
+  });
+
+  it("suggests the discounted price for the sale form", async () => {
+    await withRollback(async (tx) => {
+      await tx.discount.deleteMany();
+      const { products } = await createFixtureLot(tx, [
+        { name: "Con", originalValueUsd: 10, priceGs: 259_000, variants: [["M", 1, 1]] },
+        { name: "Sin", originalValueUsd: 10, priceGs: 259_000, variants: [["M", 1, 1]] },
+      ]);
+      await tx.discount.create({
+        data: {
+          name: "Solo uno",
+          percent: 20,
+          scope: "selected",
+          products: { create: [{ productId: products[0]?.id ?? "" }] },
+        },
+      });
+      const sellable = await getSellableProducts(tx);
+      const con = sellable.find((p) => p.id === products[0]?.id);
+      const sin = sellable.find((p) => p.id === products[1]?.id);
+      expect(con).toMatchObject({
+        priceGs: 259_000,
+        discountPercent: 20,
+        discountedPriceGs: 207_000,
+      });
+      expect(sin).toMatchObject({
+        priceGs: 259_000,
+        discountPercent: null,
+        discountedPriceGs: null,
+      });
     });
   });
 });
