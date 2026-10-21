@@ -15,6 +15,13 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toHaveClass("bg-accent", "text-surface");
   });
 
+  it("uses square corners", () => {
+    render(<Button>Cuadrado</Button>);
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("rounded-none");
+    expect(button).not.toHaveClass("rounded-md");
+  });
+
   it("applies the whatsapp variant", () => {
     render(<Button variant="whatsapp">Escribinos</Button>);
     expect(screen.getByRole("button")).toHaveClass("bg-wa");

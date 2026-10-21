@@ -17,6 +17,13 @@ describe("Input", () => {
     expect(screen.getByLabelText("Clave")).toHaveAttribute("type", "password");
   });
 
+  it("uses square corners", () => {
+    render(<Input aria-label="x" />);
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveClass("rounded-none");
+    expect(input).not.toHaveClass("rounded-md");
+  });
+
   it("merges custom classes with the base style", () => {
     render(<Input aria-label="x" className="h-12" />);
     const input = screen.getByRole("textbox");

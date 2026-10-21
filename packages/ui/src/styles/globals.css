@@ -6,21 +6,22 @@
 
 /* Design tokens taken from atika.pen. Utilities: bg-bg, text-ink, border-line, ... */
 @theme {
-  --color-bg: #fafaf8;
-  --color-surface: #ffffff;
-  --color-line: #e7e5e0;
-  --color-ink: #1c1b19;
-  --color-muted: #77736b;
-  --color-subtle: #f2f1ed;
-  --color-accent: #1c1b19;
-  --color-warn: #b4541a;
-  --color-warnbg: #fbefe6;
-  --color-ok: #3d6b4a;
-  --color-wa: #1f7a4d;
+  --color-bg: #f4f1ec;
+  --color-surface: #faf8f4;
+  --color-line: #d6cfc3;
+  --color-ink: #141311;
+  --color-muted: #6a645b;
+  --color-subtle: #ebe6dd;
+  --color-sand: #d8c9b0;
+  --color-accent: #141311;
+  --color-warn: #9a4a1e;
+  --color-warnbg: #efe0ce;
+  --color-ok: #4a6b4f;
+  --color-wa: #2f6b4a;
 
-  /* Apps set --font-inter / --font-fraunces via next/font/google. */
+  /* Apps set --font-inter / --font-cormorant via next/font/google. */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-display: var(--font-cormorant), ui-serif, Georgia, serif;
 }
 
 @layer base {

@@ -2,9 +2,10 @@ import { render, screen, within } from "@testing-library/react";
 import { Topbar } from "./topbar";
 
 describe("Topbar", () => {
-  it("renders the atika logo", () => {
+  it("renders the átika logo with the CASA ICONA eyebrow", () => {
     render(<Topbar />);
-    expect(screen.getByText("atika")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "átika" })).toBeInTheDocument();
+    expect(screen.getByText("CASA ICONA")).toBeInTheDocument();
   });
 
   it("lists the catalog categories in order", () => {
@@ -20,6 +21,6 @@ describe("Topbar", () => {
     render(<Topbar />);
     const link = screen.getByRole("link", { name: "Escribinos" });
     expect(link).toHaveAttribute("href", expect.stringContaining("https://wa.me/"));
-    expect(link).toHaveClass("bg-wa");
+    expect(link).toHaveClass("bg-wa", "rounded-none");
   });
 });
