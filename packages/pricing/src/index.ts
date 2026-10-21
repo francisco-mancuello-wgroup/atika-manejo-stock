@@ -90,3 +90,4 @@ export function priceLot(params: LotPricingParams, models: readonly LotModel[]):
     };
   });
 }
+export { applyDiscount, type DiscountRule, effectiveDiscount } from "./discount";
