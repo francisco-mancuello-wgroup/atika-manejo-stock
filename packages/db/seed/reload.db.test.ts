@@ -1,5 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { createPrismaClient, type Prisma } from "../src/index";
+import { type ChoicePlan, productKeys } from "./categories/choices";
+import { readPreserved } from "./categories/preserve";
 import type { ParsedLot } from "./excel/parse";
 import { type ImagePlan, mergeImagePlans } from "./images/seed-images";
 import { importLot } from "./reload";
@@ -115,6 +117,42 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
         [0, "/media/products/test/a.webp", "With photos"],
         [1, "/media/products/test/a-2.webp", "With photos"],
       ]);
+    });
+  });
+
+  it("stores the publication state and category chosen for each product", async () => {
+    const choices: ChoicePlan = {
+      get: (_lotName, index) =>
+        index === 0
+          ? { isPublished: true, category: "vestidos", reason: "test" }
+          : { isPublished: false, category: null, reason: "test" },
+    };
+    await withRollback(async (tx) => {
+      await importLot(tx, lot, images, choices);
+      const products = await tx.product.findMany({
+        where: { lot: { name: lot.lotName } },
+        orderBy: { id: "asc" },
+      });
+      expect(products.map((p) => [p.isPublished, p.category])).toEqual([
+        [true, "vestidos"],
+        [false, null],
+      ]);
+    });
+  });
+
+  it("reads publication and category back by lot, name, code and position before a reload", async () => {
+    await withRollback(async (tx) => {
+      await importLot(tx, lot, images, {
+        get: (_lotName, index) => ({
+          isPublished: index === 1,
+          category: index === 0 ? "tops" : null,
+          reason: "test",
+        }),
+      });
+      const preserved = await readPreserved(tx);
+      const keys = productKeys(lot.lotName, lot.products);
+      expect(preserved.get(keys[0] ?? "")).toEqual({ isPublished: false, category: "tops" });
+      expect(preserved.get(keys[1] ?? "")).toEqual({ isPublished: true, category: null });
     });
   });
 });

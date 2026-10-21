@@ -11,6 +11,7 @@ excel/parse.ts    pure workbook -> lot normalization (tested with in-memory work
 excel/load.ts     reads the workbooks from disk and holds per-lot facts the files do not carry
 reload.ts         per-lot import (suppliers, lots, products, variants, images, sales) and the table reset
 seed.ts           transactional reload plus catalog settings, app settings, admin and the photo copy
+categories/       category inference, Casa Icona look index and re-seed preservation (see "Categories")
 images/           workbook photo export (`pnpm db:export-images`) and its seed side (see "Product photos")
 password.ts       scrypt hashing helper (shared with the ERP login)
 ```
@@ -132,3 +133,29 @@ cost 1.0, stored as fractions) is only created when missing, so values edited in
 
 `.env` at the repository root (see `.env.example`): `DATABASE_URL`, `ATIKA_EXCEL_DIR`, `ADMIN_EMAIL`,
 `ADMIN_PASSWORD`.
+
+## Categories
+
+`categories/infer.ts` assigns a catalog category from the product name, then its description, then the
+brand's look description. Whole words only, case and accents ignored, Spanish and English.
+
+| Category         | Words                                                                         |
+| ---------------- | ----------------------------------------------------------------------------- |
+| vestidos         | vestido, dress, minidress; only when nothing stronger is present: maxi, midi  |
+| tops             | top, blusa, camisa, shirt, crop, remera                                       |
+| faldas-y-shorts  | falda, pollera, skirt, short(s)                                               |
+| accesorios       | aros, earcuff, collar, pulsera, anillo, cartera, bolso, bag, cinturon         |
+| (none, reported) | pants/pantalon/jean, cardigan/poncho/abrigo/campera/saco/blazer, bikini/malla |
+
+Never guessed: no keyword, two categories at once ("blusa y short") and abbreviations ("T BSC M",
+"S PANTA", "Bot", "SALIDA", "ENTERO") leave the product uncategorized with a reason. The seed prints the
+count per category and the list of products without one.
+
+Casa Icona names are not descriptive (COSTA VINO, NINA). `data/catalog-categories/casa-icona-looks.json`
+holds the look index of `atika.pdf` (number, name, one-line description), produced by
+`ATIKA_PDF_DIR=... pnpm db:export-looks`. The seed matches products to looks with the PDF photo name
+rules and infers from the look description, so it does not need the PDF. PDF text is data only.
+
+Re-seeding keeps what the admin set: `isPublished` and a non-null `category` are read before the delete and
+restored by lot + name + code + position among identical products. A preserved category wins over
+inference; a product never seen before is hidden.
