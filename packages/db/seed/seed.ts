@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
 import { createPrismaClient } from "../src/index";
+import { hashPassword } from "../src/password";
 import { buildReport, type CategoryReport, formatReport, planChoices } from "./categories/choices";
 import { type Look, readLooks } from "./categories/looks";
 import { CASA_ICONA_LOOKS_FILE } from "./categories/paths";
@@ -24,7 +25,6 @@ import {
   readPdfManifest,
 } from "./images/seed-images";
 import { PRODUCT_IMAGES_NEW_DIR } from "./images-pdf/paths";
-import { hashPassword } from "./password";
 import { clearImported, importLot, type LotTotals } from "./reload";
 
 config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)), quiet: true });
