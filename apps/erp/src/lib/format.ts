@@ -12,13 +12,13 @@ export function formatInteger(value: number): string {
 export function formatGs(value: number): string {
   const rounded = Math.round(value);
   const sign = rounded < 0 ? "-" : "";
-  return `${sign}₲ ${INTEGER.format(Math.abs(rounded))}`;
+  return `${sign}₲\u00a0${INTEGER.format(Math.abs(rounded))}`;
 }
 
-/** US dollars: `US$ 123,74`. */
+/** US dollars: `US$ 123,74` (non-breaking space so tables never split symbol and amount). */
 export function formatUsd(value: number): string {
   const sign = value < 0 ? "-" : "";
-  return `${sign}US$ ${DECIMAL_2.format(Math.abs(value))}`;
+  return `${sign}US$\u00a0${DECIMAL_2.format(Math.abs(value))}`;
 }
 
 /** ISO `yyyy-mm-dd` to `dd/mm/yyyy`. */
