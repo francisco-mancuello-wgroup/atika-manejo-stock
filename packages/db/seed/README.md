@@ -13,7 +13,7 @@ reload.ts         per-lot import (suppliers, lots, products, variants, images, s
 seed.ts           transactional reload plus catalog settings, app settings, admin and the photo copy
 categories/       category inference, Casa Icona look index and re-seed preservation (see "Categories")
 images/           workbook photo export (`pnpm db:export-images`) and its seed side (see "Product photos")
-password.ts       scrypt hashing helper (shared with the ERP login)
+../src/password.ts  scrypt hashing helper (`@atika/db/password`, shared with the ERP login)
 ```
 
 ## How the parser reads a workbook
