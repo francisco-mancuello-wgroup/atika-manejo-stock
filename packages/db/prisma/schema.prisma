@@ -53,8 +53,6 @@ model Product {
   originalValueUsd Decimal          @db.Decimal(12, 2)
   /// Recalculated from lot parameters on save; read by the catalog.
   priceGs          Int
-  /// Final sale price set by the owner (IVA included); replaces the lot formula when set.
-  salePriceUsd     Decimal?         @db.Decimal(12, 2)
   isPublished      Boolean          @default(false)
   /// Lookbook placement: only pieces of a catalog are shown, in PDF page order.
   catalog          Catalog?

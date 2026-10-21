@@ -27,3 +27,7 @@ Branch: `feat/lookbook` (repo copy `francisco-mancuello-wgroup/atika-manejo-stoc
 - L4 (2026-10-21) — "levantemos primero luego vemos la ui"; "tambien subir en vercel"; "levantar la base dedatos del repo mismo a supabase". Production deploy of the current catalog UI: Vercel `atika` connected to the user's copy (Hobby cannot deploy private org repos), root `apps/catalog`, build `pnpm --filter @atika/db db:generate && pnpm run build`, `prebuild` copies `data/` photos into `public/media/products` (`30118bb`); https://atika-event.vercel.app serves the catalog and photos from `atika-erp`. The ERP is not deployed: it has no login.
 - L5 (2026-10-21) — "este debemos trabajar https://github.com/JWFSA/atika-manejo-stock": the branch is pushed to JWFSA and reviewed there as a draft PR; the user's copy stays in sync for Vercel. Seed transaction now uses `maxWait: 30_000` (remote pooler). Milonga pieces without stock (ARTC07, ARTC08, ATL701, LUN701, RUS702) stay hidden.
 - Next: T4 (lookbook UI on `apps/catalog`), then ERP login before deploying the ERP.
+
+## Update 2026-10-21: fixed US$ price removed
+
+Prices always use the lot formula. `Product.salePriceUsd`, the "Precio de venta US$" field, the "US$ fijo" display and the seed handling were removed (migration `20261022010000_drop_sale_price_usd`); the Átika lot was recalculated so the Sordo pieces take formula prices.

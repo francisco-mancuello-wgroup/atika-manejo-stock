@@ -21,8 +21,6 @@ export interface CatalogProduct {
   catalogOrder: number | null;
   catalogSection: string | null;
   catalogName: string | null;
-  /** Owner's final price in US$ (IVA included); null = lot formula. */
-  salePriceUsd: number | null;
 }
 
 export interface CatalogSettingsView {
@@ -92,7 +90,6 @@ export async function getCatalogProducts(filters: CatalogFilters): Promise<Catal
     catalogOrder: product.catalogOrder,
     catalogSection: product.catalogSection,
     catalogName: product.catalogName,
-    salePriceUsd: product.salePriceUsd?.toNumber() ?? null,
   }));
 }
 

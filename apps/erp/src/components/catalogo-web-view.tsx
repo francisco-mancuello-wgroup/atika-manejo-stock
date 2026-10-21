@@ -7,7 +7,7 @@ import {
   catalogHref,
   LOOKBOOK_FILTERS,
 } from "../lib/catalog/filters";
-import { formatGs, formatUsd } from "../lib/format";
+import { formatGs } from "../lib/format";
 import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog";
 import { BulkVisibilitySwitch } from "./bulk-visibility-switch";
 import { CatalogSettingsForm } from "./catalog-settings-form";
@@ -65,7 +65,7 @@ export function CatalogoWebView({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Catálogo web"
-        description="Elegí qué prendas se ven en el catálogo público, en qué lookbook y página, y su precio de venta en US$. Los cambios se aplican al instante."
+        description="Elegí qué prendas se ven en el catálogo público, en qué lookbook y página. Los cambios se aplican al instante."
         actions={<PublishAllForm action={actions.publishAll} />}
       />
 
@@ -143,7 +143,7 @@ export function CatalogoWebView({
                 <th className={table.th}>Talles disponibles</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>
                 <th className={table.th}>Categoría</th>
-                <th className={table.th}>Lookbook y precio US$</th>
+                <th className={table.th}>Lookbook</th>
                 <th className={table.th}>
                   <div className="flex items-center gap-3">
                     Visible
@@ -173,16 +173,7 @@ export function CatalogoWebView({
                       <span className="bg-warnbg px-2 py-0.5 text-xs text-warn">Sin stock</span>
                     )}
                   </td>
-                  <td className={`${table.td} ${table.num}`}>
-                    <div className="flex flex-col items-end gap-0.5">
-                      {formatGs(product.priceGs)}
-                      {product.salePriceUsd !== null ? (
-                        <span className="text-xs text-muted">
-                          US$ fijo {formatUsd(product.salePriceUsd)}
-                        </span>
-                      ) : null}
-                    </div>
-                  </td>
+                  <td className={`${table.td} ${table.num}`}>{formatGs(product.priceGs)}</td>
                   <td className={table.td}>
                     <CategorySelect
                       productId={product.id}

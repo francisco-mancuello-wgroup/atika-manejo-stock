@@ -9,7 +9,7 @@ import { Field, FormMessage, Select } from "./form-controls";
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
-/** Per-product lookbook placement and owner's US$ sale price (blank = lot formula). */
+/** Per-product lookbook placement. */
 export function LookbookForm({ product, action }: { product: CatalogProduct; action: Action }) {
   const [state, formAction, pending] = useActionState(action, IDLE);
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
@@ -20,7 +20,6 @@ export function LookbookForm({ product, action }: { product: CatalogProduct; act
     catalogOrder: product.catalogOrder?.toString() ?? "",
     catalogSection: product.catalogSection ?? "",
     catalogName: product.catalogName ?? "",
-    salePriceUsd: product.salePriceUsd?.toString() ?? "",
   };
   const field = (name: keyof typeof initial) => ({
     id: id(name),
@@ -51,17 +50,9 @@ export function LookbookForm({ product, action }: { product: CatalogProduct; act
           <Input className="h-8" placeholder="Vestidos, Aros…" {...field("catalogSection")} />
         </Field>
       </div>
-      <div className="grid grid-cols-[1fr_9rem_auto] items-end gap-2">
+      <div className="grid grid-cols-[1fr_auto] items-end gap-2">
         <Field label="Nombre en el lookbook" htmlFor={id("catalogName")} error={errors.catalogName}>
           <Input className="h-8" placeholder={product.name} {...field("catalogName")} />
-        </Field>
-        <Field label="Precio de venta US$" htmlFor={id("salePriceUsd")} error={errors.salePriceUsd}>
-          <Input
-            className="h-8"
-            inputMode="decimal"
-            placeholder="Fórmula del lote"
-            {...field("salePriceUsd")}
-          />
         </Field>
         <Button
           type="submit"

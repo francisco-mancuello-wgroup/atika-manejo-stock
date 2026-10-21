@@ -56,10 +56,9 @@ describe("parseLookbook", () => {
     catalogOrder: "12",
     catalogSection: " Vestidos ",
     catalogName: " Vestido Lino ",
-    salePriceUsd: "440,5",
   };
 
-  it("parses the lookbook placement and the US$ sale price, trimming text", () => {
+  it("parses the lookbook placement, trimming text", () => {
     expect(parseLookbook(filled)).toEqual({
       success: true,
       data: {
@@ -67,18 +66,16 @@ describe("parseLookbook", () => {
         catalogOrder: 12,
         catalogSection: "Vestidos",
         catalogName: "Vestido Lino",
-        salePriceUsd: 440.5,
       },
     });
   });
 
-  it("stores blank or missing fields as null (not in the lookbook, formula price)", () => {
+  it("stores blank or missing fields as null (not in the lookbook)", () => {
     const empty = {
       catalog: "",
       catalogOrder: " ",
       catalogSection: "",
       catalogName: "  ",
-      salePriceUsd: "",
     };
     const expected = {
       success: true,
@@ -87,7 +84,6 @@ describe("parseLookbook", () => {
         catalogOrder: null,
         catalogSection: null,
         catalogName: null,
-        salePriceUsd: null,
       },
     };
     expect(parseLookbook(empty)).toEqual(expected);
@@ -109,17 +105,5 @@ describe("parseLookbook", () => {
       expect(result.success).toBe(false);
       if (!result.success) expect(Object.keys(result.fieldErrors)).toEqual(["catalogOrder"]);
     }
-  });
-
-  it("rejects a negative or non-numeric sale price and rounds to cents", () => {
-    for (const salePriceUsd of ["-1", "abc"]) {
-      const result = parseLookbook({ ...filled, salePriceUsd });
-      expect(result.success).toBe(false);
-      if (!result.success) expect(Object.keys(result.fieldErrors)).toEqual(["salePriceUsd"]);
-    }
-    const zero = parseLookbook({ ...filled, salePriceUsd: "0" });
-    expect(zero.success && zero.data.salePriceUsd).toBe(0);
-    const rounded = parseLookbook({ ...filled, salePriceUsd: "199.999" });
-    expect(rounded.success && rounded.data.salePriceUsd).toBe(200);
   });
 });

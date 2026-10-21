@@ -22,7 +22,6 @@ export interface LookbookPlacement {
   order: number;
   section: string;
   catalogName: string;
-  salePriceUsd: number | null;
   cover: string | null;
 }
 
@@ -51,10 +50,6 @@ function parsePlacement(value: unknown): LookbookPlacement {
   if (typeof order !== "number" || !Number.isInteger(order) || order < 1) {
     throw new Error("Invalid lookbook: order must be a positive integer");
   }
-  const price = raw.salePriceUsd;
-  if (price !== null && (typeof price !== "number" || !(price > 0))) {
-    throw new Error("Invalid lookbook: salePriceUsd must be a positive number or null");
-  }
   const cover = nullableStr(raw, "cover");
   if (cover !== null && !SAFE_COVER.test(cover)) {
     throw new Error(`Invalid lookbook: unsafe cover "${cover}"`);
@@ -67,7 +62,6 @@ function parsePlacement(value: unknown): LookbookPlacement {
     order,
     section: str(raw, "section"),
     catalogName: str(raw, "catalogName"),
-    salePriceUsd: price,
     cover,
   };
 }
@@ -167,7 +161,6 @@ export function planLookbook(lots: readonly ParsedLot[], data: LookbookData): Lo
           catalogOrder: placement.order,
           catalogSection: placement.section,
           catalogName: placement.catalogName,
-          salePriceUsd: placement.salePriceUsd,
         },
         cover: placement.cover,
       },

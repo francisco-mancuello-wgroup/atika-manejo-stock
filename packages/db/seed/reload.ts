@@ -64,7 +64,6 @@ export async function importLot(
       id: String(index),
       originalValueUsd: product.originalValueUsd,
       units: product.variants.reduce((sum, v) => sum + v.unitsBought, 0),
-      salePriceUsd: choices?.get(parsed.lotName, index).lookbook.salePriceUsd ?? null,
     })),
   );
 
