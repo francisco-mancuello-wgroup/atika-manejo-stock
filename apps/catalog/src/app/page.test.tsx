@@ -19,6 +19,7 @@ const products: CatalogProduct[] = [
     sizes: [{ size: "M", available: true }],
     inStock: true,
     imageUrl: null,
+    detail: null,
     brand: "Átika",
   },
 ];

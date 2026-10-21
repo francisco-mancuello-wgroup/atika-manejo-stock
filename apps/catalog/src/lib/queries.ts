@@ -1,6 +1,14 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@atika/db";
-import { type CatalogProduct, type CatalogSettingsView, toCatalogProduct } from "./catalog-view";
+import type { CatalogFilters } from "./catalog-filters";
+import {
+  type CatalogProduct,
+  type CatalogProductDetail,
+  type CatalogSettingsView,
+  toCatalogProduct,
+  toCatalogProductDetail,
+} from "./catalog-view";
+import { CATEGORIES } from "./categories";
 
 /** The slice of the Prisma client the catalog reads (a rolled back transaction works too). */
 export type CatalogDb = Pick<PrismaClient, "product" | "catalogSettings">;
@@ -14,9 +22,17 @@ const productSelect = {
   brand: true,
   lot: { select: { supplier: { select: { name: true } } } },
   category: true,
+  color: true,
+  description: true,
   priceGs: true,
   variants: { select: { size: true, stock: true } },
   images: { select: { url: true, position: true }, orderBy: { position: "asc" }, take: 1 },
+} satisfies Prisma.ProductSelect;
+
+/** The sheet needs every photo, in order. */
+const detailSelect = {
+  ...productSelect,
+  images: { select: { url: true, position: true }, orderBy: { position: "asc" } },
 } satisfies Prisma.ProductSelect;
 
 /** The settings that decide which products and sizes are shown. */
@@ -47,25 +63,73 @@ export async function getCatalogSettings(db: CatalogDb): Promise<CatalogSettings
   };
 }
 
-function visibleWhere(settings: VisibilitySettings): Prisma.ProductWhereInput {
-  return {
-    isPublished: true,
-    ...(settings.hideOutOfStock ? { variants: { some: { stock: { gt: 0 } } } } : {}),
-  };
+type ListFilters = Pick<CatalogFilters, "talle" | "q" | "orden">;
+
+const NO_FILTERS: ListFilters = { talle: null, q: null, orden: "recientes" };
+
+function visibleWhere(
+  settings: VisibilitySettings,
+  filters: Pick<ListFilters, "talle" | "q"> = NO_FILTERS,
+): Prisma.ProductWhereInput {
+  const and: Prisma.ProductWhereInput[] = [];
+  if (settings.hideOutOfStock) and.push({ variants: { some: { stock: { gt: 0 } } } });
+  // A size filter means "can be bought in that size".
+  if (filters.talle) {
+    and.push({ variants: { some: { size: filters.talle, stock: { gt: 0 } } } });
+  }
+  if (filters.q) {
+    const contains = { contains: filters.q, mode: "insensitive" as const };
+    and.push({
+      OR: [{ name: contains }, { brand: contains }, { lot: { supplier: { name: contains } } }],
+    });
+  }
+  return { isPublished: true, ...(and.length > 0 ? { AND: and } : {}) };
 }
 
-/** Published products, newest first. `category` null lists all of them ("novedades"). */
+function orderBy(settings: VisibilitySettings, orden: ListFilters["orden"]) {
+  const newest = [{ createdAt: "desc" as const }, { id: "desc" as const }];
+  // With hidden prices a price sort would leak the order, so it is ignored.
+  if (!settings.showPrices || orden === "recientes") return newest;
+  return [{ priceGs: orden === "precio-asc" ? ("asc" as const) : ("desc" as const) }, ...newest];
+}
+
+/** Published products. `category` null lists all of them ("novedades"). */
 export async function listProducts(
   db: CatalogDb,
   settings: VisibilitySettings,
   category: string | null,
+  filters: ListFilters = NO_FILTERS,
 ): Promise<CatalogProduct[]> {
   const rows = await db.product.findMany({
-    where: { ...visibleWhere(settings), ...(category ? { category } : {}) },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    where: { ...visibleWhere(settings, filters), ...(category ? { category } : {}) },
+    orderBy: orderBy(settings, filters.orden),
     select: productSelect,
   });
   return rows.map((row) => toCatalogProduct(row, settings));
+}
+
+/**
+ * Products per category slug for the rail, plus `novedades` (every visible product). Size and
+ * search filters apply, so the numbers match what each link would list.
+ */
+export async function countProductsByCategory(
+  db: CatalogDb,
+  settings: VisibilitySettings,
+  filters: Pick<ListFilters, "talle" | "q"> = NO_FILTERS,
+): Promise<Record<string, number>> {
+  const groups = await db.product.groupBy({
+    by: ["category"],
+    where: visibleWhere(settings, filters),
+    _count: { _all: true },
+  });
+  const counts: Record<string, number> = Object.fromEntries(
+    CATEGORIES.map((category) => [category.slug, 0]),
+  );
+  for (const group of groups) {
+    counts.novedades = (counts.novedades ?? 0) + group._count._all;
+    if (group.category && group.category in counts) counts[group.category] = group._count._all;
+  }
+  return counts;
 }
 
 /** One published product, or null (unknown id, unpublished, or hidden for lack of stock). */
@@ -80,4 +144,18 @@ export async function getProduct(
     select: productSelect,
   });
   return row ? toCatalogProduct(row, settings) : null;
+}
+
+/** Same visibility rules as `getProduct`, with every photo, color and description. */
+export async function getProductDetail(
+  db: CatalogDb,
+  settings: VisibilitySettings,
+  id: string,
+): Promise<CatalogProductDetail | null> {
+  if (!UUID.test(id)) return null;
+  const row = await db.product.findFirst({
+    where: { id, ...visibleWhere(settings) },
+    select: detailSelect,
+  });
+  return row ? toCatalogProductDetail(row, settings) : null;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toCatalogProduct } from "./catalog-view";
+import { toCatalogProduct, toCatalogProductDetail } from "./catalog-view";
 
 const row = {
   id: "p1",
@@ -34,7 +34,23 @@ describe("toCatalogProduct", () => {
       ],
       inStock: true,
       imageUrl: "/media/products/a.webp",
+      detail: null,
     });
+  });
+
+  it("builds the detail line from color and a clipped description", () => {
+    expect(toCatalogProduct({ ...row, color: "Verde", description: null }, open).detail).toBe(
+      "Verde",
+    );
+    expect(toCatalogProduct({ ...row, color: null, description: "Lino fresco" }, open).detail).toBe(
+      "Lino fresco",
+    );
+    expect(
+      toCatalogProduct({ ...row, color: "Verde", description: "Lino fresco" }, open).detail,
+    ).toBe("Verde · Lino fresco");
+    const long = toCatalogProduct({ ...row, color: null, description: "a".repeat(400) }, open);
+    expect(long.detail?.length).toBeLessThanOrEqual(140);
+    expect(toCatalogProduct({ ...row, color: " ", description: " " }, open).detail).toBeNull();
   });
 
   it("uses the cover (lowest position) as the image, or null without photos", () => {
@@ -85,6 +101,7 @@ describe("toCatalogProduct", () => {
     expect(Object.keys(product).sort()).toEqual([
       "brand",
       "category",
+      "detail",
       "id",
       "imageUrl",
       "inStock",
@@ -107,6 +124,49 @@ describe("toCatalogProduct", () => {
       "img-secret",
       "Alt secret",
     ]) {
+      expect(json).not.toContain(secret);
+    }
+  });
+
+  it("builds the sheet detail: ordered photos named after the product, color and description", () => {
+    const detail = toCatalogProductDetail(
+      { ...row, color: "Verde", description: "Lino fresco", images: [...row.images] },
+      { ...open, showSoldOutSizes: true },
+    );
+    expect(detail.images).toEqual([
+      { url: "/media/products/a.webp", alt: "Vestido Lino" },
+      { url: "/media/products/b.webp", alt: "Vestido Lino" },
+    ]);
+    expect(detail.color).toBe("Verde");
+    expect(detail.description).toBe("Lino fresco");
+    expect(detail.sizes.map((size) => size.size)).toEqual(["XS", "M", "L"]);
+  });
+
+  it("keeps the sheet detail free of costs, stock counts, lots and image internals", () => {
+    const wide = {
+      ...row,
+      images: [{ url: "/media/products/a.webp", position: 0, id: "img-secret", alt: "Alt secret" }],
+      variants: row.variants.map((v) => ({ ...v, unitsBought: 9 })),
+      originalValueUsd: 77.77,
+      lot: { name: "Secret lot", supplier: { name: "Casa Icona" } },
+    };
+    const detail = toCatalogProductDetail(wide, open);
+    expect(Object.keys(detail).sort()).toEqual([
+      "brand",
+      "category",
+      "color",
+      "description",
+      "detail",
+      "id",
+      "imageUrl",
+      "images",
+      "inStock",
+      "name",
+      "priceGs",
+      "sizes",
+    ]);
+    const json = JSON.stringify(detail);
+    for (const secret of ["77.77", "Secret", "unitsBought", "img-secret", "Alt secret"]) {
       expect(json).not.toContain(secret);
     }
   });

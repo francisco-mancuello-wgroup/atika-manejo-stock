@@ -13,6 +13,7 @@ const product: CatalogProduct = {
   ],
   inStock: true,
   imageUrl: null,
+  detail: null,
   brand: "Casa Icona",
 };
 

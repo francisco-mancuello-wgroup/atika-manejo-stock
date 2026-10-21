@@ -31,8 +31,18 @@ export interface CatalogProduct {
   sizes: CatalogSize[];
   /** At least one size is available. */
   inStock: boolean;
-  /** URL of the cover photo; the only thing the public site learns about product images. */
+  /** URL of the cover photo. */
   imageUrl: string | null;
+  /** One line under the name: color and the start of the description. */
+  detail: string | null;
+}
+
+/** Everything the detail sheet shows. Still nothing about costs, lots or stock counts. */
+export interface CatalogProductDetail extends CatalogProduct {
+  color: string | null;
+  description: string | null;
+  /** Photos in display order, named after the product (the ERP alt text is not published). */
+  images: { url: string; alt: string }[];
 }
 
 export interface ProductSource {
@@ -44,6 +54,22 @@ export interface ProductSource {
   priceGs: number;
   variants: readonly { size: string; stock: number }[];
   images: readonly { url: string; position: number }[];
+  color?: string | null;
+  description?: string | null;
+}
+
+const DETAIL_MAX_LENGTH = 140;
+
+function clean(value: string | null | undefined): string | null {
+  return value?.trim() || null;
+}
+
+function detailLine(color: string | null, description: string | null): string | null {
+  const line = [color, description].filter(Boolean).join(" · ");
+  if (!line) return null;
+  return line.length > DETAIL_MAX_LENGTH
+    ? `${line.slice(0, DETAIL_MAX_LENGTH - 1).trimEnd()}…`
+    : line;
 }
 
 export function toCatalogProduct(
@@ -65,5 +91,20 @@ export function toCatalogProduct(
     sizes: settings.showSoldOutSizes ? sizes : available,
     inStock: available.length > 0,
     imageUrl: cover?.url ?? null,
+    detail: detailLine(clean(product.color), clean(product.description)),
+  };
+}
+
+export function toCatalogProductDetail(
+  product: ProductSource,
+  settings: Pick<CatalogSettingsView, "showPrices" | "showSoldOutSizes">,
+): CatalogProductDetail {
+  return {
+    ...toCatalogProduct(product, settings),
+    color: clean(product.color),
+    description: clean(product.description),
+    images: [...product.images]
+      .sort((a, b) => a.position - b.position)
+      .map((image) => ({ url: image.url, alt: product.name })),
   };
 }
