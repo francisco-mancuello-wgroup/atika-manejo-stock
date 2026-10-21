@@ -9,8 +9,9 @@ config({ path: fileURLToPath(new URL("../../.env", import.meta.url)), quiet: tru
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@atika/ui", "@atika/pricing", "@atika/db"],
-  // Keep the dev-only Next.js badge away from the sidebar logo.
-  devIndicators: { position: "bottom-right" },
+  // The dev-only Next.js badge covers the sidebar logo (its position is user-draggable and
+  // persisted per browser), so hide it; compile and runtime errors are still shown.
+  devIndicators: false,
 };
 
 export default nextConfig;
