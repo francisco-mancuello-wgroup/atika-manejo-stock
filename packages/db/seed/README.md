@@ -134,6 +134,22 @@ cost 1.0, stored as fractions) is only created when missing, so values edited in
 `.env` at the repository root (see `.env.example`): `DATABASE_URL`, `ATIKA_EXCEL_DIR`, `ADMIN_EMAIL`,
 `ADMIN_PASSWORD`.
 
+## Owner account (ERP login)
+
+`admin.ts` upserts the single ERP user by lowercase email and stores only a scrypt hash
+(`@atika/db/password`). The ERP has no sign-up or reset screen, so this is how the account is created
+and how its password is rotated. `ADMIN_PASSWORD` needs at least 12 characters.
+
+```bash
+# create the owner, or change the password of the existing account
+ADMIN_EMAIL=owner@example.com ADMIN_PASSWORD='a-long-unique-passphrase' pnpm db:seed
+```
+
+Variables set on the command line win over `.env`, so the real password never has to be written to a
+file (keep it out of `.env.example`, shell history helpers and commits). The seed also reloads the
+workbook data, so it needs `ATIKA_EXCEL_DIR` and `DATABASE_URL` as usual. Rotating the password does not
+end existing sessions; to force a sign-out everywhere run `DELETE FROM sessions;` against the database.
+
 ## Categories
 
 `categories/infer.ts` assigns a catalog category from the product name, then its description, then the
