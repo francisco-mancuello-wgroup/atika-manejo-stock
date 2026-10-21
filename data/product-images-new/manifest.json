@@ -1,0 +1,889 @@
+{
+  "version": 1,
+  "lots": [
+    {
+      "lot": "Casa Icona",
+      "slug": "casa-icona",
+      "pdf": "atika.pdf",
+      "images": [
+        {
+          "productIndex": 0,
+          "code": null,
+          "name": "COSTA SOLEIL",
+          "file": "casa-icona/costa-soleil.webp",
+          "position": 0,
+          "page": 15,
+          "caption": "Costa Soleil",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 938,
+          "height": 1444,
+          "bytes": 50382,
+          "sourceBytes": 176573
+        },
+        {
+          "productIndex": 1,
+          "code": null,
+          "name": "COSTA BLACK",
+          "file": "casa-icona/costa-black.webp",
+          "position": 0,
+          "page": 13,
+          "caption": "Costa Black",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 942,
+          "height": 1444,
+          "bytes": 22792,
+          "sourceBytes": 98671
+        },
+        {
+          "productIndex": 2,
+          "code": null,
+          "name": "COSTA COCO",
+          "file": "casa-icona/costa-coco.webp",
+          "position": 0,
+          "page": 3,
+          "caption": "Costa Coco",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1444,
+          "bytes": 117628,
+          "sourceBytes": 341457
+        },
+        {
+          "productIndex": 3,
+          "code": null,
+          "name": "COSTA RAMBUTAN",
+          "file": "casa-icona/costa-rambutan.webp",
+          "position": 0,
+          "page": 14,
+          "caption": "Costa Rambutan",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 952,
+          "height": 1444,
+          "bytes": 48114,
+          "sourceBytes": 153781
+        },
+        {
+          "productIndex": 4,
+          "code": null,
+          "name": "COSTA VINO",
+          "file": "casa-icona/costa-vino.webp",
+          "position": 0,
+          "page": 4,
+          "caption": "Costa Vino",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1444,
+          "bytes": 40994,
+          "sourceBytes": 173437
+        },
+        {
+          "productIndex": 5,
+          "code": null,
+          "name": "COSTA BLANCO",
+          "file": "casa-icona/costa-blanco.webp",
+          "position": 0,
+          "page": 5,
+          "caption": "Costa Blanco",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1444,
+          "bytes": 33056,
+          "sourceBytes": 126381
+        },
+        {
+          "productIndex": 6,
+          "code": null,
+          "name": "CORA BLANCO",
+          "file": "casa-icona/cora-blanco.webp",
+          "position": 0,
+          "page": 19,
+          "caption": "Cora · Blanco",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 945,
+          "height": 1444,
+          "bytes": 38284,
+          "sourceBytes": 138512
+        },
+        {
+          "productIndex": 7,
+          "code": null,
+          "name": "CORA FUCSIA",
+          "file": "casa-icona/cora-fucsia.webp",
+          "position": 0,
+          "page": 18,
+          "caption": "Cora · Fucsia",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 952,
+          "height": 1444,
+          "bytes": 41108,
+          "sourceBytes": 135624
+        },
+        {
+          "productIndex": 8,
+          "code": null,
+          "name": "CORA VERDE LIMA",
+          "file": "casa-icona/cora-verde-lima.webp",
+          "position": 0,
+          "page": 16,
+          "caption": "Cora · Lima",
+          "rule": "token-subset",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 942,
+          "height": 1437,
+          "bytes": 43788,
+          "sourceBytes": 157476
+        },
+        {
+          "productIndex": 12,
+          "code": null,
+          "name": "VITTA NEGRO",
+          "file": "casa-icona/vitta-negro.webp",
+          "position": 0,
+          "page": 6,
+          "caption": "Vitta Mini Dress Black",
+          "rule": "alias",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1444,
+          "bytes": 30066,
+          "sourceBytes": 139800
+        },
+        {
+          "productIndex": 13,
+          "code": null,
+          "name": "VITTA PERLA",
+          "file": "casa-icona/vitta-perla.webp",
+          "position": 0,
+          "page": 7,
+          "caption": "Vitta Mini Dress Perla",
+          "rule": "alias",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1444,
+          "bytes": 50186,
+          "sourceBytes": 179466
+        },
+        {
+          "productIndex": 14,
+          "code": null,
+          "name": "GOZA RIO",
+          "file": "casa-icona/goza-rio.webp",
+          "position": 0,
+          "page": 11,
+          "caption": "Goza Dress Rio",
+          "rule": "alias",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1422,
+          "bytes": 45478,
+          "sourceBytes": 177301
+        },
+        {
+          "productIndex": 16,
+          "code": null,
+          "name": "ZAMBA VINO",
+          "file": "casa-icona/zamba-vino.webp",
+          "position": 0,
+          "page": 9,
+          "caption": "Zamba Vino",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1444,
+          "bytes": 48868,
+          "sourceBytes": 205198
+        },
+        {
+          "productIndex": 17,
+          "code": null,
+          "name": "ZAMBA AZUL",
+          "file": "casa-icona/zamba-azul.webp",
+          "position": 0,
+          "page": 8,
+          "caption": "Zamba Azul",
+          "rule": "exact",
+          "recreated": false,
+          "sourceFormat": "jpg",
+          "width": 1075,
+          "height": 1444,
+          "bytes": 84978,
+          "sourceBytes": 270055
+        }
+      ],
+      "unmatchedImages": [
+        {
+          "page": 1,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 10,
+          "caption": "Vestido largo bicolor",
+          "reason": "no-product"
+        },
+        {
+          "page": 12,
+          "caption": "Vestido corto negro",
+          "reason": "no-product"
+        },
+        {
+          "page": 17,
+          "caption": "Cora · Black",
+          "reason": "no-product"
+        },
+        {
+          "page": 20,
+          "caption": "Vitta White Cut-Out",
+          "reason": "no-product"
+        }
+      ],
+      "captionsWithoutImage": [],
+      "productsWithoutImage": [
+        {
+          "productIndex": 9,
+          "name": "ISSA NEGRO"
+        },
+        {
+          "productIndex": 10,
+          "name": "ISSA BLANCO"
+        },
+        {
+          "productIndex": 11,
+          "name": "NINA"
+        },
+        {
+          "productIndex": 15,
+          "name": "ZAMBA PITAYA"
+        }
+      ],
+      "stats": {
+        "imagesFound": 19,
+        "logosSkipped": 0,
+        "matched": 14,
+        "unmatched": 5
+      }
+    },
+    {
+      "lot": "Átika",
+      "slug": "atika",
+      "pdf": "Atika-Catalogo-Aros.pdf",
+      "images": [
+        {
+          "productIndex": 18,
+          "code": null,
+          "name": "Earcuff Sordo Cubagua Doble Bañado en Plata",
+          "file": "atika/earcuff-sordo-cubagua-doble-banado-en-plata.webp",
+          "position": 0,
+          "page": 4,
+          "caption": "Earcuff Cubagua Doble Bañado en Plata",
+          "rule": "exact",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1086,
+          "height": 1448,
+          "bytes": 22650,
+          "sourceBytes": 126575
+        },
+        {
+          "productIndex": 19,
+          "code": null,
+          "name": "Aros Sordo Puerto Asymmetric Bañado en Oro 24KT",
+          "file": "atika/aros-sordo-puerto-asymmetric-banado-en-oro-24kt.webp",
+          "position": 0,
+          "page": 2,
+          "caption": "Aros Puerto Asymmetric Bañado en Oro 24KT",
+          "rule": "exact",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1086,
+          "height": 1448,
+          "bytes": 93034,
+          "sourceBytes": 343655
+        },
+        {
+          "productIndex": 20,
+          "code": null,
+          "name": "Aros Sordo Oriente Bañado en Oro 24KT",
+          "file": "atika/aros-sordo-oriente-banado-en-oro-24kt.webp",
+          "position": 0,
+          "page": 2,
+          "caption": "Aros Oriente Bañado en Oro 24KT",
+          "rule": "exact",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1086,
+          "height": 1448,
+          "bytes": 114472,
+          "sourceBytes": 372668
+        },
+        {
+          "productIndex": 21,
+          "code": null,
+          "name": "Aros Sordo Cubagua Bañado en Oro 24KT",
+          "file": "atika/aros-sordo-cubagua-banado-en-oro-24kt.webp",
+          "position": 0,
+          "page": 3,
+          "caption": "Aros Cubagua Bañado en Oro 24KT",
+          "rule": "exact",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1086,
+          "height": 1448,
+          "bytes": 44674,
+          "sourceBytes": 213512
+        },
+        {
+          "productIndex": 22,
+          "code": null,
+          "name": "Aros Sordo Puerto Asymmetric Bañado en Plata",
+          "file": "atika/aros-sordo-puerto-asymmetric-banado-en-plata.webp",
+          "position": 0,
+          "page": 3,
+          "caption": "Aros Puerto Asymmetric Bañado en Plata",
+          "rule": "exact",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1086,
+          "height": 1448,
+          "bytes": 56172,
+          "sourceBytes": 206665
+        },
+        {
+          "productIndex": 23,
+          "code": null,
+          "name": "Earcuff Sordo Cubagua Bañado en Oro Small",
+          "file": "atika/earcuff-sordo-cubagua-banado-en-oro-small.webp",
+          "position": 0,
+          "page": 4,
+          "caption": "Earcuff Cubagua Bañado en Oro Tamaño Small",
+          "rule": "alias",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1086,
+          "height": 1448,
+          "bytes": 106288,
+          "sourceBytes": 367687
+        },
+        {
+          "productIndex": 25,
+          "code": null,
+          "name": "Earcuff Sordo Cubagua Bañado en Oro Large",
+          "file": "atika/earcuff-sordo-cubagua-banado-en-oro-large.webp",
+          "position": 0,
+          "page": 5,
+          "caption": "Earcuff Cubagua Bañado en Oro Tamaño Large",
+          "rule": "alias",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1086,
+          "height": 1448,
+          "bytes": 95080,
+          "sourceBytes": 352666
+        },
+        {
+          "productIndex": 27,
+          "code": null,
+          "name": "Earcuff Sordo Cubagua Bañado en Plata Small",
+          "file": "atika/earcuff-sordo-cubagua-banado-en-plata-small.webp",
+          "position": 0,
+          "page": 5,
+          "caption": "Earcuff Cubagua Bañado en Plata Tamaño Small",
+          "rule": "alias",
+          "recreated": true,
+          "sourceFormat": "jpg",
+          "width": 1087,
+          "height": 1447,
+          "bytes": 98946,
+          "sourceBytes": 360234
+        }
+      ],
+      "unmatchedImages": [
+        {
+          "page": 1,
+          "caption": null,
+          "reason": "no-caption"
+        }
+      ],
+      "captionsWithoutImage": [],
+      "productsWithoutImage": [
+        {
+          "productIndex": 24,
+          "name": "Sin nombre (Sordo)"
+        },
+        {
+          "productIndex": 26,
+          "name": "Earcuff Sordo Cubagua Bañado en Plata Large"
+        }
+      ],
+      "stats": {
+        "imagesFound": 9,
+        "logosSkipped": 10,
+        "matched": 8,
+        "unmatched": 1
+      }
+    },
+    {
+      "lot": "Milonga",
+      "slug": "milonga",
+      "pdf": "Atika_Milonga_Catalogo_Editorial.pdf",
+      "images": [],
+      "unmatchedImages": [
+        {
+          "page": 1,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 2,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 3,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 4,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 5,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 6,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 7,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 8,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 9,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 10,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 11,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 12,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 13,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 14,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 15,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 16,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 17,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 18,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 19,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 20,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 21,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 22,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 23,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 24,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 25,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 26,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 27,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 28,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 29,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 30,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 31,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 32,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 33,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 34,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 35,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 36,
+          "caption": null,
+          "reason": "no-caption"
+        },
+        {
+          "page": 37,
+          "caption": null,
+          "reason": "no-caption"
+        }
+      ],
+      "captionsWithoutImage": [],
+      "productsWithoutImage": [
+        {
+          "productIndex": 0,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 1,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 2,
+          "name": "Camisa A"
+        },
+        {
+          "productIndex": 3,
+          "name": "SALIDA S A"
+        },
+        {
+          "productIndex": 4,
+          "name": "T BSC M A"
+        },
+        {
+          "productIndex": 5,
+          "name": "ENTERO A"
+        },
+        {
+          "productIndex": 6,
+          "name": "S PANTA A"
+        },
+        {
+          "productIndex": 7,
+          "name": "T BSC M A"
+        },
+        {
+          "productIndex": 8,
+          "name": "Bot Amar A"
+        },
+        {
+          "productIndex": 9,
+          "name": "Camisa A"
+        },
+        {
+          "productIndex": 10,
+          "name": "Camisa A"
+        },
+        {
+          "productIndex": 11,
+          "name": "S PANTA A"
+        },
+        {
+          "productIndex": 12,
+          "name": "S PANTA A"
+        },
+        {
+          "productIndex": 13,
+          "name": "Vestido L A"
+        },
+        {
+          "productIndex": 14,
+          "name": "T BSC M A"
+        },
+        {
+          "productIndex": 15,
+          "name": "Falda A"
+        },
+        {
+          "productIndex": 16,
+          "name": "Vestido L A"
+        },
+        {
+          "productIndex": 17,
+          "name": "T BSC M A"
+        },
+        {
+          "productIndex": 18,
+          "name": "Falda A"
+        },
+        {
+          "productIndex": 19,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 20,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 21,
+          "name": "Triangulo A"
+        },
+        {
+          "productIndex": 22,
+          "name": "Bot Amar A"
+        },
+        {
+          "productIndex": 23,
+          "name": "Vestido C A"
+        },
+        {
+          "productIndex": 24,
+          "name": "Vestido C A"
+        },
+        {
+          "productIndex": 25,
+          "name": "Camisa A"
+        },
+        {
+          "productIndex": 26,
+          "name": "Triangulo A"
+        },
+        {
+          "productIndex": 27,
+          "name": "Bot Amar A"
+        },
+        {
+          "productIndex": 28,
+          "name": "Triangulo A"
+        },
+        {
+          "productIndex": 29,
+          "name": "Bot Amar A"
+        },
+        {
+          "productIndex": 30,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 31,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 32,
+          "name": "Vestido C A"
+        },
+        {
+          "productIndex": 33,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 34,
+          "name": "Camisa A"
+        },
+        {
+          "productIndex": 35,
+          "name": "Triangulo A"
+        },
+        {
+          "productIndex": 36,
+          "name": "Bot Amar A"
+        },
+        {
+          "productIndex": 37,
+          "name": "ENTERO A"
+        },
+        {
+          "productIndex": 38,
+          "name": "Poncho A"
+        },
+        {
+          "productIndex": 39,
+          "name": "Poncho A"
+        },
+        {
+          "productIndex": 40,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 41,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 42,
+          "name": "Vestido L A"
+        },
+        {
+          "productIndex": 43,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 44,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 45,
+          "name": "Falda A"
+        },
+        {
+          "productIndex": 46,
+          "name": "Camisa A"
+        },
+        {
+          "productIndex": 47,
+          "name": "SALIDA S A"
+        },
+        {
+          "productIndex": 48,
+          "name": "Triangulo A"
+        },
+        {
+          "productIndex": 49,
+          "name": "Bot Amar A"
+        },
+        {
+          "productIndex": 50,
+          "name": "Bot Amar A"
+        },
+        {
+          "productIndex": 51,
+          "name": "TOP AMA A"
+        },
+        {
+          "productIndex": 52,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 53,
+          "name": "Cardigan A"
+        },
+        {
+          "productIndex": 54,
+          "name": "Vestido L A"
+        },
+        {
+          "productIndex": 55,
+          "name": "Vestido L A"
+        },
+        {
+          "productIndex": 56,
+          "name": "Vestido L A"
+        },
+        {
+          "productIndex": 57,
+          "name": "SALIDA B A"
+        },
+        {
+          "productIndex": 58,
+          "name": "ENTERO A"
+        },
+        {
+          "productIndex": 59,
+          "name": "Cardigan A"
+        }
+      ],
+      "stats": {
+        "imagesFound": 37,
+        "logosSkipped": 37,
+        "matched": 0,
+        "unmatched": 37
+      }
+    }
+  ]
+}
