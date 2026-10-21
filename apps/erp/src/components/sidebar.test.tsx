@@ -1,5 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
+
+vi.mock("next/navigation", () => ({ usePathname: vi.fn(() => "/") }));
 
 describe("Sidebar", () => {
   it("renders the átika logo with the CASA ICONA eyebrow", () => {
@@ -40,5 +43,18 @@ describe("Sidebar", () => {
     render(<Sidebar activeHref="/ventas" />);
     expect(screen.getByRole("link", { name: "Ventas" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("marks the section of the current URL when no active section is given", () => {
+    vi.mocked(usePathname).mockReturnValue("/ventas");
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: "Ventas" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("keeps the section marked on nested pages", () => {
+    vi.mocked(usePathname).mockReturnValue("/compras/casa-icona");
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: "Compras" })).toHaveAttribute("aria-current", "page");
   });
 });
