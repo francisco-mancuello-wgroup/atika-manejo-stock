@@ -193,3 +193,12 @@ set in the ERP (and a stored US$ price) wins on every later seed.
 `cover` is a PDF page photo relative to `data/product-images-new`, for pieces the PDF export could not
 match by caption (Milonga pages and four Casa Icona looks with generic captions, taken from `sin-asignar/`).
 It becomes the product's only image; pieces without `cover` keep their brand PDF photo.
+
+## Photos uploaded from the ERP
+
+Product photos uploaded in the ERP (`/inventario/[id]`, `/inventario/nuevo`) are optimized to WebP and written to
+`apps/erp/public/media/products/uploads/<productId>/` and `apps/catalog/public/media/products/uploads/<productId>/`
+(both gitignored), with a `ProductImage` row each. The seed recreates products from the workbooks, so re-seeding
+**does not preserve uploaded photos or edits made in the ERP products form** (the files stay on disk but nothing points
+to them). Storage sits behind the `PhotoStorage` interface (`saveProductPhoto`, `deleteProductPhoto`) in
+`apps/erp/src/lib/products/photo-storage.ts` so it can move to cloud storage later.

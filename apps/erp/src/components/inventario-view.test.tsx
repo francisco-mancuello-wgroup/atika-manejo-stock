@@ -94,4 +94,20 @@ describe("InventarioView", () => {
     render(<InventarioView products={[]} lots={lots} filters={{ query: "zzz" }} />);
     expect(screen.getByText("No hay productos que coincidan con el filtro.")).toBeInTheDocument();
   });
+
+  it("links each product to its edit page and offers a new product button", () => {
+    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    expect(screen.getByRole("link", { name: "Vestido Lino" })).toHaveAttribute(
+      "href",
+      "/inventario/p1",
+    );
+    expect(screen.getByRole("link", { name: "Pantalón" })).toHaveAttribute(
+      "href",
+      "/inventario/p2",
+    );
+    expect(screen.getByRole("link", { name: "Nuevo producto" })).toHaveAttribute(
+      "href",
+      "/inventario/nuevo",
+    );
+  });
 });
