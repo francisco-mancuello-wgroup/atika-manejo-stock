@@ -9,6 +9,12 @@ import {
   toCatalogProductDetail,
 } from "./catalog-view";
 import { CATEGORIES } from "./categories";
+import {
+  type CollectionSummary,
+  collectionSlug,
+  type PresentationCollection,
+  toPresentationPiece,
+} from "./presentation";
 
 /** The slice of the Prisma client the catalog reads (a rolled back transaction works too). */
 export type CatalogDb = Pick<PrismaClient, "product" | "catalogSettings">;
@@ -158,4 +164,55 @@ export async function getProductDetail(
     select: detailSelect,
   });
   return row ? toCatalogProductDetail(row, settings) : null;
+}
+
+/**
+ * Presentation order: the order the supplier sheets were imported (oldest row first), so a
+ * collection reads like its catalog. The rows list stays newest first.
+ */
+const importOrder = [{ createdAt: "asc" as const }, { id: "asc" as const }];
+
+/** One collection per supplier with visible products, in order of first appearance. */
+export async function listCollections(
+  db: CatalogDb,
+  settings: VisibilitySettings,
+): Promise<CollectionSummary[]> {
+  const rows = await db.product.findMany({
+    where: visibleWhere(settings),
+    orderBy: importOrder,
+    select: {
+      lot: { select: { supplier: { select: { name: true } } } },
+      images: { select: { url: true }, orderBy: { position: "asc" }, take: 1 },
+    },
+  });
+  const collections = new Map<string, CollectionSummary>();
+  for (const row of rows) {
+    const name = row.lot.supplier.name.trim();
+    const slug = collectionSlug(name);
+    const found = collections.get(slug) ?? { slug, name, count: 0, coverUrl: null };
+    found.count += 1;
+    found.coverUrl ??= row.images[0]?.url ?? null;
+    collections.set(slug, found);
+  }
+  return [...collections.values()];
+}
+
+/** Every visible piece of a collection with all its photos, or null for an unknown slug. */
+export async function getCollectionPresentation(
+  db: CatalogDb,
+  settings: VisibilitySettings,
+  slug: string,
+): Promise<PresentationCollection | null> {
+  const collection = (await listCollections(db, settings)).find((item) => item.slug === slug);
+  if (!collection) return null;
+  const rows = await db.product.findMany({
+    where: { ...visibleWhere(settings), lot: { supplier: { name: collection.name } } },
+    orderBy: importOrder,
+    select: detailSelect,
+  });
+  return {
+    slug,
+    name: collection.name,
+    pieces: rows.map((row) => toPresentationPiece(row, settings)),
+  };
 }
