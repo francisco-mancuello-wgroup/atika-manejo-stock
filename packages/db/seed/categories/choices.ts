@@ -1,6 +1,7 @@
 import { CATALOG_CATEGORIES } from "../../src/categories";
 import type { ParsedLot } from "../excel/parse";
 import { inferCategory } from "./infer";
+import type { LookbookPlan } from "./lookbook";
 import { LOOKS_LOT, type Look, matchLooks } from "./looks";
 
 /** Lookbook placement and owner price, edited in the ERP and kept across re-seeds. */
@@ -61,11 +62,16 @@ export function productKeys(
  * Decides publication and category for every parsed product. Preserved values win: a stored
  * category is kept, a stored publication state is restored. A product with no stored category is
  * inferred; a product never seen before is hidden.
+ *
+ * Lookbook: a preserved placement (catalog set in the ERP) wins. A product without one takes its
+ * placement from the committed lookbook data and is published, since the lookbook only shows
+ * published pieces; a preserved owner price is still kept.
  */
 export function planChoices(
   lots: readonly ParsedLot[],
   looks: readonly Look[],
   preserved: ReadonlyMap<string, Preserved>,
+  placements?: LookbookPlan,
 ): ChoicePlan {
   const choices = new Map<string, ProductChoice[]>();
   for (const lot of lots) {
@@ -77,8 +83,15 @@ export function planChoices(
       lot.products.map((product, index): ProductChoice => {
         const kept = preserved.get(keys[index] ?? "");
         const look = lotLooks[index] ?? null;
-        const isPublished = kept?.isPublished ?? false;
-        const lookbook = kept?.lookbook ?? NO_LOOKBOOK;
+        const keptLookbook = kept?.lookbook ?? NO_LOOKBOOK;
+        const fromData = keptLookbook.catalog ? null : placements?.get(lot.lotName, index);
+        const isPublished = fromData ? true : (kept?.isPublished ?? false);
+        const lookbook: Lookbook = fromData
+          ? {
+              ...fromData.lookbook,
+              salePriceUsd: keptLookbook.salePriceUsd ?? fromData.lookbook.salePriceUsd,
+            }
+          : keptLookbook;
         if (kept?.category) {
           return {
             isPublished,

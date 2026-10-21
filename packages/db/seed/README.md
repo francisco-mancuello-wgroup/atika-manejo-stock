@@ -159,3 +159,21 @@ rules and infers from the look description, so it does not need the PDF. PDF tex
 Re-seeding keeps what the admin set: `isPublished` and a non-null `category` are read before the delete and
 restored by lot + name + code + position among identical products. A preserved category wins over
 inference; a product never seen before is hidden.
+
+## Lookbook
+
+The public catalog shows only the three brand PDFs: Casa Icona (lot "Casa Icona", 18 looks), Milonga
+(lot "Milonga", pages of the editorial PDF; the pieces of one set share a page) and Sordo (Sordo pieces of
+the Átika lot). `data/catalogs/lookbook.json` places each piece: `lot`, `code` and `name` (the workbook
+name, used only to find the product), `catalog` (`casa_icona` | `milonga` | `sordo`), `order` (look
+number, PDF page or piece), `section`, `catalogName` (the lookbook display name; `Product.name` never
+changes), `salePriceUsd` (Sordo: monicasordo.com, or the PDF Gs / 7400) and `cover`.
+
+`categories/lookbook.ts` matches a row by lot + code, then exact name, then normalized name (case, accents,
+punctuation); a row matching no product or several products is printed by the seed and never guessed.
+A product whose stored placement has no catalog takes the row's placement and is published; a placement
+set in the ERP (and a stored US$ price) wins on every later seed.
+
+`cover` is a PDF page photo relative to `data/product-images-new`, for pieces the PDF export could not
+match by caption (Milonga pages and four Casa Icona looks with generic captions, taken from `sin-asignar/`).
+It becomes the product's only image; pieces without `cover` keep their brand PDF photo.

@@ -6,3 +6,8 @@ export const CATALOG_CATEGORIES_DATA_DIR = fileURLToPath(
 );
 
 export const CASA_ICONA_LOOKS_FILE = `${CATALOG_CATEGORIES_DATA_DIR}/casa-icona-looks.json`;
+
+/** Lookbook placement of the three brand PDFs (catalog, page order, section, name, US$ price). */
+export const LOOKBOOK_FILE = fileURLToPath(
+  new URL("../../../../data/catalogs/lookbook.json", import.meta.url),
+);
