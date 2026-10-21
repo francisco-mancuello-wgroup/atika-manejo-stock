@@ -19,7 +19,7 @@
   --color-ok: #4a6b4f;
   --color-wa: #2f6b4a;
 
-  /* Apps set --font-jost / --font-bodoni via next/font/google. Bodoni Moda only at display sizes (≥ 20px). */
+  /* Apps set --font-jost / --font-bodoni via @atika/ui/fonts (self-hosted, next/font/local). Bodoni Moda only at display sizes (≥ 20px). */
   --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-bodoni), ui-serif, Georgia, serif;
 }

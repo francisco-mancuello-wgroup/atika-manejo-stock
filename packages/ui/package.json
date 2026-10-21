@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./globals.css": "./src/styles/globals.css"
+    "./globals.css": "./src/styles/globals.css",
+    "./fonts": "./src/fonts.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -19,7 +20,8 @@
   },
   "peerDependencies": {
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "next": "^16.0.0"
   },
   "devDependencies": {
     "@atika/config": "workspace:*",
@@ -30,6 +32,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "jsdom": "30.1.3",
+    "next": "16.4.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "typescript": "6.0.3",
