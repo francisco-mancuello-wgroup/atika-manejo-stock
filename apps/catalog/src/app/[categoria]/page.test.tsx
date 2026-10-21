@@ -28,44 +28,66 @@ const dress: CatalogProduct = {
   brand: null,
 };
 
-const listProducts = vi.fn(
-  async (_db: unknown, _settings: unknown, _category: string | null): Promise<CatalogProduct[]> => [
-    dress,
-  ],
-);
+const listProducts = vi.fn(async (..._args: unknown[]): Promise<CatalogProduct[]> => [dress]);
 vi.mock("../../lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("../../lib/queries", () => ({
   getCatalogSettings: async () => settings,
-  listProducts: (db: unknown, s: unknown, category: string | null) => listProducts(db, s, category),
+  listProducts: (...args: unknown[]) => listProducts(...args),
+  countProductsByCategory: async () => ({
+    novedades: 3,
+    vestidos: 1,
+    tops: 2,
+    "faldas-y-shorts": 0,
+    accesorios: 0,
+  }),
 }));
+
+const props = (categoria: string, search: Record<string, string> = {}) => ({
+  params: Promise.resolve({ categoria }),
+  searchParams: Promise.resolve(search),
+});
 
 describe("catalog category page", () => {
   it("renders on demand because it reads the database", () => {
     expect(dynamic).toBe("force-dynamic");
   });
 
-  it("lists the products of a category under its title", async () => {
-    render(await CategoryPage({ params: Promise.resolve({ categoria: "vestidos" }) }));
+  it("lists the products of a category under its title, marked in the rail", async () => {
+    render(await CategoryPage(props("vestidos")));
     expect(screen.getByRole("heading", { level: 1, name: "Vestidos" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: "Vestido Lino" })).toBeInTheDocument();
+    expect(screen.getByText("Vestido Lino")).toBeInTheDocument();
     expect(listProducts.mock.calls.at(-1)?.[2]).toBe("vestidos");
+    expect(
+      screen.getAllByRole("link", { name: /Vestidos/ }).some((a) => a.ariaCurrent === "page"),
+    ).toBe(true);
   });
 
   it("lists every published product for novedades", async () => {
-    render(await CategoryPage({ params: Promise.resolve({ categoria: "novedades" }) }));
+    render(await CategoryPage(props("novedades")));
     expect(screen.getByRole("heading", { level: 1, name: "Novedades" })).toBeInTheDocument();
     expect(listProducts.mock.calls.at(-1)?.[2]).toBeNull();
   });
 
+  it("applies the filters of the URL inside the category", async () => {
+    render(await CategoryPage(props("tops", { talle: "M", orden: "precio-asc" })));
+    expect(listProducts.mock.calls.at(-1)?.[2]).toBe("tops");
+    expect(listProducts.mock.calls.at(-1)?.[3]).toMatchObject({ talle: "M", orden: "precio-asc" });
+  });
+
   it("shows the empty state for a category without products", async () => {
     listProducts.mockResolvedValueOnce([]);
-    render(await CategoryPage({ params: Promise.resolve({ categoria: "accesorios" }) }));
+    render(await CategoryPage(props("accesorios")));
     expect(screen.getByText("Todavía no hay prendas publicadas.")).toBeInTheDocument();
   });
 
+  it("clears the filters back to the category when a filtered list is empty", async () => {
+    listProducts.mockResolvedValueOnce([]);
+    render(await CategoryPage(props("tops", { q: "zzz", orden: "precio-asc" })));
+    expect(screen.getByText("No encontramos prendas con esos filtros.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Quitar filtros" })).toHaveAttribute("href", "/tops");
+  });
+
   it("responds not found for an unknown category", async () => {
-    await expect(
-      CategoryPage({ params: Promise.resolve({ categoria: "zapatos" }) }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(CategoryPage(props("zapatos"))).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });

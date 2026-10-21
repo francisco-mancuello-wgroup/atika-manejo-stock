@@ -24,39 +24,82 @@ const products: CatalogProduct[] = [
   },
 ];
 
-const listProducts = vi.fn(async (): Promise<CatalogProduct[]> => products);
+const listProducts = vi.fn(async (..._args: unknown[]): Promise<CatalogProduct[]> => products);
+const countProductsByCategory = vi.fn(async (..._args: unknown[]) => ({
+  novedades: 1,
+  vestidos: 1,
+  tops: 0,
+  "faldas-y-shorts": 0,
+  accesorios: 0,
+}));
 vi.mock("../lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("../lib/queries", () => ({
   getCatalogSettings: async () => settings,
-  listProducts: (...args: unknown[]) => listProducts(...(args as [])),
+  listProducts: (...args: unknown[]) => listProducts(...args),
+  countProductsByCategory: (...args: unknown[]) => countProductsByCategory(...args),
 }));
+
+const searchParams = (params: Record<string, string> = {}) => Promise.resolve(params);
 
 describe("Catalog home page", () => {
   it("renders on demand because it reads the database", () => {
     expect(dynamic).toBe("force-dynamic");
   });
 
-  it("sets the configured hero text in the display serif font and keeps the pricing note", async () => {
-    render(await HomePage());
-    const heading = screen.getByRole("heading", {
-      level: 1,
-      name: "Texto de portada configurado.",
-    });
-    expect(heading).toHaveClass("font-display");
-    expect(screen.getByText("Novedades")).toBeInTheDocument();
-    expect(
-      screen.getByText("Precios con IVA incluido · Consultas y reservas por WhatsApp"),
-    ).toBeInTheDocument();
+  it("is the Novedades list under a display-font title, with the rail counts", async () => {
+    render(await HomePage({ searchParams: searchParams() }));
+    expect(screen.getByRole("heading", { level: 1, name: "Novedades" })).toHaveClass(
+      "font-display",
+    );
+    expect(screen.getByText("1 prenda")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /Vestidos/ })[0]).toHaveAttribute(
+      "href",
+      "/vestidos",
+    );
   });
 
-  it("lists the published products", async () => {
-    render(await HomePage());
-    expect(screen.getByRole("heading", { level: 3, name: "Vestido Lino" })).toBeInTheDocument();
+  it("lists every published product without a category filter", async () => {
+    render(await HomePage({ searchParams: searchParams() }));
+    expect(listProducts.mock.calls.at(-1)?.[2]).toBeNull();
+    expect(screen.getByText("Vestido Lino")).toBeInTheDocument();
+  });
+
+  it("passes size, search and sort from the URL to the queries", async () => {
+    render(
+      await HomePage({
+        searchParams: searchParams({ talle: "S", q: "aros", orden: "precio-desc" }),
+      }),
+    );
+    const filters = { talle: "S", q: "aros", orden: "precio-desc" };
+    expect(listProducts.mock.calls.at(-1)?.[3]).toMatchObject(filters);
+    expect(countProductsByCategory.mock.calls.at(-1)?.[2]).toMatchObject({
+      talle: "S",
+      q: "aros",
+    });
+    expect(screen.getByText("1 prenda · talle S · “aros”")).toBeInTheDocument();
+  });
+
+  it("falls back to no filter for invalid values", async () => {
+    render(await HomePage({ searchParams: searchParams({ talle: "XXL", orden: "azar" }) }));
+    expect(listProducts.mock.calls.at(-1)?.[3]).toMatchObject({
+      talle: null,
+      orden: "recientes",
+    });
   });
 
   it("shows the empty state when nothing is published", async () => {
     listProducts.mockResolvedValueOnce([]);
-    render(await HomePage());
+    render(await HomePage({ searchParams: searchParams() }));
     expect(screen.getByText("Todavía no hay prendas publicadas.")).toBeInTheDocument();
+  });
+
+  it("explains an empty filtered list and offers to clear the filters", async () => {
+    listProducts.mockResolvedValueOnce([]);
+    render(await HomePage({ searchParams: searchParams({ talle: "S" }) }));
+    expect(screen.getByText("No encontramos prendas con esos filtros.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Quitar filtros" })).toHaveAttribute(
+      "href",
+      "/novedades",
+    );
   });
 });
