@@ -74,7 +74,7 @@ Two apps read the same data and the same price formula. If the formula or schema
 - [x] T1 — Monorepo scaffold: pnpm workspace, Turborepo pipeline (build, dev, test, typecheck), root `biome.json` (lint/format), `packages/config` (shared tsconfigs), `.gitignore`, `.nvmrc`, root README.
   - Accept: `pnpm install && pnpm lint && pnpm typecheck` passes.
   - Note: TypeScript pinned to 6.0.3 — `typescript@7.0.2` on npm ships no `main` (no JS compiler API), which Next.js build-time type checking requires.
-- [ ] T2 — `packages/pricing` (TDD): `shippingPerUnit`, `unitCostUsd`, `priceGs`, `roundGs`, `priceLot(params, models)`.
+- [x] T2 — `packages/pricing` (TDD): `shippingPerUnit`, `unitCostUsd`, `priceGs`, `roundGs`, `priceLot(params, models)`.
   - Accept: Vitest covers the formula with the Casa Icona example (TC 7.400, factor 2,5, IVA 10 %, shipping 2.265,12 / 57 u.), zero-unit guard, rounding edge cases.
 - [ ] T3 — `packages/db`: Prisma schema (`suppliers`, `lots` with pricing params, `products`, `product_variants` (size + stock), `sales`, `product_images`, `catalog_settings`, `users` (email, password_hash), `sessions` (token_hash, user_id, expires_at)), first migration, typed client.
   - Accept: `prisma migrate dev --create-only` produces a migration; `prisma generate` runs as a Turbo task before build/typecheck; schema test validates relations; provisioning Neon is done with user approval.
@@ -92,7 +92,8 @@ Two apps read the same data and the same price formula. If the formula or schema
 ## Verification evidence
 
 - T1 (2026-10-21): `pnpm install` → done (pnpm 11.22.0); `pnpm lint` → "Checked 10 files. No fixes applied." exit 0; `pnpm typecheck` → exit 0, 0 tasks (no TS packages yet — real coverage starts in T2). TDD: not applicable (config only, no behavior). Commit `3c66640`. RDD: off (global) → no review.
+- T2 (2026-10-21): RED observed — `pnpm --filter @atika/pricing test` → 15 failed (stub index). GREEN — 15 passed; `pnpm test` (turbo) 1/1 successful; `pnpm typecheck` 1/1 successful; `pnpm lint` exit 0. REFACTOR: none needed. Shipping is prorated over units bought (sum of model units), not current stock.
 
 ## Next step
 
-Start T2 (`packages/pricing`, TDD).
+Start T3 (`packages/db` with Prisma); Neon provisioning needs user approval.
