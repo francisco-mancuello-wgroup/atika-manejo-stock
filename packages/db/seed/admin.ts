@@ -1,8 +1,7 @@
 import type { Prisma } from "../src/index";
-import { hashPassword } from "../src/password";
+import { hashPassword, MIN_PASSWORD_LENGTH } from "../src/password";
 
-// Owner decision (2026-10-21): 8 is the minimum; longer passphrases are still recommended.
-export const MIN_ADMIN_PASSWORD_LENGTH = 8;
+export const MIN_ADMIN_PASSWORD_LENGTH = MIN_PASSWORD_LENGTH;
 
 /**
  * Creates the owner account, or rotates its password when the email already exists. Only the
