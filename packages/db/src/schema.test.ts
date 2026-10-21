@@ -7,6 +7,8 @@ describe("schema", () => {
     expect(Object.values(Prisma.ModelName).sort()).toEqual([
       "AppSettings",
       "CatalogSettings",
+      "Discount",
+      "DiscountProduct",
       "Lot",
       "Product",
       "ProductImage",
@@ -45,6 +47,15 @@ describe("schema", () => {
   it("keeps the recalculated price and catalog visibility on the product", () => {
     expect(Object.values(Prisma.ProductScalarFieldEnum)).toEqual(
       expect.arrayContaining(["lotId", "originalValueUsd", "priceGs", "isPublished"]),
+    );
+  });
+
+  it("keeps discounts with a window, a scope and an explicit product list", () => {
+    expect(Object.values(Prisma.DiscountScalarFieldEnum)).toEqual(
+      expect.arrayContaining(["name", "percent", "isActive", "startsAt", "endsAt", "scope"]),
+    );
+    expect(Object.values(Prisma.DiscountProductScalarFieldEnum)).toEqual(
+      expect.arrayContaining(["discountId", "productId"]),
     );
   });
 
