@@ -13,20 +13,32 @@ const product: CatalogProduct = {
   ],
   inStock: true,
   imageUrl: null,
+  brand: "Casa Icona",
 };
 
 describe("ProductCard", () => {
-  it("links to the product page with name, price and available sizes", () => {
+  it("links to the product page", () => {
     render(<ProductCard product={product} />);
     expect(screen.getByRole("link", { name: /Vestido Lino/ })).toHaveAttribute(
       "href",
       "/producto/abc",
     );
-    expect(screen.getByRole("heading", { level: 3, name: "Vestido Lino" })).toHaveClass(
-      "font-display",
-    );
-    expect(screen.getByText(/450\.000/)).toBeInTheDocument();
-    expect(screen.getByText("S · M")).toBeInTheDocument();
+  });
+
+  it("shows eyebrow, then name and price in the same row, in the sans font", () => {
+    render(<ProductCard product={product} />);
+    const name = screen.getByRole("heading", { level: 3, name: "Vestido Lino" });
+    expect(name).not.toHaveClass("font-display");
+    const price = screen.getByText(/450\.000/);
+    expect(price.parentElement).toBe(name.parentElement);
+    expect(name.parentElement).toHaveClass("justify-between");
+    expect(price).toHaveClass("whitespace-nowrap");
+    expect(screen.getByText("Casa Icona")).toHaveClass("text-muted", "uppercase");
+  });
+
+  it("lists the available sizes as 'Talles: ...'", () => {
+    render(<ProductCard product={product} />);
+    expect(screen.getByText("Talles: S · M")).toBeInTheDocument();
   });
 
   it("asks to consult the price when prices are hidden", () => {
@@ -34,24 +46,30 @@ describe("ProductCard", () => {
     expect(screen.getByText("Consultar precio")).toBeInTheDocument();
   });
 
-  it("shows the cover photo inside the sand offset frame, named after the product", () => {
-    const { container } = render(
-      <ProductCard product={{ ...product, imageUrl: "/media/products/atika/top.webp" }} />,
-    );
+  it("omits the eyebrow when there is no brand", () => {
+    render(<ProductCard product={{ ...product, brand: null }} />);
+    expect(screen.queryByText("Casa Icona")).toBeNull();
+  });
+
+  it("shows the cover photo with a hard sand offset, named after the product", () => {
+    render(<ProductCard product={{ ...product, imageUrl: "/media/products/atika/top.webp" }} />);
     const photo = screen.getByRole("img", { name: "Vestido Lino" });
     expect(photo.getAttribute("src")).toContain(
       encodeURIComponent("/media/products/atika/top.webp"),
     );
     expect(photo).toHaveClass("object-cover");
     expect(photo).toHaveAttribute("sizes", expect.stringContaining("vw"));
-    expect(container.querySelector(".bg-sand")).not.toBeNull();
+    expect(photo.parentElement?.className).toContain("var(--color-sand)");
   });
 
-  it("shows a sand photo placeholder and says when nothing is available", () => {
+  it("shows an empty subtle placeholder with the sand offset, and says when nothing is available", () => {
     const { container } = render(
       <ProductCard product={{ ...product, sizes: [], inStock: false }} />,
     );
-    expect(container.querySelector(".bg-sand")).not.toBeNull();
+    const box = container.querySelector(".bg-subtle");
+    expect(box).not.toBeNull();
+    expect(box?.className).toContain("var(--color-sand)");
+    expect(box?.childElementCount).toBe(0);
     expect(screen.queryByRole("img")).toBeNull();
     expect(screen.getByText("Sin stock")).toBeInTheDocument();
   });

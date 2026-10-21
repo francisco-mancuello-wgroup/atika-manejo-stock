@@ -17,11 +17,14 @@ export interface CatalogSize {
 
 /**
  * The only product shape that reaches the public pages. It is built field by field, so cost,
- * original value, lot, supplier, stock counts and sales can never leak through it.
+ * original value, lot, stock counts and sales can never leak through it. The only
+ * lot-derived data is `brand`, a display name that is already public on the garments.
  */
 export interface CatalogProduct {
   id: string;
   name: string;
+  /** Brand display name (product brand, else the supplier's name); never a cost or lot detail. */
+  brand: string | null;
   category: string | null;
   /** Null when the store hides prices ("Consultar precio"). */
   priceGs: number | null;
@@ -35,6 +38,8 @@ export interface CatalogProduct {
 export interface ProductSource {
   id: string;
   name: string;
+  brand: string | null;
+  lot: { supplier: { name: string } };
   category: string | null;
   priceGs: number;
   variants: readonly { size: string; stock: number }[];
@@ -54,6 +59,7 @@ export function toCatalogProduct(
   return {
     id: product.id,
     name: product.name,
+    brand: product.brand?.trim() || product.lot.supplier.name.trim() || null,
     category: product.category,
     priceGs: settings.showPrices ? product.priceGs : null,
     sizes: settings.showSoldOutSizes ? sizes : available,

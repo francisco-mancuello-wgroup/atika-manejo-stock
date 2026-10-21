@@ -19,6 +19,7 @@ const products: CatalogProduct[] = [
     sizes: [{ size: "M", available: true }],
     inStock: true,
     imageUrl: null,
+    brand: "Átika",
   },
 ];
 
@@ -41,8 +42,9 @@ describe("Catalog home page", () => {
       name: "Texto de portada configurado.",
     });
     expect(heading).toHaveClass("font-display");
+    expect(screen.getByText("Novedades")).toBeInTheDocument();
     expect(
-      screen.getByText("Precios con IVA incluido · Consultas por WhatsApp"),
+      screen.getByText("Precios con IVA incluido · Consultas y reservas por WhatsApp"),
     ).toBeInTheDocument();
   });
 

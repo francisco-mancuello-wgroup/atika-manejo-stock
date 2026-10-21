@@ -54,6 +54,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
       const product = await getProduct(tx, open, visible ?? "");
       expect(product?.name).toBe("Seen");
       expect(Object.keys(product ?? {}).sort()).toEqual([
+        "brand",
         "category",
         "id",
         "imageUrl",

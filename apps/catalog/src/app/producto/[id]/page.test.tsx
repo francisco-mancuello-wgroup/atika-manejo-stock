@@ -27,6 +27,7 @@ const product: CatalogProduct = {
   ],
   inStock: true,
   imageUrl: null,
+  brand: null,
 };
 
 const getProduct = vi.fn(async (): Promise<CatalogProduct | null> => product);
@@ -68,7 +69,7 @@ describe("catalog product page", () => {
 
     const { container } = render(await ProductPage({ params }));
     expect(screen.queryByRole("img")).toBeNull();
-    expect(container.querySelector(".bg-sand")).not.toBeNull();
+    expect(container.querySelector(".bg-subtle")).not.toBeNull();
   });
 
   it("asks to consult the price when the price is hidden", async () => {
