@@ -1,6 +1,6 @@
 import "@atika/ui/globals.css";
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter, Unbounded } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import { Sidebar } from "../components/sidebar";
 
@@ -10,7 +10,6 @@ const cormorant = Cormorant_Garamond({
   weight: ["400", "500", "600"],
   variable: "--font-cormorant",
 });
-const unbounded = Unbounded({ subsets: ["latin"], weight: "300", variable: "--font-unbounded" });
 
 export const metadata: Metadata = {
   title: "atika · Administración",
@@ -19,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${cormorant.variable} ${unbounded.variable}`}>
+    <html lang="es" className={`${inter.variable} ${cormorant.variable}`}>
       <body className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 p-8">{children}</main>

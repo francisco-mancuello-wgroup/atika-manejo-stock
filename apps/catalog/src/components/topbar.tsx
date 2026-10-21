@@ -1,4 +1,4 @@
-import { buttonVariants, cn } from "@atika/ui";
+import { buttonVariants, cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
 
 const CATEGORIES = [
@@ -16,8 +16,8 @@ const DEFAULT_WHATSAPP_HREF = "https://wa.me/";
 export function Topbar({ whatsappHref = DEFAULT_WHATSAPP_HREF }: { whatsappHref?: string }) {
   return (
     <header className="flex items-center justify-between gap-6 border-b border-line bg-surface px-6 py-4">
-      <Link href="/" className="flex flex-col gap-0.5 text-ink">
-        <span className="font-logo text-2xl font-light tracking-wide">átika</span>
+      <Link href="/" className="flex flex-col gap-1.5 text-ink">
+        <Wordmark className="h-6" />
         <span className="hidden text-[10px] font-medium uppercase tracking-[0.2em] text-muted md:block">
           CASA ICONA
         </span>

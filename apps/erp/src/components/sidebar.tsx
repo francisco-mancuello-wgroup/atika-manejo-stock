@@ -1,4 +1,4 @@
-import { cn } from "@atika/ui";
+import { cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
 
 const NAV_ITEMS = [
@@ -13,8 +13,8 @@ const NAV_ITEMS = [
 export function Sidebar({ activeHref = "/" }: { activeHref?: string }) {
   return (
     <aside className="flex w-[232px] shrink-0 flex-col gap-8 border-r border-line bg-surface px-4 py-6">
-      <div className="flex flex-col gap-1 px-3">
-        <span className="font-logo text-2xl font-light tracking-wide text-ink">átika</span>
+      <div className="flex flex-col gap-2 px-3">
+        <Wordmark className="h-6 text-ink" />
         <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
           CASA ICONA
         </span>

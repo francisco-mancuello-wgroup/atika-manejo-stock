@@ -2,9 +2,9 @@ import { render, screen, within } from "@testing-library/react";
 import { Topbar } from "./topbar";
 
 describe("Topbar", () => {
-  it("renders the átika wordmark in the logo font with the CASA ICONA eyebrow", () => {
+  it("renders the átika logo with the CASA ICONA eyebrow", () => {
     render(<Topbar />);
-    expect(screen.getByText("átika")).toHaveClass("font-logo");
+    expect(screen.getByRole("img", { name: "átika" })).toBeInTheDocument();
     expect(screen.getByText("CASA ICONA")).toBeInTheDocument();
   });
 

@@ -19,10 +19,9 @@
   --color-ok: #4a6b4f;
   --color-wa: #2f6b4a;
 
-  /* Apps set --font-inter / --font-cormorant / --font-unbounded via next/font/google. */
+  /* Apps set --font-inter / --font-cormorant via next/font/google. */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-cormorant), ui-serif, Georgia, serif;
-  --font-logo: var(--font-unbounded), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {

@@ -20,9 +20,9 @@ describe("theme tokens (Propuesta B)", () => {
     expect(css.toLowerCase()).toContain(`${token}: ${value};`);
   });
 
-  it("maps the sans, display and logo font families to next/font variables", () => {
+  it("maps the sans and display font families to next/font variables", () => {
     expect(css).toContain("--font-sans: var(--font-inter)");
     expect(css).toContain("--font-display: var(--font-cormorant)");
-    expect(css).toContain("--font-logo: var(--font-unbounded)");
+    expect(css).not.toContain("--font-logo");
   });
 });
