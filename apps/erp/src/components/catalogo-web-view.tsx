@@ -12,7 +12,7 @@ import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog
 import { BulkVisibilitySwitch } from "./bulk-visibility-switch";
 import { CatalogSettingsForm } from "./catalog-settings-form";
 import { Field } from "./form-controls";
-import { LookbookForm } from "./lookbook-form";
+import { LookbookButton } from "./lookbook-form";
 import { PageHeader } from "./page-header";
 import { CategorySelect, VisibilitySwitch } from "./product-controls";
 import { ProductThumb } from "./product-thumb";
@@ -143,7 +143,6 @@ export function CatalogoWebView({
                 <th className={table.th}>Talles disponibles</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>
                 <th className={table.th}>Categoría</th>
-                <th className={table.th}>Lookbook</th>
                 <th className={table.th}>
                   <div className="flex items-center gap-3">
                     Visible
@@ -183,15 +182,15 @@ export function CatalogoWebView({
                     />
                   </td>
                   <td className={table.td}>
-                    <LookbookForm product={product} action={actions.saveLookbook} />
-                  </td>
-                  <td className={table.td}>
-                    <VisibilitySwitch
-                      productId={product.id}
-                      name={product.name}
-                      isPublished={product.isPublished}
-                      action={actions.setVisibility}
-                    />
+                    <div className="flex items-center gap-3">
+                      <VisibilitySwitch
+                        productId={product.id}
+                        name={product.name}
+                        isPublished={product.isPublished}
+                        action={actions.setVisibility}
+                      />
+                      <LookbookButton product={product} action={actions.saveLookbook} />
+                    </div>
                   </td>
                 </tr>
               ))}
