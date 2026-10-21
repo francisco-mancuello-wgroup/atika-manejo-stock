@@ -47,7 +47,6 @@ const placement = (over: Partial<LookbookPlacement>): LookbookPlacement => ({
   order: 1,
   section: "Colección seleccionada",
   catalogName: "Costa Coco",
-  salePriceUsd: null,
   cover: null,
   ...over,
 });
@@ -72,7 +71,6 @@ const placements: LookbookPlacement[] = [
     order: 2,
     section: "Aros",
     catalogName: "Oriente",
-    salePriceUsd: 440,
   }),
   placement({ lot: "Milonga", code: "NOPE01", name: "Nada", catalog: "milonga" }),
 ];
@@ -96,10 +94,9 @@ describe("planLookbook", () => {
       catalogOrder: 4,
       catalogSection: "Vestidos",
       catalogName: "Vestido L",
-      salePriceUsd: null,
     });
     expect(plan.get("Casa Icona", 0)?.lookbook.catalogName).toBe("Costa Coco");
-    expect(plan.get("Átika", 0)?.lookbook).toMatchObject({ catalog: "sordo", salePriceUsd: 440 });
+    expect(plan.get("Átika", 0)?.lookbook).toMatchObject({ catalog: "sordo" });
     expect(plan.get("Milonga", 1)).toBeNull();
     expect(plan.get("Átika", 1)).toBeNull();
   });
@@ -150,7 +147,7 @@ describe("planChoices with lookbook placements", () => {
     });
   });
 
-  it("lets a preserved placement, publication and owner price win", () => {
+  it("lets a preserved placement and publication win", () => {
     const keys = productKeys("Átika", lots[2]?.products ?? []);
     const casa = productKeys("Casa Icona", lots[0]?.products ?? []);
     const preserved = new Map([
@@ -164,7 +161,6 @@ describe("planChoices with lookbook placements", () => {
             catalogOrder: 9,
             catalogSection: "Otros",
             catalogName: "Mío",
-            salePriceUsd: 500,
           },
         },
       ],
@@ -178,7 +174,6 @@ describe("planChoices with lookbook placements", () => {
             catalogOrder: null,
             catalogSection: null,
             catalogName: null,
-            salePriceUsd: 99,
           },
         },
       ],
@@ -186,11 +181,11 @@ describe("planChoices with lookbook placements", () => {
     const choices = planChoices(lots, [], preserved, plan);
     expect(choices.get("Átika", 0)).toMatchObject({
       isPublished: false,
-      lookbook: { catalogOrder: 9, catalogName: "Mío", salePriceUsd: 500 },
+      lookbook: { catalogOrder: 9, catalogName: "Mío" },
     });
     expect(choices.get("Casa Icona", 0)).toMatchObject({
       isPublished: true,
-      lookbook: { catalog: "casa_icona", catalogOrder: 1, salePriceUsd: 99 },
+      lookbook: { catalog: "casa_icona", catalogOrder: 1 },
     });
   });
 });

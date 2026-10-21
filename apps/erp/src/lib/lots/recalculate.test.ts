@@ -31,20 +31,6 @@ describe("computeLotPrices", () => {
     expect(prices).toEqual(expected.map(({ id, priceGs }) => ({ id, priceGs })));
   });
 
-  it("keeps the owner's sale price in US$ when the lot is repriced", () => {
-    const [sordo, rest] = computeLotPrices(params, [
-      { id: "sordo", originalValueUsd: 100, salePriceUsd: 380, variants: [{ unitsBought: 1 }] },
-      { id: "rest", originalValueUsd: 100, variants: [{ unitsBought: 1 }] },
-    ]);
-    expect(sordo).toEqual({ id: "sordo", priceGs: 2_850_000 });
-    expect(rest?.priceGs).toBe(
-      priceLot(params, [
-        { id: "sordo", originalValueUsd: 100, units: 1 },
-        { id: "rest", originalValueUsd: 100, units: 1 },
-      ])[1]?.priceGs,
-    );
-  });
-
   it("returns nothing when the lot has no units", () => {
     expect(computeLotPrices(params, [])).toEqual([]);
     expect(

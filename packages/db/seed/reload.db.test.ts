@@ -165,13 +165,12 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
     });
   });
 
-  it("keeps the lookbook placement and owner price, and prices with that US$ price", async () => {
+  it("keeps the lookbook placement and prices with the lot formula", async () => {
     const lookbook = {
       catalog: "sordo" as const,
       catalogOrder: 3,
       catalogSection: "Aros",
       catalogName: "Cubagua",
-      salePriceUsd: 380,
     };
     await withRollback(async (tx) => {
       await importLot(tx, lot, images, {
@@ -193,10 +192,8 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
         catalogSection: "Aros",
         catalogName: "Cubagua",
       });
-      expect(first?.salePriceUsd?.toNumber()).toBe(380);
-      expect(first?.priceGs).toBe(
-        Math.round((380 * (first?.lot.exchangeRate.toNumber() ?? 0)) / 1000) * 1000,
-      );
+      expect(first?.priceGs).toBeGreaterThan(0);
+      expect((first?.priceGs ?? 1) % 1000).toBe(0);
       const preserved = await readPreserved(tx);
       expect(preserved.get(productKeys(lot.lotName, lot.products)[0] ?? "")?.lookbook).toEqual(
         lookbook,

@@ -4,13 +4,12 @@ import { inferCategory } from "./infer";
 import type { LookbookPlan } from "./lookbook";
 import { LOOKS_LOT, type Look, matchLooks } from "./looks";
 
-/** Lookbook placement and owner price, edited in the ERP and kept across re-seeds. */
+/** Lookbook placement, edited in the ERP and kept across re-seeds. */
 export interface Lookbook {
   catalog: "casa_icona" | "milonga" | "sordo" | null;
   catalogOrder: number | null;
   catalogSection: string | null;
   catalogName: string | null;
-  salePriceUsd: number | null;
 }
 
 export const NO_LOOKBOOK: Lookbook = {
@@ -18,7 +17,6 @@ export const NO_LOOKBOOK: Lookbook = {
   catalogOrder: null,
   catalogSection: null,
   catalogName: null,
-  salePriceUsd: null,
 };
 
 /** What a re-seed must keep of a product the admin may have edited. */
@@ -65,7 +63,7 @@ export function productKeys(
  *
  * Lookbook: a preserved placement (catalog set in the ERP) wins. A product without one takes its
  * placement from the committed lookbook data and is published, since the lookbook only shows
- * published pieces; a preserved owner price is still kept.
+ * published pieces.
  */
 export function planChoices(
   lots: readonly ParsedLot[],
@@ -86,12 +84,7 @@ export function planChoices(
         const keptLookbook = kept?.lookbook ?? NO_LOOKBOOK;
         const fromData = keptLookbook.catalog ? null : placements?.get(lot.lotName, index);
         const isPublished = fromData ? true : (kept?.isPublished ?? false);
-        const lookbook: Lookbook = fromData
-          ? {
-              ...fromData.lookbook,
-              salePriceUsd: keptLookbook.salePriceUsd ?? fromData.lookbook.salePriceUsd,
-            }
-          : keptLookbook;
+        const lookbook: Lookbook = fromData ? fromData.lookbook : keptLookbook;
         if (kept?.category) {
           return {
             isPublished,

@@ -4,8 +4,6 @@ import { type LotPricingParams, priceLot } from "@atika/pricing";
 export interface RecalcProduct {
   id: string;
   originalValueUsd: number;
-  /** Owner's final price in US$; replaces the formula when set. */
-  salePriceUsd?: number | null;
   variants: { unitsBought: number }[];
 }
 
@@ -18,7 +16,6 @@ export function computeLotPrices(
     id: product.id,
     originalValueUsd: product.originalValueUsd,
     units: product.variants.reduce((sum, variant) => sum + variant.unitsBought, 0),
-    salePriceUsd: product.salePriceUsd ?? null,
   }));
   if (models.reduce((sum, model) => sum + model.units, 0) === 0) return [];
   return priceLot(params, models).map(({ id, priceGs }) => ({ id, priceGs }));
@@ -59,7 +56,6 @@ export async function recalculateLot(
     lot.products.map((product) => ({
       id: product.id,
       originalValueUsd: product.originalValueUsd.toNumber(),
-      salePriceUsd: product.salePriceUsd?.toNumber() ?? null,
       variants: product.variants,
     })),
   );

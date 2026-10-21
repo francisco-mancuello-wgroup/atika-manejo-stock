@@ -183,7 +183,7 @@ The public catalog shows only the three brand PDFs: Casa Icona (lot "Casa Icona"
 the Átika lot). `data/catalogs/lookbook.json` places each piece: `lot`, `code` and `name` (the workbook
 name, used only to find the product), `catalog` (`casa_icona` | `milonga` | `sordo`), `order` (look
 number, PDF page or piece), `section`, `catalogName` (the lookbook display name; `Product.name` never
-changes), `salePriceUsd` (Sordo: monicasordo.com, or the PDF Gs / 7400) and `cover`.
+changes) and `cover`. Prices always come from the lot formula; there is no fixed price.
 
 `categories/lookbook.ts` matches a row by lot + code, then exact name, then normalized name (case, accents,
 punctuation); a row matching no product or several products is printed by the seed and never guessed.

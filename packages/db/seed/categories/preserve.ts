@@ -2,7 +2,7 @@ import type { Prisma } from "../../src/index";
 import { type Preserved, productKeys } from "./choices";
 
 /**
- * Publication state, category, lookbook placement and owner price of every stored product, keyed like `productKeys`. Read before
+ * Publication state, category, lookbook placement of every stored product, keyed like `productKeys`. Read before
  * the reload deletes the products, in import (id) order so identical products keep their place.
  */
 export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<string, Preserved>> {
@@ -17,7 +17,6 @@ export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<s
       catalogOrder: true,
       catalogSection: true,
       catalogName: true,
-      salePriceUsd: true,
       lot: { select: { name: true } },
     },
   });
@@ -37,7 +36,6 @@ export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<s
           catalogOrder: row.catalogOrder,
           catalogSection: row.catalogSection,
           catalogName: row.catalogName,
-          salePriceUsd: row.salePriceUsd?.toNumber() ?? null,
         },
       });
     }

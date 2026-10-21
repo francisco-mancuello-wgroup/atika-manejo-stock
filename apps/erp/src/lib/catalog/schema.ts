@@ -1,7 +1,7 @@
 import type { Catalog } from "@atika/db";
 import { isCatalogCategory } from "@atika/db/categories";
 import { z } from "zod";
-import { fieldErrors, roundTo } from "../form";
+import { fieldErrors } from "../form";
 
 const checkbox = z.preprocess((value) => value === "on" || value === "true", z.boolean());
 
@@ -87,7 +87,7 @@ function optionalText(label: string, max: number) {
   );
 }
 
-/** One product's lookbook placement and owner's sale price; blank fields are stored as null. */
+/** One product's lookbook placement; blank fields are stored as null. */
 export const lookbookSchema = z.object({
   catalog: z.preprocess(
     blankToNull,
@@ -104,15 +104,6 @@ export const lookbookSchema = z.object({
   ),
   catalogSection: optionalText("La sección", 60),
   catalogName: optionalText("El nombre", 120),
-  salePriceUsd: z.preprocess(
-    blankToNumber,
-    z
-      .number({ error: "El precio debe ser un número." })
-      .min(0, { error: "El precio no puede ser negativo." })
-      .max(1_000_000, { error: "El precio no puede superar US$ 1.000.000." })
-      .transform((value) => roundTo(value, 2))
-      .nullable(),
-  ),
 });
 
 export type LookbookInput = z.output<typeof lookbookSchema>;

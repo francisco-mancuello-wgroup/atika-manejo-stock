@@ -18,7 +18,6 @@ const products: CatalogProduct[] = [
     catalogOrder: 4,
     catalogSection: "Vestidos",
     catalogName: "Vestido Lino Icona",
-    salePriceUsd: 64,
   },
   {
     id: "p2",
@@ -33,7 +32,6 @@ const products: CatalogProduct[] = [
     catalogOrder: null,
     catalogSection: null,
     catalogName: null,
-    salePriceUsd: null,
   },
 ];
 
@@ -212,7 +210,7 @@ describe("CatalogoWebView", () => {
     expect(actions.setVisibilityMany).toHaveBeenCalledWith(["p1", "p2"], true);
   });
 
-  it("shows each product's lookbook placement and US$ sale price", () => {
+  it("shows each product's lookbook placement", () => {
     render(
       <CatalogoWebView
         products={products}
@@ -227,11 +225,9 @@ describe("CatalogoWebView", () => {
     expect(first.getByLabelText("Página")).toHaveValue("4");
     expect(first.getByLabelText("Sección")).toHaveValue("Vestidos");
     expect(first.getByLabelText("Nombre en el lookbook")).toHaveValue("Vestido Lino Icona");
-    expect(first.getByLabelText("Precio de venta US$")).toHaveValue("64");
-    expect(first.getByText(/US\$ fijo/)).toBeInTheDocument();
+    expect(first.queryByText(/US\$ fijo/)).not.toBeInTheDocument();
     const second = within(rows[1] as HTMLElement);
     expect(second.getByLabelText("Catálogo")).toHaveValue("");
-    expect(second.getByLabelText("Precio de venta US$")).toHaveValue("");
     expect(
       within(second.getByLabelText("Catálogo"))
         .getAllByRole("option")
@@ -257,14 +253,13 @@ describe("CatalogoWebView", () => {
     const row = within(screen.getAllByRole("row")[2] as HTMLElement);
     fireEvent.change(row.getByLabelText("Catálogo"), { target: { value: "sordo" } });
     fireEvent.change(row.getByLabelText("Página"), { target: { value: "2" } });
-    fireEvent.change(row.getByLabelText("Precio de venta US$"), { target: { value: "380" } });
     fireEvent.click(row.getByRole("button", { name: "Guardar lookbook: Top Seda" }));
     expect(await row.findByRole("status")).toHaveTextContent("Lookbook guardado.");
     const data = saveLookbook.mock.calls[0]?.[1] as FormData;
     expect(data.get("productId")).toBe("p2");
     expect(data.get("catalog")).toBe("sordo");
     expect(data.get("catalogOrder")).toBe("2");
-    expect(data.get("salePriceUsd")).toBe("380");
+    expect(data.get("salePriceUsd")).toBeNull();
     expect(data.get("catalogSection")).toBe("");
   });
 

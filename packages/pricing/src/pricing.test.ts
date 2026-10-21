@@ -105,21 +105,4 @@ describe("priceLot", () => {
   it("returns an empty list for a lot without models", () => {
     expect(priceLot(casaIcona, [])).toEqual([]);
   });
-
-  it("uses the owner's sale price in US$ (IVA included) over the formula", () => {
-    // Sordo Cubagua earrings: US$ 380 on monicasordo.com, Átika lot at 7.400
-    const models = [
-      { id: "cubagua", originalValueUsd: 100, units: 1, salePriceUsd: 380 },
-      { id: "other", originalValueUsd: 100, units: 1 },
-    ];
-
-    const [cubagua, other] = priceLot({ ...casaIcona, exchangeRate: 7400 }, models);
-
-    expect(cubagua?.priceGs).toBe(2_812_000);
-    // Shipping is still prorated over both models, and the other one keeps the formula
-    expect(cubagua?.shippingPerUnitUsd).toBe(other?.shippingPerUnitUsd);
-    expect(other?.priceGs).toBe(
-      priceGs(other?.unitCostUsd ?? 0, { ...casaIcona, exchangeRate: 7400 }),
-    );
-  });
 });
