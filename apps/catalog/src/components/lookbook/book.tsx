@@ -1,8 +1,9 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { formatGs } from "../../lib/format";
 import { type LookbookPage, type LookbookPiece, pageAnchor } from "../../lib/lookbook";
+import { effectivePriceGs, type PriceFields } from "../../lib/price";
+import { Price } from "../price";
 import { AddToCart } from "./add-to-cart";
 import { ArrowIcon } from "./icons";
 import { PiecePhotos } from "./piece-photos";
@@ -81,11 +82,11 @@ function CoverPage({ catalog }: { catalog: BookCatalog }) {
 /** Name and price on one line, like fashion apps; the price never wraps. */
 function NamePrice({
   name,
-  priceGs,
+  price,
   as: Tag,
 }: {
   name: string;
-  priceGs: number | null;
+  price: PriceFields;
   as: "h2" | "h3";
 }) {
   return (
@@ -100,7 +101,7 @@ function NamePrice({
         {name}
       </Tag>
       <p className="shrink-0 text-base tracking-[1px] whitespace-nowrap sm:text-lg">
-        {priceGs == null ? "Consultar precio" : formatGs(priceGs)}
+        <Price {...price} />
       </p>
     </div>
   );
@@ -117,11 +118,12 @@ function PieceDetails({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      {inSet && <NamePrice name={piece.name} priceGs={piece.priceGs} as="h3" />}
+      {inSet && <NamePrice name={piece.name} price={piece} as="h3" />}
       <AddToCart
         id={piece.id}
         name={piece.name}
-        priceGs={piece.priceGs}
+        priceGs={effectivePriceGs(piece)}
+        discountPercent={piece.discountPercent}
         sizes={piece.sizes}
         color={piece.color}
         link={link}
@@ -171,7 +173,13 @@ function PiecePage({
             {page.title}
           </h2>
         ) : (
-          <NamePrice name={page.title} priceGs={page.pieces[0]?.priceGs ?? null} as="h2" />
+          <NamePrice
+            name={page.title}
+            price={
+              page.pieces[0] ?? { priceGs: null, discountPercent: null, discountedPriceGs: null }
+            }
+            as="h2"
+          />
         )}
         {description && (
           <p className="-mt-2 hidden text-sm text-fg-muted sm:block">{description}</p>

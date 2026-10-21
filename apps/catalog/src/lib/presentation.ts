@@ -6,16 +6,15 @@ import {
 } from "./catalog-view";
 import { type PieceColor, resolveColor } from "./colors";
 import { findLookDescription, LOOKS, LOOKS_SUPPLIER, type Look } from "./looks";
+import type { PriceFields } from "./price";
 
 /**
  * One piece of a presentation page, built field by field like the other catalog view models, so
  * costs, lots, stock counts and sales can never leak through it.
  */
-export interface PresentationPiece {
+export interface PresentationPiece extends PriceFields {
   id: string;
   name: string;
-  /** Null when the store hides prices ("Consultar precio"). */
-  priceGs: number | null;
   sizes: CatalogSize[];
   /** Photos in display order, named after the product. */
   photos: { url: string; alt: string }[];
@@ -63,6 +62,8 @@ export function toPresentationPiece(
     id: product.id,
     name: product.name,
     priceGs: base.priceGs,
+    discountPercent: base.discountPercent,
+    discountedPriceGs: base.discountedPriceGs,
     sizes: base.sizes,
     photos: [...product.images]
       .sort((a, b) => a.position - b.position)

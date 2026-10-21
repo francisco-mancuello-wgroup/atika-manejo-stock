@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Price } from "../../../../components/price";
 import { ProductContact } from "../../../../components/product-contact";
 import { ProductPhoto } from "../../../../components/product-photo";
 import { getDb } from "../../../../lib/db";
-import { formatGs } from "../../../../lib/format";
+import { discountedPriceLabel } from "../../../../lib/price";
 import { getCatalogSettings, getProduct } from "../../../../lib/queries";
 
 type Params = Promise<{ id: string }>;
@@ -36,7 +37,7 @@ export default async function ProductPage({ params }: { params: Params }) {
         <h1 className="font-display text-5xl leading-tight text-ink">{product.name}</h1>
         <div className="flex flex-col gap-1">
           <p className="text-2xl text-ink">
-            {product.priceGs === null ? "Consultar precio" : formatGs(product.priceGs)}
+            <Price {...product} align="start" />
           </p>
           {product.priceGs === null ? null : <p className="text-xs text-muted">IVA incluido</p>}
         </div>
@@ -45,6 +46,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           sizes={product.sizes}
           whatsappNumber={settings.whatsappNumber}
           messageTemplate={settings.messageTemplate}
+          priceLabel={discountedPriceLabel(product)}
         />
       </div>
     </section>

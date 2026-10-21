@@ -11,6 +11,8 @@ const product: CatalogProductDetail = {
   brand: "Casa Icona",
   category: "vestidos",
   priceGs: 450_000,
+  discountPercent: null,
+  discountedPriceGs: null,
   sizes: [
     { size: "S", available: true },
     { size: "M", available: true },
@@ -62,6 +64,17 @@ describe("ProductSheet", () => {
     expect(screen.getByText("IVA incluido")).toBeInTheDocument();
     expect(screen.getByText("Verde")).toBeInTheDocument();
     expect(screen.getByText("Lino fresco con cierre lateral.")).toBeInTheDocument();
+  });
+
+  it("shows the struck price, the discounted price and the badge, and sends the discounted price", () => {
+    renderSheet({ discountPercent: 20, discountedPriceGs: 360_000 });
+    expect(screen.getByText("₲ 450.000").tagName).toBe("S");
+    expect(screen.getByText("₲ 360.000")).toBeInTheDocument();
+    expect(screen.getByText("-20 %")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "S" }));
+    expect(textOf(screen.getByRole("link", { name: "Realizar pedido" }))).toBe(
+      "Hola! Vestido Lino talle S – ₲\u00a0360.000 (-20 %)",
+    );
   });
 
   it("asks to consult the price when it is hidden", () => {

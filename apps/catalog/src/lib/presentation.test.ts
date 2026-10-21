@@ -36,6 +36,8 @@ describe("toPresentationPiece", () => {
       id: "p1",
       name: "COSTA VINO",
       priceGs: 450_000,
+      discountPercent: null,
+      discountedPriceGs: null,
       sizes: [
         { size: "XS", available: true },
         { size: "M", available: true },
@@ -47,6 +49,21 @@ describe("toPresentationPiece", () => {
       color: { label: "Vino", hex: expect.stringMatching(/^#/) },
       description: "Prenda corta en tono vino",
     });
+  });
+
+  it("adds the effective discount and hides it with the price", () => {
+    expect(toPresentationPiece({ ...row, discountPercent: 20 }, open, looks)).toMatchObject({
+      priceGs: 450_000,
+      discountPercent: 20,
+      discountedPriceGs: 360_000,
+    });
+    expect(
+      toPresentationPiece(
+        { ...row, discountPercent: 20 },
+        { showPrices: false, showSoldOutSizes: false },
+        looks,
+      ),
+    ).toMatchObject({ priceGs: null, discountPercent: null, discountedPriceGs: null });
   });
 
   it("prefers the stored color and description over the derived ones", () => {
@@ -87,6 +104,8 @@ describe("toPresentationPiece", () => {
     expect(Object.keys(piece).sort()).toEqual([
       "color",
       "description",
+      "discountPercent",
+      "discountedPriceGs",
       "id",
       "name",
       "photos",

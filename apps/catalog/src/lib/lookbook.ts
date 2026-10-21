@@ -1,5 +1,6 @@
 import type { CatalogSettingsView, ProductSource } from "./catalog-view";
 import { type PieceColor, resolveColor } from "./colors";
+import { type PriceFields, priceFields } from "./price";
 import { sortSizes } from "./sizes";
 
 /**
@@ -36,11 +37,9 @@ export interface LookbookRow extends ProductSource {
 }
 
 /** One product on a page: a dress, or the top of a set. Nothing about costs or stock counts. */
-export interface LookbookPiece {
+export interface LookbookPiece extends PriceFields {
   id: string;
   name: string;
-  /** Null when the store hides prices ("Consultar precio"). */
-  priceGs: number | null;
   /** Sizes that can be bought now, smallest first. */
   sizes: string[];
   color: PieceColor | null;
@@ -81,7 +80,7 @@ function toPiece(
   return {
     id: row.id,
     name: displayName(row),
-    priceGs: settings.showPrices ? row.priceGs : null,
+    ...priceFields(row.priceGs, row.discountPercent, settings.showPrices),
     sizes: availableSizes(row),
     color: resolveColor(row.color, row.name),
     description: row.description?.trim() || null,

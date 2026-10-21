@@ -7,6 +7,7 @@ import {
   getProduct,
   getProductDetail,
   listCollections,
+  listLookbook,
   listProducts,
 } from "./queries";
 
@@ -66,6 +67,8 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
         "brand",
         "category",
         "detail",
+        "discountPercent",
+        "discountedPriceGs",
         "id",
         "imageUrl",
         "inStock",
@@ -328,6 +331,123 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
         ]);
         expect(collection?.pieces[1]?.color?.label).toBe("Negro");
         expect(await getCollectionPresentation(tx, open, "no-existe")).toBeNull();
+      });
+    });
+  });
+});
+
+describe.skipIf(!hasDatabase)("catalog discounts (database)", () => {
+  afterAll(disconnectTestDb);
+
+  const today = new Date();
+  const day = (offset: number) => {
+    const date = new Date(today);
+    date.setUTCDate(date.getUTCDate() + offset);
+    return new Date(`${date.toISOString().slice(0, 10)}T00:00:00.000Z`);
+  };
+
+  it("applies the highest active discount to listProducts, getProduct and getProductDetail", async () => {
+    await withRollback(async (tx) => {
+      await tx.discount.deleteMany();
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [a, b, c] = await createProducts(tx, [
+        { name: "A", priceGs: 200_000, variants: [["M", 1]] },
+        { name: "B", priceGs: 200_000, variants: [["M", 1]] },
+        { name: "C", priceGs: 200_000, variants: [["M", 1]] },
+      ]);
+      await tx.discount.create({ data: { name: "Todos", percent: 10, scope: "all" } });
+      await tx.discount.create({
+        data: {
+          name: "Sólo A y B",
+          percent: 30,
+          scope: "selected",
+          products: { create: [{ productId: a ?? "" }, { productId: b ?? "" }] },
+        },
+      });
+      await tx.discount.create({
+        data: { name: "Apagado", percent: 80, scope: "all", isActive: false },
+      });
+      await tx.discount.create({
+        data: { name: "Vencido", percent: 70, scope: "all", endsAt: day(-3) },
+      });
+      await tx.discount.create({
+        data: { name: "Futuro", percent: 60, scope: "all", startsAt: day(3) },
+      });
+
+      const list = await listProducts(tx, open, null);
+      const byName = Object.fromEntries(list.map((p) => [p.name, p]));
+      expect(byName.A).toMatchObject({
+        priceGs: 200_000,
+        discountPercent: 30,
+        discountedPriceGs: 140_000,
+      });
+      expect(byName.B).toMatchObject({ discountPercent: 30, discountedPriceGs: 140_000 });
+      expect(byName.C).toMatchObject({
+        priceGs: 200_000,
+        discountPercent: 10,
+        discountedPriceGs: 180_000,
+      });
+
+      expect(await getProduct(tx, open, a ?? "")).toMatchObject({
+        discountPercent: 30,
+        discountedPriceGs: 140_000,
+      });
+      expect(await getProductDetail(tx, open, c ?? "")).toMatchObject({
+        discountPercent: 10,
+        discountedPriceGs: 180_000,
+      });
+    });
+  });
+
+  it("keeps products undiscounted without discounts and hides it with the prices", async () => {
+    await withRollback(async (tx) => {
+      await tx.discount.deleteMany();
+      const [id] = await createProducts(tx, [
+        { name: "Solo", priceGs: 200_000, variants: [["M", 1]] },
+      ]);
+      expect(await getProduct(tx, open, id ?? "")).toMatchObject({
+        discountPercent: null,
+        discountedPriceGs: null,
+      });
+      await tx.discount.create({ data: { name: "Todos", percent: 10, scope: "all" } });
+      const hidden = await getProduct(tx, { ...open, showPrices: false }, id ?? "");
+      expect(hidden).toMatchObject({
+        priceGs: null,
+        discountPercent: null,
+        discountedPriceGs: null,
+      });
+    });
+  });
+
+  it("applies discounts to the presentation pieces and the lookbook pieces", async () => {
+    await withRollback(async (tx) => {
+      await tx.discount.deleteMany();
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const supplier = `Descuento ${Date.now()}`;
+      const [id] = await createProducts(
+        tx,
+        [{ name: "Pieza", priceGs: 500_000, photos: ["/media/p.webp"], variants: [["M", 1]] }],
+        supplier,
+      );
+      await tx.product.update({
+        where: { id: id ?? "" },
+        data: { catalog: "milonga", catalogOrder: 1 },
+      });
+      await tx.discount.create({ data: { name: "Todos", percent: 20, scope: "all" } });
+
+      const slug = (await listCollections(tx, open)).find((c) => c.name === supplier)?.slug ?? "";
+      const collection = await getCollectionPresentation(tx, open, slug);
+      expect(collection?.pieces[0]).toMatchObject({
+        priceGs: 500_000,
+        discountPercent: 20,
+        discountedPriceGs: 400_000,
+      });
+
+      const lookbook = await listLookbook(tx, open);
+      expect(lookbook.milonga[0]?.pieces[0]).toMatchObject({
+        priceGs: 500_000,
+        discountPercent: 20,
+        discountedPriceGs: 400_000,
       });
     });
   });

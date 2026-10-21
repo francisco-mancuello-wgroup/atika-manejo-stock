@@ -20,6 +20,8 @@ const products: CatalogProduct[] = [
     name: "Vestido Lino",
     category: "vestidos",
     priceGs: 1000,
+    discountPercent: null,
+    discountedPriceGs: null,
     sizes: [{ size: "M", available: true }],
     inStock: true,
     imageUrl: null,

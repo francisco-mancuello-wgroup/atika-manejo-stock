@@ -2,15 +2,16 @@ import { cn } from "@atika/ui";
 import Link from "next/link";
 import { type CatalogFilters, catalogHref } from "../lib/catalog-filters";
 import type { CatalogProduct } from "../lib/catalog-view";
-import { formatGs } from "../lib/format";
+import { discountedPriceLabel } from "../lib/price";
 import { buildWhatsappUrl } from "../lib/whatsapp";
 import { WhatsappIcon } from "./icons";
+import { Price as PriceText } from "./price";
 import { ProductPhoto } from "./product-photo";
 
 function Price({ product, className }: { product: CatalogProduct; className?: string }) {
   return (
     <p className={cn("whitespace-nowrap font-display font-medium text-ink", className)}>
-      {product.priceGs === null ? "Consultar precio" : formatGs(product.priceGs)}
+      <PriceText {...product} />
     </p>
   );
 }
@@ -100,7 +101,10 @@ export function ProductRows({
           </div>
 
           <a
-            href={buildWhatsappUrl(whatsappNumber, messageTemplate, { producto: product.name })}
+            href={buildWhatsappUrl(whatsappNumber, messageTemplate, {
+              producto: product.name,
+              precio: discountedPriceLabel(product),
+            })}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Consultar ${product.name} por WhatsApp`}

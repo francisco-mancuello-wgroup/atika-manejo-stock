@@ -1,3 +1,4 @@
+import { type PriceFields, priceFields } from "./price";
 import { sortSizes } from "./sizes";
 
 export interface CatalogSettingsView {
@@ -20,14 +21,12 @@ export interface CatalogSize {
  * original value, lot, stock counts and sales can never leak through it. The only
  * lot-derived data is `brand`, a display name that is already public on the garments.
  */
-export interface CatalogProduct {
+export interface CatalogProduct extends PriceFields {
   id: string;
   name: string;
   /** Brand display name (product brand, else the supplier's name); never a cost or lot detail. */
   brand: string | null;
   category: string | null;
-  /** Null when the store hides prices ("Consultar precio"). */
-  priceGs: number | null;
   sizes: CatalogSize[];
   /** At least one size is available. */
   inStock: boolean;
@@ -52,6 +51,8 @@ export interface ProductSource {
   lot: { supplier: { name: string } };
   category: string | null;
   priceGs: number;
+  /** Percent off that applies now (computed on the server from the active discounts). */
+  discountPercent?: number | null;
   variants: readonly { size: string; stock: number }[];
   images: readonly { url: string; position: number }[];
   color?: string | null;
@@ -87,7 +88,7 @@ export function toCatalogProduct(
     name: product.name,
     brand: product.brand?.trim() || product.lot.supplier.name.trim() || null,
     category: product.category,
-    priceGs: settings.showPrices ? product.priceGs : null,
+    ...priceFields(product.priceGs, product.discountPercent, settings.showPrices),
     sizes: settings.showSoldOutSizes ? sizes : available,
     inStock: available.length > 0,
     imageUrl: cover?.url ?? null,

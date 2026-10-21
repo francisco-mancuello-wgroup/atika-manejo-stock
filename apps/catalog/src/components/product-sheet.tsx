@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CatalogProductDetail } from "../lib/catalog-view";
-import { formatGs } from "../lib/format";
+import { discountedPriceLabel } from "../lib/price";
 import { buildWhatsappUrl } from "../lib/whatsapp";
 import { CloseIcon, WhatsappIcon } from "./icons";
+import { Price } from "./price";
 import { ProductPhoto } from "./product-photo";
 
 const FOCUSABLE = "a[href], button:not([disabled])";
@@ -72,6 +73,7 @@ export function ProductSheet({
   const href = buildWhatsappUrl(whatsappNumber, messageTemplate, {
     producto: product.name,
     ...(size ? { talle: size } : {}),
+    precio: discountedPriceLabel(product),
   });
   const current = product.images[photo]?.url ?? product.imageUrl;
 
@@ -141,7 +143,7 @@ export function ProductSheet({
           </h2>
           <div className="flex items-baseline gap-2">
             <p className="font-display text-[22px] font-medium text-ink">
-              {product.priceGs === null ? "Consultar precio" : formatGs(product.priceGs)}
+              <Price {...product} align="start" />
             </p>
             {product.priceGs === null ? null : (
               <p className="text-[11px] text-muted">IVA incluido</p>

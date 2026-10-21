@@ -53,6 +53,14 @@ describe("cart totals", () => {
 });
 
 describe("orderMessage", () => {
+  it("charges and shows the discounted price with its percent", () => {
+    const discounted: CartItem = { ...zamba, priceGs: 1_798_000, discountPercent: 20 };
+    expect(orderMessage([discounted])).toContain(
+      `1. Zamba Azul – talle M – Azul – ${formatGs(1_798_000)} (-20 %) – https://`,
+    );
+    expect(orderMessage([discounted])).toContain(`Total: ${formatGs(1_798_000)}`);
+  });
+
   it("lists every line with size, color, price and link, then the total", () => {
     const earcuff: CartItem = {
       id: "p9",

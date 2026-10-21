@@ -10,6 +10,7 @@ import {
   removeFromCart,
 } from "../../lib/cart";
 import { formatGs } from "../../lib/format";
+import { discountLabel } from "../../lib/price";
 import { whatsappContactUrl } from "../../lib/whatsapp";
 import { BagIcon, CloseIcon, WhatsAppIcon } from "./icons";
 
@@ -135,6 +136,7 @@ export function CartProvider({
                       {[
                         item.size === "U" ? "Talle único" : `Talle ${item.size}`,
                         item.color,
+                        item.discountPercent ? discountLabel(item.discountPercent) : null,
                         item.quantity > 1 ? `x${item.quantity}` : null,
                       ]
                         .filter(Boolean)

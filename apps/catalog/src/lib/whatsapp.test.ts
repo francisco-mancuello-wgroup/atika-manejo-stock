@@ -39,6 +39,19 @@ describe("buildWhatsappUrl", () => {
     expect(new URL(url).searchParams.get("text")).toBe("Top / Top / S");
   });
 
+  it("appends the price when one is given (discounted pieces)", () => {
+    const text = new URL(
+      buildWhatsappUrl("595981123456", TEMPLATE, {
+        producto: "Vestido Lino",
+        talle: "M",
+        precio: "₲ 207.000 (-20 %)",
+      }),
+    ).searchParams.get("text");
+    expect(text).toBe(
+      "Hola! Me interesa Vestido Lino en talle M. ¿Está disponible? – ₲ 207.000 (-20 %)",
+    );
+  });
+
   it("omits the size clause when no size is chosen", () => {
     const text = new URL(
       buildWhatsappUrl("595981123456", TEMPLATE, { producto: "Vestido Lino" }),

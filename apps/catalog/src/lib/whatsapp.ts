@@ -37,15 +37,17 @@ function fillTemplate(template: string, { producto, talle }: { producto: string;
 
 /**
  * `https://wa.me/<digits>?text=<message>` with `{producto}` and `{talle}` filled in. Without a
- * size the size clause of the template is dropped. Placeholders are replaced in a single pass,
+ * size the size clause of the template is dropped; a `precio` (discounted pieces) is appended
+ * as " – <price>". Placeholders are replaced in a single pass,
  * so a product name that contains `{talle}` is left untouched.
  */
 export function buildWhatsappUrl(
   number: string,
   template: string,
-  piece: { producto: string; talle?: string },
+  piece: { producto: string; talle?: string; precio?: string | null },
 ): string {
-  return `${whatsappContactUrl(number)}?text=${encodeURIComponent(fillTemplate(template, piece))}`;
+  const message = [fillTemplate(template, piece), piece.precio].filter(Boolean).join(" – ");
+  return `${whatsappContactUrl(number)}?text=${encodeURIComponent(message)}`;
 }
 
 /**

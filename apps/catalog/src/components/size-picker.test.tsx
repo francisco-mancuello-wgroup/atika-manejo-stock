@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { formatGs } from "../lib/format";
 import { SizePicker } from "./size-picker";
 
 const base = {
@@ -32,6 +33,17 @@ describe("SizePicker", () => {
     expect(screen.queryByRole("link")).toBeNull();
     fireEvent.click(button);
     expect(screen.getByRole("radio", { name: "XS" })).toHaveFocus();
+  });
+
+  it("names the discount next to the price it is given", () => {
+    render(<SizePicker {...base} priceGs={1_503_000} discountPercent={20} sizes={sizes} />);
+    fireEvent.click(screen.getByRole("radio", { name: "S" }));
+    const url = new URL(
+      screen.getByRole("link", { name: "Realizar pedido" }).getAttribute("href") ?? "",
+    );
+    expect(url.searchParams.get("text")).toBe(
+      `Hola! Me interesa COSTA VINO en talle S. ¿Está disponible? – Vino – ${formatGs(1_503_000)} (-20 %) – ${base.link}`,
+    );
   });
 
   it("after choosing a size becomes a WhatsApp link with the full message", () => {
