@@ -150,6 +150,19 @@ file (keep it out of `.env.example`, shell history helpers and commits). The see
 workbook data, so it needs `ATIKA_EXCEL_DIR` and `DATABASE_URL` as usual. Rotating the password does not
 end existing sessions; to force a sign-out everywhere run `DELETE FROM sessions;` against the database.
 
+### Adding more ERP users without reseeding
+
+`pnpm db:seed` recreates products from the workbooks, so it wipes ERP edits, uploaded photos and
+registered sales. To create another user (or rotate a password) on a database already in use, run the
+standalone command, which only touches the `users` table:
+
+```bash
+USER_EMAIL=someone@example.com USER_PASSWORD='a-long-unique-passphrase' pnpm db:user
+```
+
+Same rules as the admin account: lowercase email, at least 8 characters, only the scrypt hash is stored.
+Signed-in users can change their own password in ERP → Seguridad.
+
 ## Categories
 
 `categories/infer.ts` assigns a catalog category from the product name, then its description, then the
