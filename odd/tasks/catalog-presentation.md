@@ -50,7 +50,6 @@ The user wants the catalog "igual" to atika-event.vercel.app/catalogos/casa-icon
 ## Verification evidence
 
 RED observed before each task (module-not-found or failing expectations): T1 `colors/looks/presentation` tests (3 files failed to resolve), then `queries.db` collection tests (2 failed, functions undefined); T2 12 failures (href expectations `/ver-todo...`, topbar action) plus the index page test failing to resolve; T3 carousel, presentation and page tests failing to resolve; T4 9 failures in `whatsapp.test.ts`/`presentation.test.tsx` plus `size-picker.test.tsx` unresolved. GREEN after each implementation.
-
 - `pnpm lint`: Checked 281 files, no fixes needed.
 - `pnpm typecheck`: 6 tasks successful.
 - `pnpm test`: catalog 23 files / 175 tests, db 175, erp 153, ui 36, pricing 15, all passing.
