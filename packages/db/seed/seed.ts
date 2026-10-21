@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
 import { createPrismaClient } from "../src/index";
-import { hashPassword } from "../src/password";
+import { upsertAdmin } from "./admin";
 import { buildReport, type CategoryReport, formatReport, planChoices } from "./categories/choices";
 import { type Look, readLooks } from "./categories/looks";
 import { CASA_ICONA_LOOKS_FILE } from "./categories/paths";
@@ -79,16 +79,6 @@ async function reload(
   );
 }
 
-async function upsertAdmin(prisma: Client): Promise<void> {
-  const email = requireEnv("ADMIN_EMAIL").toLowerCase();
-  const passwordHash = await hashPassword(requireEnv("ADMIN_PASSWORD"));
-  await prisma.user.upsert({
-    where: { email },
-    create: { email, passwordHash },
-    update: { passwordHash },
-  });
-}
-
 async function main(): Promise<void> {
   const lots = await loadLots(requireEnv("ATIKA_EXCEL_DIR"));
   for (const lot of lots)
@@ -113,7 +103,7 @@ async function main(): Promise<void> {
   const prisma = createPrismaClient(requireEnv("DATABASE_URL"));
   try {
     const { totals, report } = await reload(prisma, lots, images, looks ?? []);
-    await upsertAdmin(prisma);
+    await upsertAdmin(prisma, requireEnv("ADMIN_EMAIL"), requireEnv("ADMIN_PASSWORD"));
     if (manifest || pdfManifest) {
       const files = mediaFilesFor(images, lots, [
         { urlPrefix: `${MEDIA_URL_PREFIX}/${BRAND_PDF_MEDIA_SUBDIR}`, dir: PRODUCT_IMAGES_NEW_DIR },
