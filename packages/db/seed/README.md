@@ -9,7 +9,9 @@ excel/notes.ts    parser for the free-text "VENTAS (fecha)" notes
 excel/sizes.ts    size normalization
 excel/parse.ts    pure workbook -> lot normalization (tested with in-memory workbooks)
 excel/load.ts     reads the workbooks from disk and holds per-lot facts the files do not carry
-seed.ts           transactional reload: suppliers, lots, products, variants, sales, catalog settings, app settings, admin
+reload.ts         per-lot import (suppliers, lots, products, variants, images, sales) and the table reset
+seed.ts           transactional reload plus catalog settings, app settings, admin and the photo copy
+images/           workbook photo export (`pnpm db:export-images`) and its seed side (see "Product photos")
 password.ts       scrypt hashing helper (shared with the ERP login)
 ```
 
@@ -60,6 +62,28 @@ Data rules applied (see `odd/tasks/excel-import.md`):
 | Milonga    | one row per model | `REFERENCIA` code, colour, combined sizes, struck cells plus sized notes, shipping in Gs |
 | Zunilda    | one row per model | code and colour, struck size cells, notes `SIZE -date`, shipping in Gs                   |
 | Átika      | one row per model | brand column, unit cost in USD and Gs (rate per row), `Date` sale cells, no shipping     |
+
+## Product photos
+
+The workbooks embed one floating drawing per product. `pnpm db:export-images` reads them, writes
+`data/product-images/<lot-slug>/<product>.webp` (WebP, long side at most 1600px, quality 82, never
+upscaled) and `data/product-images/manifest.json`. The folder is committed; re-running on the same
+workbooks gives byte-identical output (the folder is emptied first).
+
+Matching rule: a drawing belongs to the product read from the worksheet row of its **top-left
+anchor** (a picture that overlaps further rows still belongs to its anchor row). In the one-row-per-size
+layout a product owns all its size rows. A drawing anchored on a header, blank, totals or any other
+non-product row is reported as unmatched and never attached to the nearest product; products without a
+drawing are reported too. Two drawings on one product become `-2`, `-3` files with positions 0, 1.
+
+Files are named `<lot-slug>/<code-name>.webp`; a repeated stem gets `-2`, `-3` in product order. The manifest
+identifies a product by lot name and position in the lot (the order the seed creates them) and also
+stores its name and code: the seed refuses a manifest whose names disagree with the workbooks.
+
+`pnpm db:seed` creates a `ProductImage` per manifest entry (position 0 = cover, alt = product name,
+url `/media/products/<lot-slug>/<file>.webp`) and copies the files to `apps/catalog/public/media/products`
+and `apps/erp/public/media/products` (gitignored, emptied before each copy). Without a manifest the seed
+works as before.
 
 ## Settings rows
 

@@ -11,3 +11,6 @@ playwright-report/
 test-results/
 packages/db/src/generated/
 next-env.d.ts
+
+# product photos
+apps/*/public/media/
