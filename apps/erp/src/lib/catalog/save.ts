@@ -72,3 +72,21 @@ export async function publishAllInStock(db: TransactionRunner): Promise<FormStat
       : `Se publicaron ${result.count} ${result.count === 1 ? "producto" : "productos"}.`;
   return { status: "success", message };
 }
+
+/** Shows or hides every given product (e.g. the current filtered list), with or without stock. */
+export async function setProductsVisibility(
+  db: TransactionRunner,
+  productIds: readonly string[],
+  isPublished: boolean,
+): Promise<FormState> {
+  const ids = productIds.filter((id) => UUID.test(id));
+  if (ids.length === 0) return { status: "error", message: "No hay productos para actualizar." };
+  const result = await db.$transaction((tx) =>
+    tx.product.updateMany({ where: { id: { in: ids } }, data: { isPublished } }),
+  );
+  const noun = result.count === 1 ? "producto" : "productos";
+  const message = isPublished
+    ? `Se hicieron visibles ${result.count} ${noun}.`
+    : `Se ocultaron ${result.count} ${noun}.`;
+  return { status: "success", message };
+}

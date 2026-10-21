@@ -10,6 +10,7 @@ import {
   publishAllInStock,
   saveCatalogSettings,
   setProductCategory,
+  setProductsVisibility,
   setProductVisibility,
 } from "./save";
 
@@ -90,7 +91,6 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
 
   it("publishes only products that have stock", async () => {
     await withRollback(async (tx) => {
-      await tx.product.updateMany({ data: { isPublished: false } });
       const { products } = await createFixtureLot(tx, [
         { name: "With stock", originalValueUsd: 10, variants: [["M", 2, 1]] },
         { name: "Sold out", originalValueUsd: 10, variants: [["M", 2, 0]] },
@@ -102,6 +102,39 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
       );
       expect(withStock?.isPublished).toBe(true);
       expect(soldOut?.isPublished).toBe(false);
+    });
+  });
+
+  it("shows or hides every listed product at once, including those without stock", async () => {
+    await withRollback(async (tx) => {
+      const { products } = await createFixtureLot(tx, [
+        { name: "With stock", originalValueUsd: 10, variants: [["M", 2, 1]] },
+        { name: "Sold out", originalValueUsd: 10, variants: [["M", 2, 0]] },
+      ]);
+      const ids = products.map((p) => p.id);
+
+      expect(await setProductsVisibility(dbOver(tx), ids, true)).toMatchObject({
+        status: "success",
+        message: "Se hicieron visibles 2 productos.",
+      });
+      const shown = await tx.product.findMany({ where: { id: { in: ids } } });
+      expect(shown.every((p) => p.isPublished)).toBe(true);
+
+      expect(await setProductsVisibility(dbOver(tx), ids, false)).toMatchObject({
+        status: "success",
+        message: "Se ocultaron 2 productos.",
+      });
+      const hidden = await tx.product.findMany({ where: { id: { in: ids } } });
+      expect(hidden.every((p) => !p.isPublished)).toBe(true);
+    });
+  });
+
+  it("ignores malformed ids and rejects an empty selection", async () => {
+    await withRollback(async (tx) => {
+      expect(await setProductsVisibility(dbOver(tx), [], true)).toMatchObject({ status: "error" });
+      expect(await setProductsVisibility(dbOver(tx), ["nope"], true)).toMatchObject({
+        status: "error",
+      });
     });
   });
 });
