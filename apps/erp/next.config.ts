@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   // The dev-only Next.js badge covers the sidebar logo (its position is user-draggable and
   // persisted per browser), so hide it; compile and runtime errors are still shown.
   devIndicators: false,
+  // Product photos are uploaded through Server Actions (up to 10 MB each, several per save).
+  experimental: { serverActions: { bodySizeLimit: "50mb" } },
 };
 
 export default nextConfig;
