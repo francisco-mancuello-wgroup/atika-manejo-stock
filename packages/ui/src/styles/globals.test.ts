@@ -21,8 +21,8 @@ describe("theme tokens (Propuesta B)", () => {
   });
 
   it("maps the sans and display font families to next/font variables", () => {
-    expect(css).toContain("--font-sans: var(--font-inter)");
-    expect(css).toContain("--font-display: var(--font-cormorant)");
+    expect(css).toContain("--font-sans: var(--font-jost)");
+    expect(css).toContain("--font-display: var(--font-bodoni)");
     expect(css).not.toContain("--font-logo");
   });
 });

@@ -19,9 +19,9 @@
   --color-ok: #4a6b4f;
   --color-wa: #2f6b4a;
 
-  /* Apps set --font-inter / --font-cormorant via next/font/google. */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-cormorant), ui-serif, Georgia, serif;
+  /* Apps set --font-jost / --font-bodoni via next/font/google. Bodoni Moda only at display sizes (≥ 20px). */
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bodoni), ui-serif, Georgia, serif;
 }
 
 @layer base {
