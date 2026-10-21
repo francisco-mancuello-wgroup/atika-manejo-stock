@@ -20,7 +20,7 @@ Every later feature builds on these tokens and chrome; switching now avoids rest
 
 ## Out of scope
 
-- Real logo asset (wordmark stays live text in Unbounded until the user provides the file).
+_(Real logo moved into scope as T3 on user request: "encargate del logo también".)_
 - Real screens (lots, sales, catalog pages) — later features.
 
 ## Design reference (atika.pen, Propuesta B)
@@ -60,6 +60,9 @@ Fonts: Inter (body/UI), Cormorant Garamond (titles, prices, large figures), Unbo
 - [x] T2 — Chrome: ERP sidebar and catalog topbar match B (wordmark "átika", eyebrow, active nav bar with `aria-current="page"`, TC footer); catalog home heading in Cormorant.
   - Accept: smoke tests assert wordmark, eyebrow and `aria-current` on the active item; all checks pass.
 
+- [x] T3 — Real logo: vector wordmark extracted from brand PDF page 1 (single evenodd path, viewBox = PDF clip box) as `Wordmark` in `@atika/ui` (`role="img"`, `aria-label="átika"`, `currentColor`); used in ERP sidebar and catalog topbar; Unbounded font removed.
+  - Accept: tests find the logo by role/name; no Unbounded font loaded; all checks pass.
+
 ## Progress
 
 - 2026-10-21: Document created; user chose Propuesta B.
@@ -73,6 +76,9 @@ Fonts: Inter (body/UI), Cormorant Garamond (titles, prices, large figures), Unbo
 - `env -u DATABASE_URL pnpm build`: 3/3 successful; built CSS in both apps contains `--color-sand`.
 - Commits: 2b937aa feat(ui) theme tokens and fonts; 59b34ba feat(apps) sidebar and topbar.
 
+- T3 (2026-10-21, commit `0b75d32`): RED — ui: `Failed to resolve import "./wordmark"`; erp/catalog: `Unable to find an accessible element with the role "img" and name "átika"` (1 failed each). GREEN — ui 34, erp 6, catalog 5 passed; `pnpm typecheck` 6/6; `pnpm test` 6/6; `pnpm lint` exit 0; `env -u DATABASE_URL pnpm build` 3/3; no Unbounded in built CSS.
+- Merge: local `main` only. Push waits for the user's OK after manual testing.
+
 ## Next step
 
-Merge to `main`.
+User tests locally (`pnpm dev`: catalog :3000, ERP :3001); push `main` after the user's OK.
