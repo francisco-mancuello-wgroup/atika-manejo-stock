@@ -6,6 +6,7 @@ import {
   saveCatalogSettingsAction,
   setCategoryAction,
   setVisibilityAction,
+  setVisibilityManyAction,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export default async function CatalogoWebPage({
       actions={{
         setVisibility: setVisibilityAction,
         setCategory: setCategoryAction,
+        setVisibilityMany: setVisibilityManyAction,
         publishAll: publishAllAction,
         saveSettings: saveCatalogSettingsAction,
       }}

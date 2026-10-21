@@ -38,6 +38,7 @@ const idleAction = async (): Promise<FormState> => ({ status: "idle" });
 const actions = {
   setVisibility: vi.fn(idleAction),
   setCategory: vi.fn(idleAction),
+  setVisibilityMany: vi.fn(idleAction),
   publishAll: idleAction,
   saveSettings: idleAction,
 };
@@ -162,5 +163,21 @@ describe("CatalogoWebView", () => {
     expect(data.get("showPrices")).toBeNull();
     expect(data.get("hideOutOfStock")).toBe("on");
     expect(data.get("whatsappNumber")).toBe("+595 981 000 000");
+  });
+
+  it("offers a header switch that applies visibility to every listed product", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+      />,
+    );
+    const header = screen.getAllByRole("row")[0] as HTMLElement;
+    const bulk = within(header).getByRole("switch", { name: "Visibles: todos los de la lista" });
+    expect(bulk).toHaveAttribute("aria-checked", "false");
+    fireEvent.click(bulk);
+    expect(actions.setVisibilityMany).toHaveBeenCalledWith(["p1", "p2"], true);
   });
 });

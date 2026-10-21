@@ -6,6 +6,7 @@ import {
   publishAllInStock,
   saveCatalogSettings,
   setProductCategory,
+  setProductsVisibility,
   setProductVisibility,
 } from "../../lib/catalog/save";
 import { getDb } from "../../lib/db";
@@ -29,6 +30,20 @@ export async function setVisibilityAction(
     return state;
   } catch (error) {
     console.error("setVisibilityAction failed", error);
+    return FAILED;
+  }
+}
+
+export async function setVisibilityManyAction(
+  productIds: string[],
+  isPublished: boolean,
+): Promise<FormState> {
+  try {
+    const state = await setProductsVisibility(getDb(), productIds, isPublished);
+    if (state.status === "success") revalidateCatalogAdmin();
+    return state;
+  } catch (error) {
+    console.error("setVisibilityManyAction failed", error);
     return FAILED;
   }
 }

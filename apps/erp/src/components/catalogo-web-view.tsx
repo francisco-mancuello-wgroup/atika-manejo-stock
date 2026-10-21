@@ -4,6 +4,7 @@ import type { FormState } from "../lib/action-state";
 import { CATALOG_STATUSES, type CatalogFilters, catalogHref } from "../lib/catalog/filters";
 import { formatGs } from "../lib/format";
 import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog";
+import { BulkVisibilitySwitch } from "./bulk-visibility-switch";
 import { CatalogSettingsForm } from "./catalog-settings-form";
 import { Field } from "./form-controls";
 import { PageHeader } from "./page-header";
@@ -16,6 +17,7 @@ type FormAction = (previous: FormState, formData: FormData) => Promise<FormState
 export interface CatalogActions {
   setVisibility: (productId: string, isPublished: boolean) => Promise<FormState>;
   setCategory: (productId: string, category: string) => Promise<FormState>;
+  setVisibilityMany: (productIds: string[], isPublished: boolean) => Promise<FormState>;
   publishAll: FormAction;
   saveSettings: FormAction;
 }
@@ -106,7 +108,16 @@ export function CatalogoWebView({
                 <th className={table.th}>Talles disponibles</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>
                 <th className={table.th}>Categoría</th>
-                <th className={table.th}>Visible</th>
+                <th className={table.th}>
+                  <div className="flex items-center gap-3">
+                    Visible
+                    <BulkVisibilitySwitch
+                      productIds={products.map((product) => product.id)}
+                      allVisible={products.every((product) => product.isPublished)}
+                      action={actions.setVisibilityMany}
+                    />
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
