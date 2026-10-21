@@ -1,0 +1,7 @@
+{
+  "extends": "@atika/config/tsconfig/library.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src", "prisma.config.ts"]
+}
