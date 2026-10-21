@@ -38,7 +38,7 @@ describe("SizePicker", () => {
     render(<SizePicker {...base} sizes={sizes} />);
     fireEvent.click(screen.getByRole("radio", { name: "S" }));
     expect(screen.getByRole("radio", { name: "S" })).toBeChecked();
-    const link = screen.getByRole("link", { name: "Consultar talle S" });
+    const link = screen.getByRole("link", { name: "Realizar pedido" });
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
     const url = new URL(link.getAttribute("href") ?? "");
@@ -53,13 +53,13 @@ describe("SizePicker", () => {
     render(<SizePicker {...base} sizes={sizes} />);
     fireEvent.click(screen.getByRole("radio", { name: "S" }));
     fireEvent.click(screen.getByRole("radio", { name: "XS" }));
-    expect(screen.getByRole("link", { name: "Consultar talle XS" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Realizar pedido" })).toBeInTheDocument();
   });
 
   it("preselects the only size (one-size pieces)", () => {
     render(<SizePicker {...base} sizes={[{ size: "U", available: true }]} />);
     expect(screen.getByRole("radio", { name: "U" })).toBeChecked();
-    expect(screen.getByRole("link", { name: "Consultar talle U" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Realizar pedido" })).toBeInTheDocument();
   });
 
   it("preselects the only available size even among sold-out ones", () => {

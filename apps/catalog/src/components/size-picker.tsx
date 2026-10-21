@@ -94,7 +94,7 @@ export function SizePicker({
           className={cn(BUTTON, "self-start bg-wa text-surface hover:bg-wa/90")}
         >
           <WhatsappIcon className="size-5" />
-          Consultar talle {selected}
+          Realizar pedido
         </a>
       ) : (
         <button

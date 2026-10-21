@@ -62,7 +62,7 @@ describe("Presentation page", () => {
   it("builds absolute piece links from the request host and uses the configured template", async () => {
     render(await PresentationPage(props("casa-icona")));
     fireEvent.click(screen.getByRole("radio", { name: "S" }));
-    const href = screen.getByRole("link", { name: "Consultar talle S" }).getAttribute("href");
+    const href = screen.getByRole("link", { name: "Realizar pedido" }).getAttribute("href");
     expect(new URL(href ?? "").searchParams.get("text")).toBe(
       "Hola COSTA VINO – ₲\u00a01.000 – https://catalogo.test/catalogos/casa-icona#casa-icona-pagina-1",
     );
