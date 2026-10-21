@@ -1,0 +1,48 @@
+/*
+ * Atika lookbook theme (atika.com.py), for the public catalog only. It is the catalog's single
+ * Tailwind entry: it pulls in `@atika/ui/globals.css` and then overrides its tokens, so the
+ * utilities are generated with these values while the ERP keeps the shared theme.
+ * Fonts: Trirong 300 for headings, Quattrocento Sans for text (next/font in layout.tsx).
+ */
+@import "@atika/ui/globals.css";
+
+@theme {
+  --color-bg: #efecec;
+  --color-ink: #252525;
+
+  --color-background: #efecec;
+  --color-foreground: #252525;
+  --color-surface: #f5f3f2;
+  --color-fg-muted: rgb(37 37 37 / 0.75);
+  --color-fg-50: rgb(37 37 37 / 0.5);
+  --color-border: #dcd8d6;
+  --color-primary: #2c332f;
+  --color-primary-foreground: #ffffff;
+  --color-on-accent: #ffffff;
+  --color-on-accent-muted: rgb(239 236 236 / 0.75);
+  --color-badge: #3f5147;
+  --color-hover: rgb(37 37 37 / 0.04);
+
+  --font-sans: var(--font-quattrocento), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-trirong), ui-serif, Georgia, serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    letter-spacing: 0.6px;
+  }
+  h1,
+  h2,
+  h3 {
+    font-weight: 300;
+    letter-spacing: 0.66px;
+  }
+}
+
+/* One native scroll for the lookbook, snapping page by page. */
+html:has([data-lookbook]) {
+  scroll-snap-type: y mandatory;
+}

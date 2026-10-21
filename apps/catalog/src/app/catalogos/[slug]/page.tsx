@@ -1,39 +1,49 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { cache } from "react";
-import { Presentation } from "../../../components/presentation";
+import { LookbookBook } from "../../../components/lookbook/book";
+import { CartProvider } from "../../../components/lookbook/cart";
+import { CATALOG_COVERS } from "../../../lib/catalog-covers";
 import { getDb } from "../../../lib/db";
-import { getCatalogSettings, getCollectionPresentation } from "../../../lib/queries";
+import { ALL_CATALOGS, CATALOGS, findCatalog } from "../../../lib/lookbook";
+import { getCatalogSettings, listLookbook } from "../../../lib/queries";
 import { requestOrigin } from "../../../lib/whatsapp";
 
 type Params = Promise<{ slug: string }>;
 
-// Products and settings change from the ERP at any time.
+// Products, stock and settings change from the ERP at any time.
 export const dynamic = "force-dynamic";
 
-/** Shared by the metadata and the page of one request. */
-const loadCollection = cache(async (slug: string) => {
-  const db = getDb();
-  const settings = await getCatalogSettings(db);
-  return { settings, collection: await getCollectionPresentation(db, settings, slug) };
-});
-
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { collection } = await loadCollection((await params).slug);
-  return { title: collection ? `${collection.name} · atika` : "atika" };
+  const { slug } = await params;
+  if (slug === ALL_CATALOGS) return { title: "Catálogos · Átika" };
+  const catalog = findCatalog(slug);
+  return { title: catalog ? `${catalog.name} — ${catalog.tagline} · Átika` : "Átika" };
 }
 
-export default async function PresentationPage({ params }: { params: Params }) {
-  const { settings, collection } = await loadCollection((await params).slug);
-  if (!collection) notFound();
+/** `/catalogos/<slug>`: one lookbook; `/catalogos/todos` chains the three. */
+export default async function CatalogPage({ params }: { params: Params }) {
+  const { slug } = await params;
+  const all = slug === ALL_CATALOGS;
+  const shown = all ? [...CATALOGS] : CATALOGS.filter((catalog) => catalog.slug === slug);
+  const first = shown[0];
+  if (!first) notFound();
+  const db = getDb();
+  const settings = await getCatalogSettings(db);
+  const pages = await listLookbook(db, settings);
   const requestHeaders = await headers();
   return (
-    <Presentation
-      collection={collection}
-      whatsappNumber={settings.whatsappNumber}
-      messageTemplate={settings.messageTemplate}
-      origin={requestOrigin((name) => requestHeaders.get(name))}
-    />
+    <CartProvider whatsappNumber={settings.whatsappNumber}>
+      <LookbookBook
+        title={all ? "Átika" : first.name}
+        catalogs={shown.map((catalog) => ({
+          ...catalog,
+          cover: CATALOG_COVERS[catalog.slug],
+          pages: pages[catalog.slug],
+        }))}
+        origin={requestOrigin((name) => requestHeaders.get(name))}
+        pagePath={`/catalogos/${slug}`}
+      />
+    </CartProvider>
   );
 }

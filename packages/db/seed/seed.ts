@@ -38,7 +38,8 @@ import { clearImported, importLot, type LotTotals } from "./reload";
 config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)), quiet: true });
 
 const CATALOG_SETTINGS = {
-  whatsappNumber: "+595 981 000 000",
+  // Atika sales WhatsApp (0992442692)
+  whatsappNumber: "+595 992 442692",
   messageTemplate: "Hola! Me interesa {producto} en talle {talle}. ¿Está disponible?",
   heroText: "Prendas seleccionadas, piezas únicas.",
 };

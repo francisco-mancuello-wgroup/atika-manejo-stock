@@ -9,6 +9,7 @@ import {
   toCatalogProductDetail,
 } from "./catalog-view";
 import { CATEGORIES } from "./categories";
+import { CATALOGS, type CatalogSlug, type LookbookPage, lookbookPages } from "./lookbook";
 import {
   type CollectionSummary,
   collectionSlug,
@@ -215,4 +216,38 @@ export async function getCollectionPresentation(
     name: collection.name,
     pieces: rows.map((row) => toPresentationPiece(row, settings)),
   };
+}
+
+const lookbookSelect = {
+  ...detailSelect,
+  catalog: true,
+  catalogOrder: true,
+  catalogSection: true,
+  catalogName: true,
+} satisfies Prisma.ProductSelect;
+
+/**
+ * The pages of every lookbook catalog (Casa Icona, Milonga, Sordo), in display order. Only
+ * published products placed in a catalog are read; pieces without stock or photos drop out in
+ * `lookbookPages`.
+ */
+export async function listLookbook(
+  db: CatalogDb,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+): Promise<Record<CatalogSlug, LookbookPage[]>> {
+  const rows = await db.product.findMany({
+    where: { isPublished: true, catalog: { not: null } },
+    orderBy: [{ catalogOrder: "asc" }, { id: "asc" }],
+    select: lookbookSelect,
+  });
+  const byCatalog = Object.fromEntries(
+    CATALOGS.map(({ slug, value }) => [
+      slug,
+      lookbookPages(
+        rows.filter((row) => row.catalog === value),
+        settings,
+      ),
+    ]),
+  );
+  return byCatalog as Record<CatalogSlug, LookbookPage[]>;
 }

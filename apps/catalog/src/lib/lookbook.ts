@@ -1,0 +1,133 @@
+import type { CatalogSettingsView, ProductSource } from "./catalog-view";
+import { type PieceColor, resolveColor } from "./colors";
+import { sortSizes } from "./sizes";
+
+/**
+ * The three Atika lookbooks, in display order: each one is a vertical catalog like its PDF, a
+ * cover and then one piece (or one set) per page. `value` is the Prisma `Catalog` enum value.
+ */
+export const CATALOGS = [
+  {
+    slug: "casa-icona",
+    value: "casa_icona",
+    name: "Casa Icona",
+    tagline: "Colección seleccionada",
+  },
+  { slug: "milonga", value: "milonga", name: "Milonga", tagline: "Colección 2026" },
+  { slug: "sordo", value: "sordo", name: "Sordo", tagline: "Aros y earcuffs" },
+] as const;
+
+export type CatalogSlug = (typeof CATALOGS)[number]["slug"];
+export type CatalogValue = (typeof CATALOGS)[number]["value"];
+
+/** `/catalogos/todos` chains the three catalogs. */
+export const ALL_CATALOGS = "todos";
+
+export function findCatalog(slug: string) {
+  return CATALOGS.find((catalog) => catalog.slug === slug) ?? null;
+}
+
+/** What the lookbook reads of a product (the public columns plus its placement). */
+export interface LookbookRow extends ProductSource {
+  catalogName: string | null;
+  catalog: CatalogValue | null;
+  catalogOrder: number | null;
+  catalogSection: string | null;
+}
+
+/** One product on a page: a dress, or the top of a set. Nothing about costs or stock counts. */
+export interface LookbookPiece {
+  id: string;
+  name: string;
+  /** Null when the store hides prices ("Consultar precio"). */
+  priceGs: number | null;
+  /** Sizes that can be bought now, smallest first. */
+  sizes: string[];
+  color: PieceColor | null;
+  description: string | null;
+}
+
+/** One page: usually one product, or the parts of a set that share a PDF page and its photo. */
+export interface LookbookPage {
+  /** Names of the pieces on the page, joined with " + ". */
+  title: string;
+  brand: string | null;
+  section: string | null;
+  pieces: LookbookPiece[];
+  photos: { url: string; alt: string }[];
+  /** 1-based position in the catalog, after hiding pieces without stock or photos. */
+  page: number;
+}
+
+const displayName = (row: LookbookRow) => row.catalogName?.trim() || row.name;
+
+function byPdfOrder(a: LookbookRow, b: LookbookRow): number {
+  const orderA = a.catalogOrder ?? Number.POSITIVE_INFINITY;
+  const orderB = b.catalogOrder ?? Number.POSITIVE_INFINITY;
+  if (orderA !== orderB) return orderA - orderB;
+  // Parts of one set keep the workbook order (top before bottom)
+  if (a.catalogOrder != null) return a.id.localeCompare(b.id);
+  return displayName(a).localeCompare(displayName(b), "es");
+}
+
+function availableSizes(row: LookbookRow): string[] {
+  return sortSizes(row.variants.filter((variant) => variant.stock > 0).map((v) => v.size));
+}
+
+function toPiece(
+  row: LookbookRow,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+): LookbookPiece {
+  return {
+    id: row.id,
+    name: displayName(row),
+    priceGs: settings.showPrices ? row.priceGs : null,
+    sizes: availableSizes(row),
+    color: resolveColor(row.color, row.name),
+    description: row.description?.trim() || null,
+  };
+}
+
+/** The pages of one catalog, in PDF order. A piece without stock or photos disappears. */
+export function lookbookPages(
+  rows: readonly LookbookRow[],
+  settings: Pick<CatalogSettingsView, "showPrices">,
+): LookbookPage[] {
+  const shown = [...rows]
+    .sort(byPdfOrder)
+    .filter((row) => availableSizes(row).length > 0 && row.images.length > 0);
+
+  const groups: LookbookRow[][] = [];
+  for (const row of shown) {
+    const last = groups.at(-1);
+    const samePage =
+      last !== undefined && row.catalogOrder != null && last[0]?.catalogOrder === row.catalogOrder;
+    if (samePage) last.push(row);
+    else groups.push([row]);
+  }
+
+  return groups.map((group, index) => {
+    const seen = new Set<string>();
+    const photos = group
+      .flatMap((row) =>
+        [...row.images]
+          .sort((a, b) => a.position - b.position)
+          .map((image) => ({ url: image.url, alt: displayName(row) })),
+      )
+      .filter((photo) => !seen.has(photo.url) && Boolean(seen.add(photo.url)));
+    const first = group[0];
+    return {
+      title: group.map(displayName).join(" + "),
+      brand: first?.brand?.trim() || first?.lot.supplier.name.trim() || null,
+      section: first?.catalogSection?.trim() || null,
+      pieces: group.map((row) => toPiece(row, settings)),
+      photos,
+      page: index + 1,
+    };
+  });
+}
+
+/** Anchor of a page, unique when catalogs are chained (`milonga-pagina-3`). */
+export function pageAnchor(slug: string, page: number): string {
+  return `${slug}-pagina-${page}`;
+}
