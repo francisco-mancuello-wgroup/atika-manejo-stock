@@ -1,4 +1,5 @@
 import { formatGs } from "./format";
+import { discountLabel } from "./price";
 
 /** One line of the cart: a piece in one size. Kept on the device, never sent to the server. */
 export interface CartItem {
@@ -6,8 +7,10 @@ export interface CartItem {
   name: string;
   size: string;
   color: string | null;
-  /** Null when the store hides prices. */
+  /** What the customer pays per unit (already discounted); null when the store hides prices. */
   priceGs: number | null;
+  /** Percent off included in `priceGs`; absent in carts saved before discounts existed. */
+  discountPercent?: number | null;
   /** Absolute link to the piece's page, for the order message. */
   link: string | null;
   quantity: number;
@@ -46,7 +49,11 @@ export function orderMessage(items: readonly CartItem[]): string {
       name,
       line.size === "U" ? null : `talle ${line.size}`,
       line.color,
-      line.priceGs == null ? null : formatGs(line.priceGs),
+      line.priceGs == null
+        ? null
+        : line.discountPercent
+          ? `${formatGs(line.priceGs)} (${discountLabel(line.discountPercent)})`
+          : formatGs(line.priceGs),
       line.link,
     ].filter(Boolean);
     return `${index + 1}. ${parts.join(" – ")}`;

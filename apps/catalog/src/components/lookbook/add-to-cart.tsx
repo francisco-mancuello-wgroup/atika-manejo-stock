@@ -14,13 +14,17 @@ export function AddToCart({
   id,
   name,
   priceGs,
+  discountPercent = null,
   sizes,
   color,
   link,
 }: {
   id: string;
   name: string;
+  /** What the customer pays (already discounted); null when prices are hidden. */
   priceGs: number | null;
+  /** Percent off included in `priceGs`. */
+  discountPercent?: number | null;
   sizes: string[];
   color: PieceColor | null;
   link: string | null;
@@ -33,7 +37,16 @@ export function AddToCart({
 
   const addItem = () => {
     if (!size) return;
-    add({ id, name, size, color: color?.label ?? null, priceGs, link, quantity: 1 });
+    add({
+      id,
+      name,
+      size,
+      color: color?.label ?? null,
+      priceGs,
+      discountPercent,
+      link,
+      quantity: 1,
+    });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 2500);
   };

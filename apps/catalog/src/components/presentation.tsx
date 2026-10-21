@@ -1,10 +1,11 @@
 import { cn, Wordmark } from "@atika/ui";
 import Image from "next/image";
 import Link from "next/link";
-import { formatGs } from "../lib/format";
 import type { PresentationCollection, PresentationPiece } from "../lib/presentation";
+import { effectivePriceGs } from "../lib/price";
 import { pieceLink } from "../lib/whatsapp";
 import { PhotoCarousel } from "./photo-carousel";
+import { Price } from "./price";
 import { SizePicker } from "./size-picker";
 
 interface Contact {
@@ -56,7 +57,7 @@ function PieceSection({
             {piece.name}
           </h2>
           <p className="shrink-0 whitespace-nowrap text-base tracking-[1px] text-ink sm:text-lg">
-            {piece.priceGs === null ? "Consultar precio" : formatGs(piece.priceGs)}
+            <Price {...piece} />
           </p>
         </div>
 
@@ -82,7 +83,8 @@ function PieceSection({
             name={piece.name}
             sizes={piece.sizes}
             colorLabel={piece.color?.label ?? null}
-            priceGs={piece.priceGs}
+            priceGs={effectivePriceGs(piece)}
+            discountPercent={piece.discountPercent}
             link={pieceLink(contact.origin, collection.slug, index + 1)}
             whatsappNumber={contact.whatsappNumber}
             messageTemplate={contact.messageTemplate}

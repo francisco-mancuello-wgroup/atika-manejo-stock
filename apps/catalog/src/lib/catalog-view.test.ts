@@ -28,6 +28,8 @@ describe("toCatalogProduct", () => {
       brand: "Casa Icona",
       category: "vestidos",
       priceGs: 450_000,
+      discountPercent: null,
+      discountedPriceGs: null,
       sizes: [
         { size: "XS", available: true },
         { size: "M", available: true },
@@ -51,6 +53,25 @@ describe("toCatalogProduct", () => {
     const long = toCatalogProduct({ ...row, color: null, description: "a".repeat(400) }, open);
     expect(long.detail?.length).toBeLessThanOrEqual(140);
     expect(toCatalogProduct({ ...row, color: " ", description: " " }, open).detail).toBeNull();
+  });
+
+  it("adds the effective discount and the discounted price", () => {
+    const discounted = toCatalogProduct({ ...row, discountPercent: 20 }, open);
+    expect(discounted).toMatchObject({
+      priceGs: 450_000,
+      discountPercent: 20,
+      discountedPriceGs: 360_000,
+    });
+    const detail = toCatalogProductDetail({ ...row, discountPercent: 20 }, open);
+    expect(detail).toMatchObject({ discountPercent: 20, discountedPriceGs: 360_000 });
+  });
+
+  it("exposes neither price nor discount when prices are hidden", () => {
+    const hidden = toCatalogProduct(
+      { ...row, discountPercent: 20 },
+      { showPrices: false, showSoldOutSizes: false },
+    );
+    expect(hidden).toMatchObject({ priceGs: null, discountPercent: null, discountedPriceGs: null });
   });
 
   it("uses the cover (lowest position) as the image, or null without photos", () => {
@@ -102,6 +123,8 @@ describe("toCatalogProduct", () => {
       "brand",
       "category",
       "detail",
+      "discountPercent",
+      "discountedPriceGs",
       "id",
       "imageUrl",
       "inStock",
@@ -157,6 +180,8 @@ describe("toCatalogProduct", () => {
       "color",
       "description",
       "detail",
+      "discountPercent",
+      "discountedPriceGs",
       "id",
       "imageUrl",
       "images",

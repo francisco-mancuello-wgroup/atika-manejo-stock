@@ -21,6 +21,8 @@ const product: CatalogProduct = {
   name: "Vestido Lino",
   category: "vestidos",
   priceGs: 450_000,
+  discountPercent: null,
+  discountedPriceGs: null,
   sizes: [
     { size: "M", available: true },
     { size: "L", available: false },
@@ -78,6 +80,21 @@ describe("catalog product page", () => {
     render(await ProductPage({ params }));
     expect(screen.getByText("Consultar precio")).toBeInTheDocument();
     expect(screen.queryByText("IVA incluido")).not.toBeInTheDocument();
+  });
+
+  it("shows the struck price, the discounted price and the badge, and sends the discounted price", async () => {
+    getProduct.mockResolvedValueOnce({
+      ...product,
+      discountPercent: 20,
+      discountedPriceGs: 360_000,
+    });
+    render(await ProductPage({ params }));
+    expect(screen.getByText(/450\.000/).tagName).toBe("S");
+    expect(screen.getByText(/360\.000/)).toBeInTheDocument();
+    expect(screen.getByText("-20 %")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Consultar por WhatsApp" });
+    const text = new URL(link.getAttribute("href") ?? "").searchParams.get("text");
+    expect(text).toMatch(/360\.000 \(-20 %\)$/);
   });
 
   it("responds not found for an unknown or unpublished product", async () => {

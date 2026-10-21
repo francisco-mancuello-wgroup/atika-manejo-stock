@@ -4,6 +4,7 @@ import { cn } from "@atika/ui";
 import { useId, useRef, useState } from "react";
 import type { CatalogSize } from "../lib/catalog-view";
 import { formatGs } from "../lib/format";
+import { discountLabel } from "../lib/price";
 import { buildPieceWhatsappUrl } from "../lib/whatsapp";
 import { WhatsappIcon } from "./icons";
 
@@ -20,6 +21,7 @@ export function SizePicker({
   sizes,
   colorLabel,
   priceGs,
+  discountPercent = null,
   link,
   whatsappNumber,
   messageTemplate,
@@ -27,7 +29,10 @@ export function SizePicker({
   name: string;
   sizes: CatalogSize[];
   colorLabel: string | null;
+  /** What the customer pays (already discounted); null when prices are hidden. */
   priceGs: number | null;
+  /** Percent off included in `priceGs`, named in the message. */
+  discountPercent?: number | null;
   /** Absolute link to the piece, included in the message. */
   link: string | null;
   whatsappNumber: string;
@@ -45,7 +50,12 @@ export function SizePicker({
         producto: name,
         talle: selected,
         color: colorLabel,
-        precio: priceGs === null ? null : formatGs(priceGs),
+        precio:
+          priceGs === null
+            ? null
+            : discountPercent
+              ? `${formatGs(priceGs)} (${discountLabel(discountPercent)})`
+              : formatGs(priceGs),
         link,
       })
     : null;

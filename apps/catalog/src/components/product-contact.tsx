@@ -10,16 +10,20 @@ export function ProductContact({
   sizes,
   whatsappNumber,
   messageTemplate,
+  priceLabel = null,
 }: {
   productName: string;
   sizes: CatalogSize[];
   whatsappNumber: string;
   messageTemplate: string;
+  /** Discounted price to mention in the message (`₲ 360.000 (-20 %)`), when a discount applies. */
+  priceLabel?: string | null;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const href = buildWhatsappUrl(whatsappNumber, messageTemplate, {
     producto: productName,
     ...(selected ? { talle: selected } : {}),
+    precio: priceLabel,
   });
 
   return (

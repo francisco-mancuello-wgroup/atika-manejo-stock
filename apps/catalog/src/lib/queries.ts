@@ -1,5 +1,6 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@atika/db";
+import { type DiscountRule, effectiveDiscount } from "@atika/pricing";
 import type { CatalogFilters } from "./catalog-filters";
 import {
   type CatalogProduct,
@@ -18,7 +19,7 @@ import {
 } from "./presentation";
 
 /** The slice of the Prisma client the catalog reads (a rolled back transaction works too). */
-export type CatalogDb = Pick<PrismaClient, "product" | "catalogSettings">;
+export type CatalogDb = Pick<PrismaClient, "product" | "catalogSettings" | "discount">;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -56,6 +57,45 @@ export const DEFAULT_CATALOG_SETTINGS: CatalogSettingsView = {
   showSoldOutSizes: false,
   hideOutOfStock: true,
 };
+
+/**
+ * Active discounts as pricing rules. Nothing is read when prices are hidden, since no price (and
+ * so no discount) is shown then.
+ */
+async function loadDiscountRules(
+  db: CatalogDb,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+): Promise<DiscountRule[]> {
+  if (!settings.showPrices) return [];
+  const rows = await db.discount.findMany({
+    where: { isActive: true },
+    select: {
+      percent: true,
+      isActive: true,
+      startsAt: true,
+      endsAt: true,
+      scope: true,
+      products: { select: { productId: true } },
+    },
+  });
+  return rows.map((row) => ({
+    percent: row.percent,
+    isActive: row.isActive,
+    startsAt: row.startsAt,
+    endsAt: row.endsAt,
+    scope: row.scope,
+    productIds: row.products.map((product) => product.productId),
+  }));
+}
+
+/** Attaches the percent that applies to each product at `now` (highest wins, never stacked). */
+function withDiscounts<T extends { id: string }>(
+  rows: readonly T[],
+  rules: readonly DiscountRule[],
+  now: Date,
+): (T & { discountPercent: number | null })[] {
+  return rows.map((row) => ({ ...row, discountPercent: effectiveDiscount(rules, row.id, now) }));
+}
 
 export async function getCatalogSettings(db: CatalogDb): Promise<CatalogSettingsView> {
   const row = await db.catalogSettings.findUnique({ where: { id: 1 } });
@@ -106,13 +146,15 @@ export async function listProducts(
   settings: VisibilitySettings,
   category: string | null,
   filters: ListFilters = NO_FILTERS,
+  now: Date = new Date(),
 ): Promise<CatalogProduct[]> {
   const rows = await db.product.findMany({
     where: { ...visibleWhere(settings, filters), ...(category ? { category } : {}) },
     orderBy: orderBy(settings, filters.orden),
     select: productSelect,
   });
-  return rows.map((row) => toCatalogProduct(row, settings));
+  const rules = await loadDiscountRules(db, settings);
+  return withDiscounts(rows, rules, now).map((row) => toCatalogProduct(row, settings));
 }
 
 /**
@@ -144,13 +186,16 @@ export async function getProduct(
   db: CatalogDb,
   settings: VisibilitySettings,
   id: string,
+  now: Date = new Date(),
 ): Promise<CatalogProduct | null> {
   if (!UUID.test(id)) return null;
   const row = await db.product.findFirst({
     where: { id, ...visibleWhere(settings) },
     select: productSelect,
   });
-  return row ? toCatalogProduct(row, settings) : null;
+  if (!row) return null;
+  const [discounted] = withDiscounts([row], await loadDiscountRules(db, settings), now);
+  return discounted ? toCatalogProduct(discounted, settings) : null;
 }
 
 /** Same visibility rules as `getProduct`, with every photo, color and description. */
@@ -158,13 +203,16 @@ export async function getProductDetail(
   db: CatalogDb,
   settings: VisibilitySettings,
   id: string,
+  now: Date = new Date(),
 ): Promise<CatalogProductDetail | null> {
   if (!UUID.test(id)) return null;
   const row = await db.product.findFirst({
     where: { id, ...visibleWhere(settings) },
     select: detailSelect,
   });
-  return row ? toCatalogProductDetail(row, settings) : null;
+  if (!row) return null;
+  const [discounted] = withDiscounts([row], await loadDiscountRules(db, settings), now);
+  return discounted ? toCatalogProductDetail(discounted, settings) : null;
 }
 
 /**
@@ -203,6 +251,7 @@ export async function getCollectionPresentation(
   db: CatalogDb,
   settings: VisibilitySettings,
   slug: string,
+  now: Date = new Date(),
 ): Promise<PresentationCollection | null> {
   const collection = (await listCollections(db, settings)).find((item) => item.slug === slug);
   if (!collection) return null;
@@ -214,7 +263,9 @@ export async function getCollectionPresentation(
   return {
     slug,
     name: collection.name,
-    pieces: rows.map((row) => toPresentationPiece(row, settings)),
+    pieces: withDiscounts(rows, await loadDiscountRules(db, settings), now).map((row) =>
+      toPresentationPiece(row, settings),
+    ),
   };
 }
 
@@ -234,17 +285,19 @@ const lookbookSelect = {
 export async function listLookbook(
   db: CatalogDb,
   settings: Pick<CatalogSettingsView, "showPrices">,
+  now: Date = new Date(),
 ): Promise<Record<CatalogSlug, LookbookPage[]>> {
   const rows = await db.product.findMany({
     where: { isPublished: true, catalog: { not: null } },
     orderBy: [{ catalogOrder: "asc" }, { id: "asc" }],
     select: lookbookSelect,
   });
+  const discounted = withDiscounts(rows, await loadDiscountRules(db, settings), now);
   const byCatalog = Object.fromEntries(
     CATALOGS.map(({ slug, value }) => [
       slug,
       lookbookPages(
-        rows.filter((row) => row.catalog === value),
+        discounted.filter((row) => row.catalog === value),
         settings,
       ),
     ]),

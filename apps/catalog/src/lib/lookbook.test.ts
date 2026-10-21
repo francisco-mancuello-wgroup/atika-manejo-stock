@@ -48,12 +48,34 @@ describe("lookbookPages", () => {
       brand: "Milonga",
       section: "Vestidos",
       pieces: [
-        { name: "Pieza 1", priceGs: 1_500_000, sizes: ["S", "M"], color: { label: "Negro" } },
+        {
+          name: "Pieza 1",
+          priceGs: 1_500_000,
+          discountPercent: null,
+          discountedPriceGs: null,
+          sizes: ["S", "M"],
+          color: { label: "Negro" },
+        },
       ],
       photos: [
         { url: "/media/products/p1.webp", alt: "Pieza 1" },
         { url: "/media/products/p1-2.webp", alt: "Pieza 1" },
       ],
+    });
+  });
+
+  it("carries the effective discount of each piece and hides it with the price", () => {
+    const [page] = lookbookPages([row(1, { discountPercent: 20 })], settings);
+    expect(page?.pieces[0]).toMatchObject({
+      priceGs: 1_500_000,
+      discountPercent: 20,
+      discountedPriceGs: 1_200_000,
+    });
+    const [hidden] = lookbookPages([row(1, { discountPercent: 20 })], { showPrices: false });
+    expect(hidden?.pieces[0]).toMatchObject({
+      priceGs: null,
+      discountPercent: null,
+      discountedPriceGs: null,
     });
   });
 

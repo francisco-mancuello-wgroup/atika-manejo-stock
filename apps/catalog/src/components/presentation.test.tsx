@@ -10,6 +10,8 @@ const collection: PresentationCollection = {
       id: "1",
       name: "COSTA VINO",
       priceGs: 2_518_000,
+      discountPercent: null,
+      discountedPriceGs: null,
       sizes: [
         { size: "XS", available: true },
         { size: "S", available: true },
@@ -25,6 +27,8 @@ const collection: PresentationCollection = {
       id: "2",
       name: "NINA",
       priceGs: null,
+      discountPercent: null,
+      discountedPriceGs: null,
       sizes: [{ size: "U", available: true }],
       photos: [],
       color: null,
@@ -85,6 +89,29 @@ describe("Presentation", () => {
     expect(within(first).getByText("Prenda corta en tono vino")).toBeInTheDocument();
     expect(within(first).getByText("Vino")).toBeInTheDocument();
     expect(within(first).getByTestId("swatch")).toHaveStyle({ backgroundColor: "#6d1f2c" });
+  });
+
+  it("shows the discount and sends the discounted price in the WhatsApp message", () => {
+    const [first, second] = collection.pieces;
+    const discounted = {
+      ...collection,
+      pieces: [
+        { ...(first as never as object), discountPercent: 20, discountedPriceGs: 2_014_000 },
+        second,
+      ],
+    } as PresentationCollection;
+    render(<Presentation collection={discounted} {...contact} />);
+    const section = screen.getByRole("region", { name: "COSTA VINO" });
+    expect(within(section).getByText("₲ 2.518.000").tagName).toBe("S");
+    expect(within(section).getByText("₲ 2.014.000")).toBeInTheDocument();
+    expect(within(section).getByText("-20 %")).toBeInTheDocument();
+    fireEvent.click(within(section).getByRole("radio", { name: "S" }));
+    const href = within(section)
+      .getByRole("link", { name: "Realizar pedido" })
+      .getAttribute("href");
+    const text = new URL(href ?? "").searchParams.get("text");
+    expect(text).toContain("₲\u00a02.014.000 (-20 %)");
+    expect(text).not.toContain("2.518.000");
   });
 
   it("asks to consult the price, and shows neither color nor description when unknown", () => {

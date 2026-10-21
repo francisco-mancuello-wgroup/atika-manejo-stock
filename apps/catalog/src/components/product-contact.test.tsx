@@ -45,6 +45,14 @@ describe("ProductContact", () => {
     );
   });
 
+  it("adds the discounted price to the message when one is given", () => {
+    render(<ProductContact {...props} priceLabel="₲ 360.000 (-20 %)" />);
+    fireEvent.click(screen.getByRole("button", { name: "S" }));
+    expect(textOf(screen.getByRole("link", { name: "Consultar por WhatsApp" }))).toBe(
+      "Hola! Vestido Lino talle S – ₲ 360.000 (-20 %)",
+    );
+  });
+
   it("lets the visitor unselect the size", () => {
     render(<ProductContact {...props} />);
     const s = screen.getByRole("button", { name: "S" });

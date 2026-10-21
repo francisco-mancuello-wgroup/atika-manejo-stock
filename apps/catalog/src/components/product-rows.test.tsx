@@ -8,6 +8,8 @@ const product: CatalogProduct = {
   name: "Vestido Lino",
   category: "vestidos",
   priceGs: 450_000,
+  discountPercent: null,
+  discountedPriceGs: null,
   sizes: [
     { size: "S", available: true },
     { size: "M", available: false },
@@ -77,6 +79,21 @@ describe("ProductRows", () => {
     expect(chips.map((chip) => chip.textContent)).toEqual(["S", "M"]);
     expect(chips[0]).toHaveClass("border-ink");
     expect(chips[1]).toHaveClass("line-through");
+  });
+
+  it("shows the struck price, the discounted price and the badge of a discounted product", () => {
+    renderRows([{ ...product, discountPercent: 20, discountedPriceGs: 360_000 }]);
+    expect(screen.getAllByText("₲ 450.000").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("₲ 450.000")[0]?.tagName).toBe("S");
+    expect(screen.getAllByText("₲ 360.000").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("-20 %").length).toBeGreaterThan(0);
+  });
+
+  it("puts the discounted price in the row's WhatsApp message", () => {
+    renderRows([{ ...product, discountPercent: 20, discountedPriceGs: 360_000 }]);
+    const link = screen.getByRole("link", { name: "Consultar Vestido Lino por WhatsApp" });
+    const text = new URL(link.getAttribute("href") ?? "").searchParams.get("text");
+    expect(text).toBe("Hola! Vestido Lino – ₲\u00a0360.000 (-20 %)");
   });
 
   it("shows the price with the IVA note, in the display font", () => {
