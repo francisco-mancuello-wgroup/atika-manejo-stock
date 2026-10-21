@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { type FormState, formValues } from "../../lib/action-state";
-import { getDb } from "../../lib/db";
-import { registerSaleFromForm } from "../../lib/sales/register";
+import { type FormState, formValues } from "../../../lib/action-state";
+import { getDb } from "../../../lib/db";
+import { registerSaleFromForm } from "../../../lib/sales/register";
 
 export async function registerSaleAction(
   _previous: FormState,

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { vi } from "vitest";
 import HomePage from "./page";
 
-vi.mock("../lib/queries/summary", () => ({
+vi.mock("../../lib/queries/summary", () => ({
   getResumen: async () => ({
     totals: {
       stock: 5,

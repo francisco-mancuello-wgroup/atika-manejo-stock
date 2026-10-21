@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { LotDetailView } from "../../../components/lot-detail-view";
-import { getLotDetail } from "../../../lib/queries/lots";
+import { LotDetailView } from "../../../../components/lot-detail-view";
+import { getLotDetail } from "../../../../lib/queries/lots";
 import { saveLotParams } from "./actions";
 
 export const dynamic = "force-dynamic";

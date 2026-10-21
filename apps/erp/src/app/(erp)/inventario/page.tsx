@@ -1,6 +1,6 @@
-import { InventarioView } from "../../components/inventario-view";
-import { parseInventoryFilters } from "../../lib/inventory-filters";
-import { getInventory, getLotOptions } from "../../lib/queries/inventory";
+import { InventarioView } from "../../../components/inventario-view";
+import { parseInventoryFilters } from "../../../lib/inventory-filters";
+import { getInventory, getLotOptions } from "../../../lib/queries/inventory";
 
 export const dynamic = "force-dynamic";
 

@@ -3,8 +3,20 @@ import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
 
 vi.mock("next/navigation", () => ({ usePathname: vi.fn(() => "/") }));
+vi.mock("../app/login/actions", () => ({ logoutAction: vi.fn() }));
 
 describe("Sidebar", () => {
+  it("shows the signed-in email with a Salir button", () => {
+    render(<Sidebar email="dueña@atika.test" />);
+    expect(screen.getByText("dueña@atika.test")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Salir" })).toBeInTheDocument();
+  });
+
+  it("hides the account block without a session email", () => {
+    render(<Sidebar />);
+    expect(screen.queryByRole("button", { name: "Salir" })).not.toBeInTheDocument();
+  });
+
   it("renders the átika logo with the CASA ICONA eyebrow", () => {
     render(<Sidebar />);
     expect(screen.getByRole("img", { name: "átika" })).toBeInTheDocument();

@@ -1,5 +1,5 @@
-import { ResumenView } from "../components/resumen-view";
-import { getResumen } from "../lib/queries/summary";
+import { ResumenView } from "../../components/resumen-view";
+import { getResumen } from "../../lib/queries/summary";
 
 // Reads the database on every request; never prerendered (build has no DATABASE_URL).
 export const dynamic = "force-dynamic";

@@ -3,6 +3,7 @@
 import { cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logoutAction } from "../app/login/actions";
 import { formatInteger } from "../lib/format";
 
 const NAV_ITEMS = [
@@ -22,9 +23,12 @@ function isActive(href: string, currentPath: string): boolean {
 
 export function Sidebar({
   activeHref,
+  email,
   exchangeRate,
 }: {
   activeHref?: string;
+  /** Signed-in account; the account block with the logout button shows only when present. */
+  email?: string;
   /** Guaraníes per US dollar (AppSettings); a dash is shown when it could not be read. */
   exchangeRate?: number;
 }) {
@@ -64,6 +68,19 @@ export function Sidebar({
         </span>
         <span className="font-display text-xl text-ink">{`₲ ${exchangeRate === undefined ? "–" : formatInteger(exchangeRate)} / US$`}</span>
       </div>
+      {email ? (
+        <form action={logoutAction} className="flex flex-col gap-2 border-t border-line px-3 pt-4">
+          <span title={email} className="truncate text-xs text-muted">
+            {email}
+          </span>
+          <button
+            type="submit"
+            className="self-start text-sm font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          >
+            Salir
+          </button>
+        </form>
+      ) : null}
     </aside>
   );
 }
