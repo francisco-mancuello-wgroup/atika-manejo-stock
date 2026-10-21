@@ -68,7 +68,7 @@ Two apps read the same data and the same price formula. If the formula or schema
 - Strategy: ask-on-risk (default). Forecast ~600 authored lines (generated scaffolding and lockfiles excluded) → will ask for chain strategy before exceeding ~400.
 - Branch: `feat/atika-foundation` (repo is on `main`).
 - Chain strategy: **stacked-to-main** (user, 2026-10-21: "tienes que ir mergeando a main"). Merged locally with `--no-ff` per slice; remote `origin` is empty and pushing needs separate approval.
-- Slices: A = T1+T2 (`3c66640`..`e4356bb`, scaffold + pricing, ~520 lines: over budget because scaffold config and docs travel with it; no cohesive smaller split); B = T3 (`09455d9`, db, ~300 lines); C = T4+T5 (ui + app shells).
+- Slices: A = T1+T2 (`3c66640`..`e4356bb`, scaffold + pricing, ~520 lines: over budget because scaffold config and docs travel with it; no cohesive smaller split); B = T3 (`09455d9`, db, ~300 lines); C1 = T4 (`77622b1`, ui, 368 lines) merged as `75d7db0`; C2 = T5 (`57b60cf` + docs `35746a1`, app shells, ~383 lines) merged as `587db0c`. Parent spot check before merge: `turbo run build test typecheck --force` with DATABASE_URL unset → 13/13 successful, 0 cached; `pnpm lint` exit 0.
 - One work-unit commit per task, Conventional Commits.
 
 ## Tasks
@@ -101,4 +101,4 @@ Two apps read the same data and the same price formula. If the formula or schema
 
 ## Next step
 
-Merge slice C to `main`; then apply migration to Neon (needs user approval).
+Feature complete on `main`; push `main` to origin (authorized after completion). Next: provision Neon and apply `20261021000000_init` (needs user approval), then next feature (`erp-auth` or `erp-lots-inventory`).
