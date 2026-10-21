@@ -63,13 +63,11 @@ Stock, costs and sales live in `INVENTARIO - CASA ICONA`, `MILONGA`, `ZUNILDA GU
 ## Verification evidence
 
 TDD RED/GREEN:
-
 - T1 RED: after removing `@prisma/adapter-neon`, `pnpm test` in `@atika/db` failed to load `src/index.ts` (import of the removed adapter); GREEN after switching to `@prisma/adapter-pg` (7 tests passed, including a new local-connection-string test).
 - T2 RED: `parse.test.ts` failed with "Failed to resolve import ./parse" (module absent, 0 tests run); GREEN after implementation (36 tests passed in `@atika/db`).
 - T3 RED: `password.test.ts` failed with no tests run (module `./password` absent); GREEN after implementation (4 password tests).
 
 Commands (repo root):
-
 - `pnpm install`: ok (lockfile updated).
 - `pnpm lint`: Checked 87 files, no fixes applied.
 - `pnpm typecheck`: 6 of 6 tasks successful.
@@ -78,17 +76,17 @@ Commands (repo root):
 - `pnpm db:migrate`: `20261021000000_init` applied on `atika-postgres`; later runs report "No pending migrations to apply".
 - `pnpm db:seed` run twice: identical output; SQL counts after the second run: suppliers 4, lots 4, products 123, variants 193, sales 20, users 1, catalog_settings 1; sum units bought 237, stock 217, units sold 20.
 
-Totals per lot (USD cost = sum of unit cost × units bought; investment adds the lot shipping):
+Totals per lot (unit counts only; costs and investment are business data and are printed by `pnpm db:seed`, not stored in the repo):
 
-| Lot               | Products | Bought | Sold | In stock | Cost USD | Investment USD | FX   |
-| ----------------- | -------- | ------ | ---- | -------- | -------- | -------------- | ---- |
-| Casa Icona        | 18       | 57     | 1    | 56       | 3.539,25 | 5.804,37       | 7009 |
-| Milonga           | 60       | 99     | 13   | 86       | 2.972,85 | 4.256,91       | 7009 |
-| Zunilda Gutierrez | 17       | 51     | 3    | 48       | 6.144,00 | 6.878,77       | 7009 |
-| Átika             | 28       | 30     | 3    | 27       | 4.176,00 | 4.176,00       | 7400 |
-| Total             | 123      | 237    | 20   | 217      | 16.832,10 | 21.116,05     |      |
+| Lot               | Products | Bought | Sold | In stock |
+| ----------------- | -------- | ------ | ---- | -------- |
+| Casa Icona        | 18       | 57     | 1    | 56       |
+| Milonga           | 60       | 99     | 13   | 86       |
+| Zunilda Gutierrez | 17       | 51     | 3    | 48       |
+| Átika             | 28       | 30     | 3    | 27       |
+| Total             | 123      | 237    | 20   | 217      |
 
-Cost totals match the workbooks' own totals for Milonga (2.972,85), Zunilda (6.144) and Átika (4.176). Casa Icona's workbook total (4.974,75) double counts rows with qty > 1 because its "COSTO TOTAL" column multiplies the already-total "unit cost" by qty; the corrected sum is 3.539,25.
+Cost totals match the workbooks' own totals for Milonga, Zunilda and Átika. Casa Icona's workbook total double counts rows with qty > 1 (its "COSTO TOTAL" multiplies the already-total "unit cost" by qty); the seed uses the corrected per-unit cost.
 
 ## Data quirks and how they were handled
 
@@ -98,7 +96,7 @@ Cost totals match the workbooks' own totals for Milonga (2.972,85), Zunilda (6.1
 - Átika: manual prices and mixed formulas (factor 2, 1.1 or none) ignored; every price is recomputed (factor 2,5, IVA 10 %).
 - Átika exchange rate: 7400 for 27 units, 7140 for the three struck rows (all sold); lot uses 7400 (most common), the 7140 rows are warned about.
 - Átika: five rows have no name; named "Sin nombre (<brand>)". Brand "Casa Icona"/"Zunilda Gutierrez"/"Sordo" rows are products of their own brand inside the Átika lot.
-- Milonga: size columns `XS/S` and `M/L` kept as their own variants (only PALC04 and two more rows use them); descriptions contain a trailing letter ("Cardigan   A"), whitespace collapsed to "Cardigan A".
+- Milonga: size columns `XS/S` and `M/L` kept as their own variants (only PALC04 and two more rows use them); descriptions contain a trailing letter ("Cardigan A"), whitespace collapsed to "Cardigan A".
 - Milonga: two rows (ATLC02, ATLC06) have a sale only in the note ("1 (S) - 23/06/2026"), no strikethrough; counted as sales. Struck cell plus matching note are counted once.
 - Zunilda: sales note lists two XS sales on one struck cell with qty 2; one sale per dated entry.
 - Lot purchase date: not in the workbooks; uses the workbook creation date (Casa Icona and Milonga 2025-10-06, Zunilda 2024-08-22, Átika 2025-10-22). All sales carry their own date.
