@@ -1,0 +1,95 @@
+{
+  "source": "atika.pdf",
+  "looks": [
+    {
+      "number": 1,
+      "name": "Costa Coco",
+      "description": "Blusa clara y short en tono cacao"
+    },
+    {
+      "number": 2,
+      "name": "Costa Vino",
+      "description": "Prenda corta en tono vino"
+    },
+    {
+      "number": 3,
+      "name": "Costa Blanco",
+      "description": "Look corto en blanco"
+    },
+    {
+      "number": 4,
+      "name": "Vitta Mini Dress Black",
+      "description": "Vestido corto negro con aberturas"
+    },
+    {
+      "number": 5,
+      "name": "Vitta Mini Dress Perla",
+      "description": "Vestido corto perla con aberturas"
+    },
+    {
+      "number": 6,
+      "name": "Zamba Azul",
+      "description": "Vestido largo en degradé multicolor"
+    },
+    {
+      "number": 7,
+      "name": "Zamba Vino",
+      "description": "Vestido largo en tono vino"
+    },
+    {
+      "number": 8,
+      "name": "Vestido largo bicolor",
+      "description": "Rosa claro y rojo · escote strapless"
+    },
+    {
+      "number": 9,
+      "name": "Goza Dress Rio",
+      "description": "Vestido largo en degradé multicolor"
+    },
+    {
+      "number": 10,
+      "name": "Vestido corto negro",
+      "description": "Cuello alto y aberturas en la cintura"
+    },
+    {
+      "number": 11,
+      "name": "Costa Black",
+      "description": "Prenda corta negra de silueta relajada"
+    },
+    {
+      "number": 12,
+      "name": "Costa Rambutan",
+      "description": "Look corto en degradé coral y rosa"
+    },
+    {
+      "number": 13,
+      "name": "Costa Soleil",
+      "description": "Look corto en blanco y amarillo"
+    },
+    {
+      "number": 14,
+      "name": "Cora · Lima",
+      "description": "Vestido corto en tono lima"
+    },
+    {
+      "number": 15,
+      "name": "Cora · Black",
+      "description": "Vestido corto negro de volumen estructurado"
+    },
+    {
+      "number": 16,
+      "name": "Cora · Fucsia",
+      "description": "Vestido corto fucsia con hombreras suaves"
+    },
+    {
+      "number": 17,
+      "name": "Cora · Blanco",
+      "description": "Vestido corto blanco de mangas amplias"
+    },
+    {
+      "number": 18,
+      "name": "Vitta White Cut-Out",
+      "description": "Vestido blanco con aberturas laterales"
+    }
+  ]
+}
