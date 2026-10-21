@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ProductContact } from "../../../components/product-contact";
-import { ProductPhoto } from "../../../components/product-photo";
-import { getDb } from "../../../lib/db";
-import { formatGs } from "../../../lib/format";
-import { getCatalogSettings, getProduct } from "../../../lib/queries";
+import { ProductContact } from "../../../../components/product-contact";
+import { ProductPhoto } from "../../../../components/product-photo";
+import { getDb } from "../../../../lib/db";
+import { formatGs } from "../../../../lib/format";
+import { getCatalogSettings, getProduct } from "../../../../lib/queries";
 
 type Params = Promise<{ id: string }>;
 

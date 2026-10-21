@@ -60,5 +60,7 @@ export function catalogHref(
   if (next.orden !== "recientes") query.set("orden", next.orden);
   if (next.p) query.set("p", next.p);
   const search = query.toString();
-  return `/${slug}${search ? `?${search}` : ""}`;
+  // "novedades" is the whole list, which lives at the root of /ver-todo.
+  const path = slug === "novedades" ? "/ver-todo" : `/ver-todo/${slug}`;
+  return `${path}${search ? `?${search}` : ""}`;
 }

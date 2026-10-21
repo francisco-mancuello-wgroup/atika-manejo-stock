@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import type { CatalogProduct, CatalogSettingsView } from "../../../lib/catalog-view";
+import type { CatalogProduct, CatalogSettingsView } from "../../../../lib/catalog-view";
 import ProductPage, { dynamic } from "./page";
 
 vi.mock("next/navigation", () => ({
@@ -32,8 +32,8 @@ const product: CatalogProduct = {
 };
 
 const getProduct = vi.fn(async (): Promise<CatalogProduct | null> => product);
-vi.mock("../../../lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("../../../lib/queries", () => ({
+vi.mock("../../../../lib/db", () => ({ getDb: () => ({}) }));
+vi.mock("../../../../lib/queries", () => ({
   getCatalogSettings: async () => settings,
   getProduct: () => getProduct(),
 }));

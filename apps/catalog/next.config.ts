@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@atika/ui", "@atika/pricing", "@atika/db"],
   // The dev-only Next.js badge overlaps the page; compile and runtime errors are still shown.
   devIndicators: false,
+  // The rows list moved from the site root to /ver-todo; old category links keep working.
+  async redirects() {
+    return [
+      {
+        source: "/:categoria(novedades|vestidos|tops|faldas-y-shorts|accesorios)",
+        destination: "/ver-todo/:categoria",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

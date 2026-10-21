@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import type { CatalogProduct, CatalogSettingsView } from "../../lib/catalog-view";
+import type { CatalogProduct, CatalogSettingsView } from "../../../../lib/catalog-view";
 import CategoryPage, { dynamic } from "./page";
 
 vi.mock("next/navigation", () => ({
@@ -29,8 +29,8 @@ const dress: CatalogProduct = {
 };
 
 const listProducts = vi.fn(async (..._args: unknown[]): Promise<CatalogProduct[]> => [dress]);
-vi.mock("../../lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("../../lib/queries", () => ({
+vi.mock("../../../../lib/db", () => ({ getDb: () => ({}) }));
+vi.mock("../../../../lib/queries", () => ({
   getCatalogSettings: async () => settings,
   listProducts: (...args: unknown[]) => listProducts(...args),
   countProductsByCategory: async () => ({
@@ -84,7 +84,10 @@ describe("catalog category page", () => {
     listProducts.mockResolvedValueOnce([]);
     render(await CategoryPage(props("tops", { q: "zzz", orden: "precio-asc" })));
     expect(screen.getByText("No encontramos prendas con esos filtros.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Quitar filtros" })).toHaveAttribute("href", "/tops");
+    expect(screen.getByRole("link", { name: "Quitar filtros" })).toHaveAttribute(
+      "href",
+      "/ver-todo/tops",
+    );
   });
 
   it("responds not found for an unknown category", async () => {

@@ -48,16 +48,22 @@ describe("catalogHref", () => {
   const filters = parseCatalogFilters({ talle: "S", q: "aros", orden: "precio-asc", p: "id1" });
 
   it("keeps size, search and sort but drops the open product by default", () => {
-    expect(catalogHref("vestidos", filters)).toBe("/vestidos?talle=S&q=aros&orden=precio-asc");
+    expect(catalogHref("vestidos", filters)).toBe(
+      "/ver-todo/vestidos?talle=S&q=aros&orden=precio-asc",
+    );
   });
 
   it("applies overrides, and omits defaults", () => {
-    expect(catalogHref("tops", filters, { talle: null, orden: "recientes" })).toBe("/tops?q=aros");
-    expect(catalogHref("novedades", parseCatalogFilters({}))).toBe("/novedades");
+    expect(catalogHref("tops", filters, { talle: null, orden: "recientes" })).toBe(
+      "/ver-todo/tops?q=aros",
+    );
+    expect(catalogHref("novedades", parseCatalogFilters({}))).toBe("/ver-todo");
     expect(catalogHref("tops", filters, { p: "id2" })).toContain("p=id2");
   });
 
   it("encodes the sizes that contain a slash", () => {
-    expect(catalogHref("tops", parseCatalogFilters({ talle: "XS/S" }))).toBe("/tops?talle=XS%2FS");
+    expect(catalogHref("tops", parseCatalogFilters({ talle: "XS/S" }))).toBe(
+      "/ver-todo/tops?talle=XS%2FS",
+    );
   });
 });

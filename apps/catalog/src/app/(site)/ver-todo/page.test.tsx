@@ -3,7 +3,7 @@ import type {
   CatalogProduct,
   CatalogProductDetail,
   CatalogSettingsView,
-} from "../lib/catalog-view";
+} from "../../../lib/catalog-view";
 import HomePage, { dynamic } from "./page";
 
 const settings: CatalogSettingsView = {
@@ -46,8 +46,8 @@ const countProductsByCategory = vi.fn(async (..._args: unknown[]) => ({
   accesorios: 0,
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
-vi.mock("../lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("../lib/queries", () => ({
+vi.mock("../../../lib/db", () => ({ getDb: () => ({}) }));
+vi.mock("../../../lib/queries", () => ({
   getCatalogSettings: async () => settings,
   listProducts: (...args: unknown[]) => listProducts(...args),
   getProductDetail: (...args: unknown[]) => getProductDetail(...args),
@@ -69,7 +69,7 @@ describe("Catalog home page", () => {
     expect(screen.getByText("1 prenda")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /Vestidos/ })[0]).toHaveAttribute(
       "href",
-      "/vestidos",
+      "/ver-todo/vestidos",
     );
   });
 
@@ -114,7 +114,7 @@ describe("Catalog home page", () => {
     expect(screen.getByText("No encontramos prendas con esos filtros.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Quitar filtros" })).toHaveAttribute(
       "href",
-      "/novedades",
+      "/ver-todo",
     );
   });
 
@@ -126,7 +126,7 @@ describe("Catalog home page", () => {
     // Closing returns to the same list without p.
     expect(screen.getAllByRole("link", { name: "Cerrar" })[0]).toHaveAttribute(
       "href",
-      "/novedades?talle=M",
+      "/ver-todo?talle=M",
     );
     // The list is still rendered behind it, with its row highlighted.
     expect(screen.getByRole("link", { name: "Vestido Lino" })).toBeInTheDocument();

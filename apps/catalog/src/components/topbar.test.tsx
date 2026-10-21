@@ -49,17 +49,17 @@ describe("Topbar search", () => {
     expect(input).toHaveAttribute("placeholder", "Buscar prenda");
     const form = input.closest("form");
     expect(form).toHaveAttribute("method", "get");
-    expect(form).toHaveAttribute("action", "/");
+    expect(form).toHaveAttribute("action", "/ver-todo");
   });
 
   it("searches inside the current category and keeps size and sort", () => {
-    pathname = "/vestidos";
+    pathname = "/ver-todo/vestidos";
     search = "talle=S&orden=precio-asc&p=abc&q=viejo";
     render(<Topbar />);
     const input = screen.getByRole("searchbox", { name: "Buscar prenda" });
     expect(input).toHaveValue("viejo");
     const form = input.closest("form") as HTMLFormElement;
-    expect(form).toHaveAttribute("action", "/vestidos");
+    expect(form).toHaveAttribute("action", "/ver-todo/vestidos");
     const hidden = Array.from(form.querySelectorAll("input[type=hidden]")).map(
       (field) => `${field.getAttribute("name")}=${field.getAttribute("value")}`,
     );
@@ -69,11 +69,11 @@ describe("Topbar search", () => {
   it("searches the whole catalog from pages that are not a category", () => {
     pathname = "/producto/123";
     render(<Topbar />);
-    expect(screen.getByRole("searchbox").closest("form")).toHaveAttribute("action", "/");
+    expect(screen.getByRole("searchbox").closest("form")).toHaveAttribute("action", "/ver-todo");
   });
 
   it("ignores invalid size and sort values in the URL", () => {
-    pathname = "/tops";
+    pathname = "/ver-todo/tops";
     search = "talle=XXL&orden=azar";
     render(<Topbar />);
     expect(

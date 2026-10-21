@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CatalogPage } from "../../components/catalog-page";
-import type { SearchParams } from "../../lib/catalog-filters";
-import { findCategory } from "../../lib/categories";
+import { CatalogPage } from "../../../../components/catalog-page";
+import type { SearchParams } from "../../../../lib/catalog-filters";
+import { findCategory } from "../../../../lib/categories";
 
 type Params = Promise<{ categoria: string }>;
 
