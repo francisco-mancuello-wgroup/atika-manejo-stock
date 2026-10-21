@@ -1,5 +1,8 @@
+"use client";
+
 import { cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/", label: "Resumen" },
@@ -10,7 +13,15 @@ const NAV_ITEMS = [
   { href: "/parametros", label: "Parámetros" },
 ] as const;
 
-export function Sidebar({ activeHref = "/" }: { activeHref?: string }) {
+function isActive(href: string, currentPath: string): boolean {
+  return href === "/"
+    ? currentPath === "/"
+    : currentPath === href || currentPath.startsWith(`${href}/`);
+}
+
+export function Sidebar({ activeHref }: { activeHref?: string }) {
+  const pathname = usePathname();
+  const currentPath = activeHref ?? pathname ?? "/";
   return (
     <aside className="flex w-[232px] shrink-0 flex-col gap-8 border-r border-line bg-surface px-4 py-6">
       <div className="flex flex-col gap-2 px-3">
@@ -21,7 +32,7 @@ export function Sidebar({ activeHref = "/" }: { activeHref?: string }) {
       </div>
       <nav aria-label="Principal" className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) => {
-          const active = item.href === activeHref;
+          const active = isActive(item.href, currentPath);
           return (
             <Link
               key={item.href}

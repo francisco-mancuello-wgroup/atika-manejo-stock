@@ -1,13 +1,6 @@
 import { buttonVariants, cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
-
-const CATEGORIES = [
-  { href: "/novedades", label: "Novedades" },
-  { href: "/vestidos", label: "Vestidos" },
-  { href: "/tops", label: "Tops" },
-  { href: "/faldas-y-shorts", label: "Faldas y shorts" },
-  { href: "/accesorios", label: "Accesorios" },
-] as const;
+import { CATEGORIES } from "../lib/categories";
 
 // The store number is a catalog setting (later feature); until then the link opens WhatsApp
 // without a prefilled recipient.
@@ -24,7 +17,7 @@ export function Topbar({ whatsappHref = DEFAULT_WHATSAPP_HREF }: { whatsappHref?
       </Link>
       <nav aria-label="Categorías" className="hidden items-center gap-6 text-sm text-muted md:flex">
         {CATEGORIES.map((category) => (
-          <Link key={category.href} href={category.href} className="hover:text-ink">
+          <Link key={category.slug} href={`/${category.slug}`} className="hover:text-ink">
             {category.label}
           </Link>
         ))}
