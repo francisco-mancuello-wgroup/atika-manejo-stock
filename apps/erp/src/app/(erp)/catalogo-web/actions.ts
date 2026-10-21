@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { type FormState, formValues } from "../../../lib/action-state";
+import { requireSession } from "../../../lib/auth/session";
 import {
   publishAllInStock,
   saveCatalogSettings,
@@ -24,6 +25,7 @@ export async function setVisibilityAction(
   productId: string,
   isPublished: boolean,
 ): Promise<FormState> {
+  await requireSession();
   try {
     const state = await setProductVisibility(getDb(), productId, isPublished);
     if (state.status === "success") revalidateCatalogAdmin();
@@ -38,6 +40,7 @@ export async function setVisibilityManyAction(
   productIds: string[],
   isPublished: boolean,
 ): Promise<FormState> {
+  await requireSession();
   try {
     const state = await setProductsVisibility(getDb(), productIds, isPublished);
     if (state.status === "success") revalidateCatalogAdmin();
@@ -49,6 +52,7 @@ export async function setVisibilityManyAction(
 }
 
 export async function setCategoryAction(productId: string, category: string): Promise<FormState> {
+  await requireSession();
   try {
     const state = await setProductCategory(getDb(), productId, category);
     if (state.status === "success") revalidateCatalogAdmin();
@@ -60,6 +64,7 @@ export async function setCategoryAction(productId: string, category: string): Pr
 }
 
 export async function publishAllAction(): Promise<FormState> {
+  await requireSession();
   try {
     const state = await publishAllInStock(getDb());
     if (state.status === "success") revalidateCatalogAdmin();
@@ -74,6 +79,7 @@ export async function saveCatalogSettingsAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
   const values = formValues(formData);
   try {
     const state = await saveCatalogSettings(getDb(), values);

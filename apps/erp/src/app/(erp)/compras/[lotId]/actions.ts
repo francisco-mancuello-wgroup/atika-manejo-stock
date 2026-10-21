@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { FormState } from "../../../../lib/action-state";
 import { formValues } from "../../../../lib/action-state";
+import { requireSession } from "../../../../lib/auth/session";
 import { getDb } from "../../../../lib/db";
 import { saveLotParameters } from "../../../../lib/lots/save";
 
@@ -12,6 +13,7 @@ export async function saveLotParams(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
   const values = formValues(formData);
   try {
     const state = await saveLotParameters(getDb(), lotId, values);
