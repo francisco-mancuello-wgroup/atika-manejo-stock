@@ -9,12 +9,29 @@ const products: SellableProduct[] = [
     id: "p1",
     label: "Vestido Lino · Casa Icona",
     priceGs: 1_000_000,
+    discountPercent: null,
+    discountedPriceGs: null,
     sizes: [
       { size: "S", stock: 1 },
       { size: "M", stock: 4 },
     ],
   },
-  { id: "p2", label: "Pantalón · Milonga", priceGs: 400_000, sizes: [{ size: "U", stock: 5 }] },
+  {
+    id: "p2",
+    label: "Pantalón · Milonga",
+    priceGs: 400_000,
+    discountPercent: null,
+    discountedPriceGs: null,
+    sizes: [{ size: "U", stock: 5 }],
+  },
+  {
+    id: "p3",
+    label: "Blusa · Milonga",
+    priceGs: 500_000,
+    discountPercent: 20,
+    discountedPriceGs: 400_000,
+    sizes: [{ size: "M", stock: 2 }],
+  },
 ];
 
 const idle = async (): Promise<FormState> => ({ status: "idle" });
@@ -48,6 +65,14 @@ describe("SaleForm", () => {
     fireEvent.change(screen.getByLabelText("Talle"), { target: { value: "M" } });
     expect(screen.getByLabelText("Cantidad")).toHaveAttribute("max", "4");
     expect(screen.getByText("Precio de lista: ₲ 1.000.000")).toBeInTheDocument();
+  });
+
+  it("suggests the discounted price with its percent and the original price", () => {
+    render(<SaleForm products={products} today="2026-10-21" action={idle} />);
+    fireEvent.change(screen.getByLabelText("Producto"), { target: { value: "p3" } });
+    expect(
+      screen.getByText("Precio de lista: ₲ 400.000 (-20 %), antes ₲ 500.000"),
+    ).toBeInTheDocument();
   });
 
   it("submits the fields and shows the success message", async () => {

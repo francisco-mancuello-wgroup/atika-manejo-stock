@@ -1,7 +1,10 @@
 import "server-only";
+import type { Prisma } from "@atika/db";
+import { applyDiscount, effectiveDiscount } from "@atika/pricing";
 import { getDb } from "../db";
 import { sortSizes } from "../sizes";
 import { type SaleRow, toSaleRow } from "../view-models";
+import { getActiveDiscountRules } from "./discounts";
 
 const saleInclude = {
   variant: { select: { size: true, product: { select: { id: true, name: true } } } },
@@ -36,23 +39,34 @@ export async function getMonthSalesTotalGs(monthStart: Date): Promise<number> {
 export interface SellableProduct {
   id: string;
   label: string;
+  /** List price of the product. */
   priceGs: number;
+  /** Percent off that applies today, and the price after it; null without a discount. */
+  discountPercent: number | null;
+  discountedPriceGs: number | null;
   sizes: { size: string; stock: number }[];
 }
 
 /** Products with at least one size in stock, for the sale form. */
-export async function getSellableProducts(): Promise<SellableProduct[]> {
-  const products = await getDb().product.findMany({
+export async function getSellableProducts(
+  db: Pick<Prisma.TransactionClient, "product" | "discount"> = getDb(),
+  now: Date = new Date(),
+): Promise<SellableProduct[]> {
+  const rules = await getActiveDiscountRules(db);
+  const products = await db.product.findMany({
     where: { variants: { some: { stock: { gt: 0 } } } },
     orderBy: [{ name: "asc" }],
     include: { lot: { select: { name: true } }, variants: { where: { stock: { gt: 0 } } } },
   });
   return products.map((product) => {
     const order = sortSizes(product.variants.map((v) => v.size));
+    const percent = effectiveDiscount(rules, product.id, now);
     return {
       id: product.id,
       label: `${product.name} · ${product.lot.name}`,
       priceGs: product.priceGs,
+      discountPercent: percent,
+      discountedPriceGs: percent === null ? null : applyDiscount(product.priceGs, percent),
       sizes: product.variants
         .map((v) => ({ size: v.size, stock: v.stock }))
         .sort((a, b) => order.indexOf(a.size) - order.indexOf(b.size)),

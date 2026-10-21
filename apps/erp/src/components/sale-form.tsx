@@ -9,6 +9,14 @@ import { Field, FormMessage, Select } from "./form-controls";
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
+/** "Precio de lista: ₲ 400.000 (-20 %), antes ₲ 500.000" when a discount applies. */
+function priceHint(product: SellableProduct): string {
+  if (product.discountPercent === null || product.discountedPriceGs === null) {
+    return `Precio de lista: ${formatGs(product.priceGs)}`;
+  }
+  return `Precio de lista: ${formatGs(product.discountedPriceGs)} (-${product.discountPercent} %), antes ${formatGs(product.priceGs)}`;
+}
+
 export function SaleForm({
   products,
   today,
@@ -85,7 +93,7 @@ export function SaleForm({
         label="Cantidad"
         htmlFor="quantity"
         error={errors.quantity}
-        hint={product ? `Precio de lista: ${formatGs(product.priceGs)}` : undefined}
+        hint={product ? priceHint(product) : undefined}
       >
         <Input
           id="quantity"
