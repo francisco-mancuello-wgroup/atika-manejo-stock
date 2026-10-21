@@ -1,4 +1,4 @@
-import { Button, cn, Input } from "@atika/ui";
+import { Button, buttonVariants, cn, Input } from "@atika/ui";
 import Link from "next/link";
 import { formatGs } from "../lib/format";
 import type { InventoryFilters } from "../lib/inventory-filters";
@@ -20,7 +20,15 @@ export function InventarioView({
   const filtered = Boolean(filters.lotId || filters.query);
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Inventario" description="Productos con el stock disponible por talle." />
+      <PageHeader
+        title="Inventario"
+        description="Productos con el stock disponible por talle."
+        actions={
+          <Link href="/inventario/nuevo" className={buttonVariants()}>
+            Nuevo producto
+          </Link>
+        }
+      />
 
       <search>
         <form
@@ -88,7 +96,12 @@ export function InventarioView({
                     <div className="flex items-center gap-3">
                       <ProductThumb src={product.imageUrl} name={product.name} />
                       <div className="flex flex-col">
-                        <span className="font-medium">{product.name}</span>
+                        <Link
+                          href={`/inventario/${product.id}`}
+                          className="font-medium underline-offset-4 hover:underline"
+                        >
+                          {product.name}
+                        </Link>
                         {product.color ? (
                           <span className="text-xs text-muted">{product.color}</span>
                         ) : null}
