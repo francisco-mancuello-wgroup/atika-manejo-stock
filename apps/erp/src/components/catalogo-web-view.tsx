@@ -9,6 +9,7 @@ import { CatalogSettingsForm } from "./catalog-settings-form";
 import { Field } from "./form-controls";
 import { PageHeader } from "./page-header";
 import { CategorySelect, VisibilitySwitch } from "./product-controls";
+import { ProductThumb } from "./product-thumb";
 import { PublishAllForm } from "./publish-all-form";
 import { table } from "./styles";
 
@@ -123,7 +124,12 @@ export function CatalogoWebView({
             <tbody>
               {products.map((product) => (
                 <tr key={product.id} className={table.row}>
-                  <td className={cn(table.td, "font-medium")}>{product.name}</td>
+                  <td className={cn(table.td, "font-medium")}>
+                    <div className="flex items-center gap-3">
+                      <ProductThumb src={product.imageUrl} name={product.name} />
+                      {product.name}
+                    </div>
+                  </td>
                   <td className={cn(table.td, "text-muted")}>{product.lotName}</td>
                   <td className={table.td}>
                     {product.sizes.length > 0 ? (

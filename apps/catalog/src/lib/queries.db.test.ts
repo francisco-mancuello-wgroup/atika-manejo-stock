@@ -56,6 +56,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
       expect(Object.keys(product ?? {}).sort()).toEqual([
         "category",
         "id",
+        "imageUrl",
         "inStock",
         "name",
         "priceGs",
@@ -64,6 +65,21 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
       expect(await getProduct(tx, open, hidden ?? "")).toBeNull();
       expect(await getProduct(tx, open, "not-a-uuid")).toBeNull();
       expect(await getProduct(tx, open, "00000000-0000-7000-8000-000000000000")).toBeNull();
+    });
+  });
+
+  it("exposes the cover photo URL only", async () => {
+    await withRollback(async (tx) => {
+      const [id] = await createProducts(tx, [{ name: "Photo", variants: [["S", 1]] }]);
+      await tx.productImage.createMany({
+        data: [
+          { productId: id ?? "", url: "/media/products/x/second.webp", alt: "s", position: 1 },
+          { productId: id ?? "", url: "/media/products/x/cover.webp", alt: "c", position: 0 },
+        ],
+      });
+      const product = await getProduct(tx, open, id ?? "");
+      expect(product?.imageUrl).toBe("/media/products/x/cover.webp");
+      expect(JSON.stringify(product)).not.toContain("second.webp");
     });
   });
 

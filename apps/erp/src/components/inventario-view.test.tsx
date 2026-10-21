@@ -16,6 +16,7 @@ const products: InventoryProduct[] = [
       { size: "M", stock: 3 },
     ],
     totalStock: 3,
+    imageUrl: "/media/products/casa-icona/vestido-lino.webp",
   },
   {
     id: "p2",
@@ -27,6 +28,7 @@ const products: InventoryProduct[] = [
     priceGs: 400_000,
     sizes: [{ size: "U", stock: 5 }],
     totalStock: 5,
+    imageUrl: null,
   },
 ];
 
@@ -44,6 +46,20 @@ describe("InventarioView", () => {
     expect(within(row).getByText("A1")).toBeInTheDocument();
     expect(within(row).getByText("₲ 1.000.000")).toBeInTheDocument();
     expect(screen.getByText("2 productos")).toBeInTheDocument();
+  });
+
+  it("shows a 40x52 thumbnail of the cover, or a sand placeholder", () => {
+    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    const withPhoto = screen.getByText("Vestido Lino").closest("tr") as HTMLElement;
+    const img = within(withPhoto).getByRole("img", { name: "Vestido Lino" });
+    expect(img).toHaveAttribute("width", "40");
+    expect(img).toHaveAttribute("height", "52");
+    expect(img.getAttribute("src")).toContain(
+      encodeURIComponent("/media/products/casa-icona/vestido-lino.webp"),
+    );
+    const withoutPhoto = screen.getByText("Pantalón").closest("tr") as HTMLElement;
+    expect(within(withoutPhoto).queryByRole("img")).toBeNull();
+    expect(withoutPhoto.querySelector(".bg-sand")).not.toBeNull();
   });
 
   it("shows a stock chip per size and marks sold-out sizes", () => {

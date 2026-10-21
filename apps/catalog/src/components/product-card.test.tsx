@@ -12,6 +12,7 @@ const product: CatalogProduct = {
     { size: "M", available: true },
   ],
   inStock: true,
+  imageUrl: null,
 };
 
 describe("ProductCard", () => {
@@ -33,11 +34,25 @@ describe("ProductCard", () => {
     expect(screen.getByText("Consultar precio")).toBeInTheDocument();
   });
 
+  it("shows the cover photo inside the sand offset frame, named after the product", () => {
+    const { container } = render(
+      <ProductCard product={{ ...product, imageUrl: "/media/products/atika/top.webp" }} />,
+    );
+    const photo = screen.getByRole("img", { name: "Vestido Lino" });
+    expect(photo.getAttribute("src")).toContain(
+      encodeURIComponent("/media/products/atika/top.webp"),
+    );
+    expect(photo).toHaveClass("object-cover");
+    expect(photo).toHaveAttribute("sizes", expect.stringContaining("vw"));
+    expect(container.querySelector(".bg-sand")).not.toBeNull();
+  });
+
   it("shows a sand photo placeholder and says when nothing is available", () => {
     const { container } = render(
       <ProductCard product={{ ...product, sizes: [], inStock: false }} />,
     );
     expect(container.querySelector(".bg-sand")).not.toBeNull();
+    expect(screen.queryByRole("img")).toBeNull();
     expect(screen.getByText("Sin stock")).toBeInTheDocument();
   });
 });

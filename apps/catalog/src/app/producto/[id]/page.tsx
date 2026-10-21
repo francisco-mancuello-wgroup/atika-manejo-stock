@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductContact } from "../../../components/product-contact";
+import { ProductPhoto } from "../../../components/product-photo";
 import { getDb } from "../../../lib/db";
 import { formatGs } from "../../../lib/format";
 import { getCatalogSettings, getProduct } from "../../../lib/queries";
@@ -24,10 +25,13 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   return (
     <section className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:grid-cols-2">
-      {/* Photo placeholder: sand surface with an offset block until real photos exist. */}
-      <div className="relative aspect-[3/4] bg-sand">
-        <div aria-hidden="true" className="absolute bottom-6 left-6 size-1/3 bg-subtle" />
-      </div>
+      <ProductPhoto
+        src={product.imageUrl}
+        alt={product.name}
+        sizes="(min-width: 768px) 50vw, 100vw"
+        size="page"
+        priority
+      />
       <div className="flex flex-col gap-6">
         <h1 className="font-display text-5xl leading-tight text-ink">{product.name}</h1>
         <div className="flex flex-col gap-1">

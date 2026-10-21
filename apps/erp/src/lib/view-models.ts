@@ -1,4 +1,5 @@
 import { shippingPerUnit, unitCostUsd } from "@atika/pricing";
+import { coverUrl } from "./cover";
 import { toIsoDate } from "./dates";
 import { sortSizes } from "./sizes";
 
@@ -23,6 +24,8 @@ export interface ProductRow {
   originalValueUsd: DecimalLike;
   priceGs: number;
   variants: VariantRow[];
+  /** Loaded by the product lists that show a thumbnail. */
+  images?: readonly { url: string; position: number }[];
 }
 
 export interface LotRow {
@@ -131,6 +134,7 @@ export interface InventoryProduct {
   priceGs: number;
   sizes: SizeStock[];
   totalStock: number;
+  imageUrl: string | null;
 }
 
 function sortedVariants(variants: readonly VariantRow[]): VariantRow[] {
@@ -153,6 +157,7 @@ export function toInventoryProduct(
     priceGs: product.priceGs,
     sizes: variants.map((v) => ({ size: v.size, stock: v.stock })),
     totalStock: sum(variants.map((v) => v.stock)),
+    imageUrl: coverUrl(product.images),
   };
 }
 

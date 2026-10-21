@@ -13,6 +13,7 @@ const products: CatalogProduct[] = [
     category: "vestidos",
     isPublished: true,
     sizes: ["S", "M"],
+    imageUrl: "/media/products/casa-icona/vestido-lino.webp",
   },
   {
     id: "p2",
@@ -22,6 +23,7 @@ const products: CatalogProduct[] = [
     category: null,
     isPublished: false,
     sizes: [],
+    imageUrl: null,
   },
 ];
 
@@ -64,6 +66,22 @@ describe("CatalogoWebView", () => {
     expect(first.getByRole("combobox")).toHaveValue("vestidos");
     expect(first.getByRole("switch")).toHaveAttribute("aria-checked", "true");
     expect(within(rows[1] as HTMLElement).getByText("Sin stock")).toBeInTheDocument();
+  });
+
+  it("shows a thumbnail of the cover, or a sand placeholder", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+      />,
+    );
+    const rows = screen.getAllByRole("row").slice(1);
+    const img = within(rows[0] as HTMLElement).getByRole("img", { name: "Vestido Lino" });
+    expect([img.getAttribute("width"), img.getAttribute("height")]).toEqual(["40", "52"]);
+    expect(within(rows[1] as HTMLElement).queryByRole("img")).toBeNull();
+    expect((rows[1] as HTMLElement).querySelector(".bg-sand")).not.toBeNull();
   });
 
   it("offers status filters as links that keep the search and marks the active one", () => {

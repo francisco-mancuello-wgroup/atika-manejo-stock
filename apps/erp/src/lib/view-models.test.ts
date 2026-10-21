@@ -111,6 +111,20 @@ describe("toInventoryProduct", () => {
   });
 });
 
+describe("toInventoryProduct cover image", () => {
+  it("exposes the lowest-position image as imageUrl, null without images", () => {
+    const lot = lotRow();
+    const base = at(lot.products, 0);
+    const images = [
+      { url: "/media/products/b.webp", position: 1 },
+      { url: "/media/products/a.webp", position: 0 },
+    ];
+    expect(toInventoryProduct({ ...base, images }, lot).imageUrl).toBe("/media/products/a.webp");
+    expect(toInventoryProduct({ ...base, images: [] }, lot).imageUrl).toBeNull();
+    expect(toInventoryProduct(base, lot).imageUrl).toBeNull();
+  });
+});
+
 describe("toLotDetail", () => {
   it("builds the model × size grid with only the sizes present in the lot", () => {
     const detail = toLotDetail(lotRow());

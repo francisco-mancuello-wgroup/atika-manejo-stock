@@ -14,6 +14,7 @@ const productSelect = {
   category: true,
   priceGs: true,
   variants: { select: { size: true, stock: true } },
+  images: { select: { url: true, position: true }, orderBy: { position: "asc" }, take: 1 },
 } satisfies Prisma.ProductSelect;
 
 /** The settings that decide which products and sizes are shown. */

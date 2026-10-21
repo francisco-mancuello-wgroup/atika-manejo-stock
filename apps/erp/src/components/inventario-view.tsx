@@ -5,6 +5,7 @@ import type { InventoryFilters } from "../lib/inventory-filters";
 import type { InventoryProduct } from "../lib/view-models";
 import { Field, Select } from "./form-controls";
 import { PageHeader } from "./page-header";
+import { ProductThumb } from "./product-thumb";
 import { table } from "./styles";
 
 export function InventarioView({
@@ -84,11 +85,14 @@ export function InventarioView({
               {products.map((product) => (
                 <tr key={product.id} className={table.row}>
                   <td className={table.td}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{product.name}</span>
-                      {product.color ? (
-                        <span className="text-xs text-muted">{product.color}</span>
-                      ) : null}
+                    <div className="flex items-center gap-3">
+                      <ProductThumb src={product.imageUrl} name={product.name} />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{product.name}</span>
+                        {product.color ? (
+                          <span className="text-xs text-muted">{product.color}</span>
+                        ) : null}
+                      </div>
                     </div>
                   </td>
                   <td className={table.td}>
