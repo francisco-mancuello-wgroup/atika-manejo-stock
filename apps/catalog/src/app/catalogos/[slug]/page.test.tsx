@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { CatalogSettingsView } from "../../../lib/catalog-view";
 import type { PresentationCollection } from "../../../lib/presentation";
 import PresentationPage, { dynamic, generateMetadata } from "./page";
@@ -34,6 +34,9 @@ vi.mock("next/navigation", () => ({
     throw new Error("NEXT_NOT_FOUND");
   },
 }));
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ host: "catalogo.test" }),
+}));
 vi.mock("../../../lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("../../../lib/queries", () => ({
   getCatalogSettings: async () => settings,
@@ -53,6 +56,15 @@ describe("Presentation page", () => {
     expect(screen.getByRole("region", { name: "COSTA VINO" })).toHaveAttribute(
       "id",
       "casa-icona-pagina-1",
+    );
+  });
+
+  it("builds absolute piece links from the request host and uses the configured template", async () => {
+    render(await PresentationPage(props("casa-icona")));
+    fireEvent.click(screen.getByRole("radio", { name: "S" }));
+    const href = screen.getByRole("link", { name: "Consultar talle S" }).getAttribute("href");
+    expect(new URL(href ?? "").searchParams.get("text")).toBe(
+      "Hola COSTA VINO – ₲\u00a01.000 – https://catalogo.test/catalogos/casa-icona#casa-icona-pagina-1",
     );
   });
 

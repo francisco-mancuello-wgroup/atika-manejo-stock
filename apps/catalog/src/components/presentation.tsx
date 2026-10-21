@@ -3,7 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatGs } from "../lib/format";
 import type { PresentationCollection, PresentationPiece } from "../lib/presentation";
+import { pieceLink } from "../lib/whatsapp";
 import { PhotoCarousel } from "./photo-carousel";
+import { SizePicker } from "./size-picker";
+
+interface Contact {
+  whatsappNumber: string;
+  messageTemplate: string;
+  /** Origin of the site, to build absolute links to the pieces ("" for relative ones). */
+  origin: string;
+}
 
 const EYEBROW = "text-[11px] font-medium uppercase tracking-[0.15em] text-ink";
 
@@ -13,10 +22,12 @@ function PieceSection({
   piece,
   collection,
   index,
+  contact,
 }: {
   piece: PresentationPiece;
   collection: PresentationCollection;
   index: number;
+  contact: Contact;
 }) {
   return (
     <section
@@ -53,7 +64,7 @@ function PieceSection({
           <p className="hidden text-sm leading-relaxed text-muted sm:block">{piece.description}</p>
         ) : null}
 
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="flex flex-col gap-5">
           {piece.color ? (
             <p className="flex items-center gap-2 text-sm text-muted">
               {piece.color.hex ? (
@@ -67,21 +78,15 @@ function PieceSection({
               {piece.color.label}
             </p>
           ) : null}
-          <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-            <legend className="mb-2 p-0 text-[11px] uppercase tracking-[0.22em] text-muted">
-              Talle
-            </legend>
-            <ul className="flex flex-wrap gap-2">
-              {piece.sizes.map(({ size }) => (
-                <li
-                  key={size}
-                  className="flex h-10 min-w-10 items-center justify-center border border-line px-3 text-sm text-ink"
-                >
-                  {size}
-                </li>
-              ))}
-            </ul>
-          </fieldset>
+          <SizePicker
+            name={piece.name}
+            sizes={piece.sizes}
+            colorLabel={piece.color?.label ?? null}
+            priceGs={piece.priceGs}
+            link={pieceLink(contact.origin, collection.slug, index + 1)}
+            whatsappNumber={contact.whatsappNumber}
+            messageTemplate={contact.messageTemplate}
+          />
         </div>
       </div>
     </section>
@@ -92,7 +97,10 @@ function PieceSection({
  * Full-screen presentation of one collection: a cover and one snap-scrolling section per piece.
  * Sections are server-rendered; only the carousel (and the size picker) are client components.
  */
-export function Presentation({ collection }: { collection: PresentationCollection }) {
+export function Presentation({
+  collection,
+  ...contact
+}: { collection: PresentationCollection } & Contact) {
   const cover = collection.pieces.find((piece) => piece.photos.length > 0)?.photos[0];
   const count = collection.pieces.length;
 
@@ -142,7 +150,13 @@ export function Presentation({ collection }: { collection: PresentationCollectio
         </section>
 
         {collection.pieces.map((piece, index) => (
-          <PieceSection key={piece.id} piece={piece} collection={collection} index={index} />
+          <PieceSection
+            key={piece.id}
+            piece={piece}
+            collection={collection}
+            index={index}
+            contact={contact}
+          />
         ))}
       </div>
     </>
