@@ -15,10 +15,21 @@ const quattrocento = Quattrocento_Sans({
   variable: "--font-quattrocento",
 });
 
+const DESCRIPTION =
+  "Tienda oficial de Átika: Casa Icona, Milonga y Sordo. Elegí tus prendas y pagá por WhatsApp.";
+
 export const metadata: Metadata = {
+  // Share previews (WhatsApp, Instagram) need absolute URLs for `opengraph-image.png`
+  metadataBase: new URL(process.env.SITE_URL ?? "https://atika-event.vercel.app"),
   title: "Átika – Atika Official",
-  description:
-    "Tienda oficial de Átika: Casa Icona, Milonga y Sordo. Elegí tus prendas y pagá por WhatsApp.",
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Átika",
+    locale: "es_PY",
+    title: "Átika – Atika Official",
+    description: DESCRIPTION,
+  },
 };
 
 /** Document shell only: the site topbar lives in `(site)`, the presentation pages have none. */
