@@ -1,4 +1,4 @@
-const SIZE_ORDER = ["XS", "XS/S", "S", "M", "M/L", "L", "XL", "U"];
+export const SIZE_ORDER = ["XS", "XS/S", "S", "M", "M/L", "L", "XL", "U"];
 
 /** Known sizes from smallest to one-size; unknown ones follow alphabetically. */
 export function sortSizes(sizes: readonly string[]): string[] {
