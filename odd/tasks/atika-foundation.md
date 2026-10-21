@@ -67,6 +67,8 @@ Two apps read the same data and the same price formula. If the formula or schema
 
 - Strategy: ask-on-risk (default). Forecast ~600 authored lines (generated scaffolding and lockfiles excluded) → will ask for chain strategy before exceeding ~400.
 - Branch: `feat/atika-foundation` (repo is on `main`).
+- Chain strategy: **stacked-to-main** (user, 2026-10-21: "tienes que ir mergeando a main"). Merged locally with `--no-ff` per slice; remote `origin` is empty and pushing needs separate approval.
+- Slices: A = T1+T2 (`3c66640`..`e4356bb`, scaffold + pricing, ~520 lines: over budget because scaffold config and docs travel with it; no cohesive smaller split); B = T3 (`09455d9`, db, ~300 lines); C = T4+T5 (ui + app shells).
 - One work-unit commit per task, Conventional Commits.
 
 ## Tasks
@@ -93,8 +95,8 @@ Two apps read the same data and the same price formula. If the formula or schema
 
 - T1 (2026-10-21): `pnpm install` → done (pnpm 11.22.0); `pnpm lint` → "Checked 10 files. No fixes applied." exit 0; `pnpm typecheck` → exit 0, 0 tasks (no TS packages yet — real coverage starts in T2). TDD: not applicable (config only, no behavior). Commit `3c66640`. RDD: off (global) → no review.
 - T2 (2026-10-21, commit `e4356bb`): RED observed — `pnpm --filter @atika/pricing test` → 15 failed (stub index). GREEN — 15 passed; `pnpm test` (turbo) 1/1 successful; `pnpm typecheck` 1/1 successful; `pnpm lint` exit 0. REFACTOR: none needed. Shipping is prorated over units bought (sum of model units), not current stock.
-- T3 (2026-10-21): RED observed — `pnpm --filter @atika/db test` → fails, `Cannot find module './generated/prisma/client'`. GREEN — `prisma validate` valid; `prisma generate` ok; 6/6 tests passed. From clean (generated dir removed): `pnpm test` 3/3 turbo tasks, `pnpm typecheck` 3/3, `pnpm lint` exit 0. Migration `20261021000000_init` has 9 `CREATE TABLE`. Prisma install scripts approved via pnpm `allowBuilds`; `pnpm-workspace.yaml` excluded from Biome (pnpm rewrites it). Not applied to any database: Neon pending user approval. Decisions: money in USD/rates as `Decimal`, guaraníes as `Int`; `Product.priceGs` persisted and recalculated on lot save; `CatalogSettings` single row id=1; sessions store SHA-256 of the cookie token.
+- T3 (2026-10-21, commit `09455d9`): RED observed — `pnpm --filter @atika/db test` → fails, `Cannot find module './generated/prisma/client'`. GREEN — `prisma validate` valid; `prisma generate` ok; 6/6 tests passed. From clean (generated dir removed): `pnpm test` 3/3 turbo tasks, `pnpm typecheck` 3/3, `pnpm lint` exit 0. Migration `20261021000000_init` has 9 `CREATE TABLE`. Prisma install scripts approved via pnpm `allowBuilds`; `pnpm-workspace.yaml` excluded from Biome (pnpm rewrites it). Not applied to any database: Neon pending user approval. Decisions: money in USD/rates as `Decimal`, guaraníes as `Int`; `Product.priceGs` persisted and recalculated on lot save; `CatalogSettings` single row id=1; sessions store SHA-256 of the cookie token.
 
 ## Next step
 
-Delivery budget reached (~400+ authored lines): ask chain strategy (ask-on-risk) before T4.
+Slices A and B merged to `main`; continue T4 on a new branch from `main` (slice C).
