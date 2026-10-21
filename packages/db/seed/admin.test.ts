@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { createPrismaClient, type Prisma } from "../src/index";
 import { verifyPassword } from "../src/password";
 import { MIN_ADMIN_PASSWORD_LENGTH, upsertAdmin } from "./admin";
@@ -27,6 +27,16 @@ describe("upsertAdmin input", () => {
     await expect(upsertAdmin(db, "owner@example.test", "short")).rejects.toThrow(
       new RegExp(String(MIN_ADMIN_PASSWORD_LENGTH)),
     );
+  });
+});
+
+describe("upsertAdmin password length", () => {
+  it("accepts passwords of at least 8 characters and rejects shorter ones", async () => {
+    const upsert = vi.fn(async () => ({}));
+    const db = { user: { upsert } } as never;
+    await expect(upsertAdmin(db, "owner@example.test", "abcd1234")).resolves.toBeUndefined();
+    expect(upsert).toHaveBeenCalledTimes(1);
+    await expect(upsertAdmin(db, "owner@example.test", "abc1234")).rejects.toThrow(/at least 8/);
   });
 });
 

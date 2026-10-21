@@ -138,7 +138,7 @@ cost 1.0, stored as fractions) is only created when missing, so values edited in
 
 `admin.ts` upserts the single ERP user by lowercase email and stores only a scrypt hash
 (`@atika/db/password`). The ERP has no sign-up or reset screen, so this is how the account is created
-and how its password is rotated. `ADMIN_PASSWORD` needs at least 12 characters.
+and how its password is rotated. `ADMIN_PASSWORD` needs at least 8 characters (a longer passphrase is recommended).
 
 ```bash
 # create the owner, or change the password of the existing account
