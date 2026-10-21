@@ -10,6 +10,7 @@
     "next.config.ts",
     "vitest.config.ts",
     "vitest.setup.ts",
+    "vitest.server-only.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

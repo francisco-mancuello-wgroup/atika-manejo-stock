@@ -1,9 +1,9 @@
+import { CATALOG_CATEGORIES } from "@atika/db/categories";
+
+/** Navigation entries: "novedades" lists every published product; the rest come from the database package. */
 export const CATEGORIES = [
   { slug: "novedades", label: "Novedades" },
-  { slug: "vestidos", label: "Vestidos" },
-  { slug: "tops", label: "Tops" },
-  { slug: "faldas-y-shorts", label: "Faldas y shorts" },
-  { slug: "accesorios", label: "Accesorios" },
+  ...CATALOG_CATEGORIES,
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
