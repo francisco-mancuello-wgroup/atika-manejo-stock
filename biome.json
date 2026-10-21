@@ -6,7 +6,13 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/.atl", "!**/prisma/migrations", "!pnpm-lock.yaml"]
+    "includes": [
+      "**",
+      "!**/.atl",
+      "!**/prisma/migrations",
+      "!pnpm-lock.yaml",
+      "!pnpm-workspace.yaml"
+    ]
   },
   "formatter": {
     "indentStyle": "space",

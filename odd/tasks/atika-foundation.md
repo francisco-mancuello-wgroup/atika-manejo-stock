@@ -67,6 +67,8 @@ Two apps read the same data and the same price formula. If the formula or schema
 
 - Strategy: ask-on-risk (default). Forecast ~600 authored lines (generated scaffolding and lockfiles excluded) → will ask for chain strategy before exceeding ~400.
 - Branch: `feat/atika-foundation` (repo is on `main`).
+- Chain strategy: **stacked-to-main** (user, 2026-10-21: "tienes que ir mergeando a main"). Merged locally with `--no-ff` per slice; remote `origin` is empty and pushing needs separate approval.
+- Slices: A = T1+T2 (`3c66640`..`e4356bb`, scaffold + pricing, ~520 lines: over budget because scaffold config and docs travel with it; no cohesive smaller split); B = T3 (`09455d9`, db, ~300 lines); C = T4+T5 (ui + app shells).
 - One work-unit commit per task, Conventional Commits.
 
 ## Tasks
@@ -76,8 +78,8 @@ Two apps read the same data and the same price formula. If the formula or schema
   - Note: TypeScript pinned to 6.0.3 — `typescript@7.0.2` on npm ships no `main` (no JS compiler API), which Next.js build-time type checking requires.
 - [x] T2 — `packages/pricing` (TDD): `shippingPerUnit`, `unitCostUsd`, `priceGs`, `roundGs`, `priceLot(params, models)`.
   - Accept: Vitest covers the formula with the Casa Icona example (TC 7.400, factor 2,5, IVA 10 %, shipping 2.265,12 / 57 u.), zero-unit guard, rounding edge cases.
-- [ ] T3 — `packages/db`: Prisma schema (`suppliers`, `lots` with pricing params, `products`, `product_variants` (size + stock), `sales`, `product_images`, `catalog_settings`, `users` (email, password_hash), `sessions` (token_hash, user_id, expires_at)), first migration, typed client.
-  - Accept: `prisma migrate dev --create-only` produces a migration; `prisma generate` runs as a Turbo task before build/typecheck; schema test validates relations; provisioning Neon is done with user approval.
+- [x] T3 — `packages/db`: Prisma schema (`suppliers`, `lots` with pricing params, `products`, `product_variants` (size + stock), `sales`, `product_images`, `catalog_settings`, `users` (email, password_hash), `sessions` (token_hash, user_id, expires_at)), first migration, typed client.
+  - Accept: initial migration generated offline with `prisma migrate diff --from-empty` (no DB needed); `prisma generate` runs as a Turbo task before build/typecheck; schema test validates relations; provisioning Neon is done with user approval.
 - [ ] T4 — `packages/ui`: Tailwind v4 theme with atika tokens + fonts, shadcn init, Button/Input/Toggle primitives.
   - Accept: both apps import the theme and build.
 - [ ] T5 — `apps/erp` and `apps/catalog` shells: Next.js 16 apps wired to `pricing`, `db`, `ui`; ERP layout with sidebar, catalog layout with topbar.
@@ -92,8 +94,9 @@ Two apps read the same data and the same price formula. If the formula or schema
 ## Verification evidence
 
 - T1 (2026-10-21): `pnpm install` → done (pnpm 11.22.0); `pnpm lint` → "Checked 10 files. No fixes applied." exit 0; `pnpm typecheck` → exit 0, 0 tasks (no TS packages yet — real coverage starts in T2). TDD: not applicable (config only, no behavior). Commit `3c66640`. RDD: off (global) → no review.
-- T2 (2026-10-21): RED observed — `pnpm --filter @atika/pricing test` → 15 failed (stub index). GREEN — 15 passed; `pnpm test` (turbo) 1/1 successful; `pnpm typecheck` 1/1 successful; `pnpm lint` exit 0. REFACTOR: none needed. Shipping is prorated over units bought (sum of model units), not current stock.
+- T2 (2026-10-21, commit `e4356bb`): RED observed — `pnpm --filter @atika/pricing test` → 15 failed (stub index). GREEN — 15 passed; `pnpm test` (turbo) 1/1 successful; `pnpm typecheck` 1/1 successful; `pnpm lint` exit 0. REFACTOR: none needed. Shipping is prorated over units bought (sum of model units), not current stock.
+- T3 (2026-10-21, commit `09455d9`): RED observed — `pnpm --filter @atika/db test` → fails, `Cannot find module './generated/prisma/client'`. GREEN — `prisma validate` valid; `prisma generate` ok; 6/6 tests passed. From clean (generated dir removed): `pnpm test` 3/3 turbo tasks, `pnpm typecheck` 3/3, `pnpm lint` exit 0. Migration `20261021000000_init` has 9 `CREATE TABLE`. Prisma install scripts approved via pnpm `allowBuilds`; `pnpm-workspace.yaml` excluded from Biome (pnpm rewrites it). Not applied to any database: Neon pending user approval. Decisions: money in USD/rates as `Decimal`, guaraníes as `Int`; `Product.priceGs` persisted and recalculated on lot save; `CatalogSettings` single row id=1; sessions store SHA-256 of the cookie token.
 
 ## Next step
 
-Start T3 (`packages/db` with Prisma); Neon provisioning needs user approval.
+Slices A and B merged to `main`; continue T4 on a new branch from `main` (slice C).

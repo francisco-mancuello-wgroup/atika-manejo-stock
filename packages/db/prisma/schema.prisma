@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Supplier {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now())
+  lots      Lot[]
+
+  @@map("suppliers")
+}
+
+/// A purchase from one supplier. Pricing parameters live here and are applied to every product.
+model Lot {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  supplierId       String    @db.Uuid
+  supplier         Supplier  @relation(fields: [supplierId], references: [id])
+  name             String
+  purchasedAt      DateTime  @db.Date
+  /// Guaraníes per US dollar.
+  exchangeRate     Decimal   @db.Decimal(10, 2)
+  saleFactor       Decimal   @db.Decimal(6, 3)
+  /// Fraction, 0.1 = 10 %.
+  vatRate          Decimal   @db.Decimal(5, 4)
+  /// Share of the original value actually paid, fraction.
+  costRate         Decimal   @db.Decimal(5, 4)
+  totalShippingUsd Decimal   @db.Decimal(12, 2)
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  products         Product[]
+
+  @@index([supplierId])
+  @@map("lots")
+}
+
+model Product {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  lotId            String           @db.Uuid
+  lot              Lot              @relation(fields: [lotId], references: [id])
+  code             String?
+  name             String
+  brand            String?
+  color            String?
+  category         String?
+  description      String?
+  originalValueUsd Decimal          @db.Decimal(12, 2)
+  /// Recalculated from lot parameters on save; read by the catalog.
+  priceGs          Int
+  isPublished      Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  variants         ProductVariant[]
+  images           ProductImage[]
+
+  @@index([lotId])
+  @@index([isPublished])
+  @@map("products")
+}
+
+/// One size of a product. Shipping is prorated over unitsBought; sales decrement stock.
+model ProductVariant {
+  id          String  @id @default(uuid(7)) @db.Uuid
+  productId   String  @db.Uuid
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// XS, S, M, L, XL or U (one size).
+  size        String
+  unitsBought Int
+  stock       Int
+  sales       Sale[]
+
+  @@unique([productId, size])
+  @@map("product_variants")
+}
+
+model Sale {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  variantId   String         @db.Uuid
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+  quantity    Int            @default(1)
+  soldAt      DateTime       @db.Date
+  /// Product price at the moment of the sale.
+  listPriceGs Int
+  /// Amount actually charged when it differs from the list price.
+  chargedGs   Int?
+  customer    String?
+  notes       String?
+  createdAt   DateTime       @default(now())
+
+  @@index([variantId])
+  @@index([soldAt])
+  @@map("sales")
+}
+
+model ProductImage {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  productId String  @db.Uuid
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  /// 0 is the cover image.
+  position  Int
+
+  @@index([productId, position])
+  @@map("product_images")
+}
+
+/// Single row (id = 1) configured from the ERP and read by the catalog.
+model CatalogSettings {
+  id               Int      @id @default(1)
+  whatsappNumber   String
+  /// Supports {producto} and {talle} placeholders.
+  messageTemplate  String
+  heroText         String
+  showPrices       Boolean  @default(true)
+  showSoldOutSizes Boolean  @default(false)
+  hideOutOfStock   Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+
+  @@map("catalog_settings")
+}
+
+model User {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  email        String    @unique
+  /// scrypt hash, never the plain password.
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  /// SHA-256 of the cookie token; the token itself is never stored.
+  tokenHash String   @unique
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
