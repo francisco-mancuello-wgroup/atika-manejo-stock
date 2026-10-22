@@ -27,20 +27,32 @@ import {
   type PresentationCollection,
   toPresentationPiece,
 } from "./presentation";
-import { activeGroupWhere, hasActiveGroupStock, toWebVariants, type WebVariant } from "./web-stock";
+import {
+  activeGroupWhere,
+  toWebVariants,
+  type WebMode,
+  type WebVariant,
+  webModeFor,
+  webVisibilityWhere,
+} from "./web-stock";
 
 /** The slice of the Prisma client the catalog reads (a rolled back transaction works too). */
 export type CatalogDb = Pick<
   PrismaClient,
-  "product" | "catalogSettings" | "discount" | "bankPromo"
+  "product" | "catalogSettings" | "discount" | "bankPromo" | "publicationGroup"
 >;
+
+/** One cheap query per request: any active group puts the web in groups mode. */
+async function webMode(db: CatalogDb, now: Date): Promise<WebMode> {
+  const active = await db.publicationGroup.count({ where: activeGroupWhere(now) });
+  return webModeFor(active);
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** The columns the web stock is derived from; `withWebStock` turns them into plain variants. */
 function stockSelect(now: Date) {
   return {
-    isPublished: true,
     variants: {
       select: {
         size: true,
@@ -231,23 +243,18 @@ type ListFilters = Pick<CatalogFilters, "talle" | "q" | "orden">;
 const NO_FILTERS: ListFilters = { talle: null, q: null, orden: "recientes" };
 
 /**
- * Rows that can be on the web: published, or holding units in an active group. The remainder
+ * Rows that can be on the web: in manual mode the published ones, in groups mode the ones with an
+ * allocation in an active group (manual publication is ignored). The remainder
  * (`allocated - sold > 0`) compares two columns, which Prisma can't express, so the database only
  * narrows (physical stock is an upper bound of web stock) and `withWebStock` decides in memory.
  */
 function visibleWhere(
   settings: VisibilitySettings,
   now: Date,
+  mode: WebMode,
   filters: Pick<ListFilters, "talle" | "q"> = NO_FILTERS,
 ): Prisma.ProductWhereInput {
-  const and: Prisma.ProductWhereInput[] = [
-    {
-      OR: [
-        { isPublished: true },
-        { variants: { some: { allocations: { some: { group: activeGroupWhere(now) } } } } },
-      ],
-    },
-  ];
+  const and: Prisma.ProductWhereInput[] = [webVisibilityWhere(mode, now)];
   if (settings.hideOutOfStock) and.push({ variants: { some: { stock: { gt: 0 } } } });
   // A size filter means "can be bought in that size".
   if (filters.talle) {
@@ -263,23 +270,23 @@ function visibleWhere(
 }
 
 interface StockRow {
-  isPublished: boolean;
   variants: readonly WebVariant[];
 }
 
 /**
- * Applies the web stock: every variant's `stock` becomes what the web can sell, and rows that
- * aren't visible drop out. Unpublished rows need units left in an active group; `hideOutOfStock`
- * and the size filter are judged on web stock, so they match what the pages then show.
+ * Applies the web stock: every variant's `stock` becomes what the web can sell. The rows were
+ * already narrowed to the mode's visibility; `hideOutOfStock` and the size filter are judged on
+ * web stock, so they match what the pages then show (a product whose groups are sold out is shown
+ * sold out unless `hideOutOfStock` hides it).
  */
 function withWebStock<T extends StockRow>(
   rows: readonly T[],
+  mode: WebMode,
   settings: Pick<VisibilitySettings, "hideOutOfStock">,
   filters: Pick<ListFilters, "talle"> = { talle: null },
-): (Omit<T, "isPublished" | "variants"> & { variants: { size: string; stock: number }[] })[] {
-  return rows.flatMap(({ isPublished, variants, ...rest }) => {
-    if (!isPublished && !hasActiveGroupStock(variants)) return [];
-    const web = toWebVariants(variants, isPublished);
+): (Omit<T, "variants"> & { variants: { size: string; stock: number }[] })[] {
+  return rows.flatMap(({ variants, ...rest }) => {
+    const web = toWebVariants(variants, mode);
     if (settings.hideOutOfStock && !web.some((variant) => variant.stock > 0)) return [];
     if (filters.talle && !web.some((v) => v.size === filters.talle && v.stock > 0)) return [];
     return [{ ...rest, variants: web }];
@@ -293,7 +300,7 @@ function orderBy(settings: VisibilitySettings, orden: ListFilters["orden"]) {
   return [{ priceGs: orden === "precio-asc" ? ("asc" as const) : ("desc" as const) }, ...newest];
 }
 
-/** Products on the web (published or in an active group). `category` null lists all ("novedades"). */
+/** Products on the web (per the manual publication, or the active groups). `category` null lists all ("novedades"). */
 export async function listProducts(
   db: CatalogDb,
   settings: VisibilitySettings,
@@ -301,13 +308,14 @@ export async function listProducts(
   filters: ListFilters = NO_FILTERS,
   now: Date = new Date(),
 ): Promise<CatalogProduct[]> {
+  const mode = await webMode(db, now);
   const rows = await db.product.findMany({
-    where: { ...visibleWhere(settings, now, filters), ...(category ? { category } : {}) },
+    where: { ...visibleWhere(settings, now, mode, filters), ...(category ? { category } : {}) },
     orderBy: orderBy(settings, filters.orden),
     select: productSelect(now),
   });
   const rules = await loadDiscountRules(db, settings);
-  return withDiscounts(withWebStock(rows, settings, filters), rules, now).map((row) =>
+  return withDiscounts(withWebStock(rows, mode, settings, filters), rules, now).map((row) =>
     toCatalogProduct(row, settings),
   );
 }
@@ -323,14 +331,15 @@ export async function countProductsByCategory(
   now: Date = new Date(),
 ): Promise<Record<string, number>> {
   // Counted in memory over the same rows `listProducts` reads, so numbers and lists always agree.
+  const mode = await webMode(db, now);
   const rows = await db.product.findMany({
-    where: visibleWhere(settings, now, filters),
+    where: visibleWhere(settings, now, mode, filters),
     select: { category: true, ...stockSelect(now) },
   });
   const counts: Record<string, number> = Object.fromEntries(
     CATEGORIES.map((category) => [category.slug, 0]),
   );
-  for (const row of withWebStock(rows, settings, filters)) {
+  for (const row of withWebStock(rows, mode, settings, filters)) {
     counts.novedades = (counts.novedades ?? 0) + 1;
     if (row.category && row.category in counts)
       counts[row.category] = (counts[row.category] ?? 0) + 1;
@@ -346,11 +355,12 @@ export async function getProduct(
   now: Date = new Date(),
 ): Promise<CatalogProduct | null> {
   if (!UUID.test(id)) return null;
+  const mode = await webMode(db, now);
   const row = await db.product.findFirst({
-    where: { id, ...visibleWhere(settings, now) },
+    where: { id, ...visibleWhere(settings, now, mode) },
     select: productSelect(now),
   });
-  const [shown] = row ? withWebStock([row], settings) : [];
+  const [shown] = row ? withWebStock([row], mode, settings) : [];
   if (!shown) return null;
   const [discounted] = withDiscounts([shown], await loadDiscountRules(db, settings), now);
   return discounted ? toCatalogProduct(discounted, settings) : null;
@@ -364,11 +374,12 @@ export async function getProductDetail(
   now: Date = new Date(),
 ): Promise<CatalogProductDetail | null> {
   if (!UUID.test(id)) return null;
+  const mode = await webMode(db, now);
   const row = await db.product.findFirst({
-    where: { id, ...visibleWhere(settings, now) },
+    where: { id, ...visibleWhere(settings, now, mode) },
     select: detailSelect(now),
   });
-  const [shown] = row ? withWebStock([row], settings) : [];
+  const [shown] = row ? withWebStock([row], mode, settings) : [];
   if (!shown) return null;
   const [discounted] = withDiscounts([shown], await loadDiscountRules(db, settings), now);
   if (!discounted) return null;
@@ -388,8 +399,9 @@ export async function listCollections(
   settings: VisibilitySettings,
   now: Date = new Date(),
 ): Promise<CollectionSummary[]> {
+  const mode = await webMode(db, now);
   const rows = await db.product.findMany({
-    where: visibleWhere(settings, now),
+    where: visibleWhere(settings, now, mode),
     orderBy: importOrder,
     select: {
       lot: { select: { supplier: { select: { name: true } } } },
@@ -398,7 +410,7 @@ export async function listCollections(
     },
   });
   const collections = new Map<string, CollectionSummary>();
-  for (const row of withWebStock(rows, settings)) {
+  for (const row of withWebStock(rows, mode, settings)) {
     const name = row.lot.supplier.name.trim();
     const slug = collectionSlug(name);
     const found = collections.get(slug) ?? { slug, name, count: 0, coverUrl: null };
@@ -418,8 +430,9 @@ export async function getCollectionPresentation(
 ): Promise<PresentationCollection | null> {
   const collection = (await listCollections(db, settings, now)).find((item) => item.slug === slug);
   if (!collection) return null;
+  const mode = await webMode(db, now);
   const rows = await db.product.findMany({
-    where: { ...visibleWhere(settings, now), lot: { supplier: { name: collection.name } } },
+    where: { ...visibleWhere(settings, now, mode), lot: { supplier: { name: collection.name } } },
     orderBy: importOrder,
     select: detailSelect(now),
   });
@@ -427,7 +440,7 @@ export async function getCollectionPresentation(
     slug,
     name: collection.name,
     pieces: withDiscounts(
-      withWebStock(rows, settings),
+      withWebStock(rows, mode, settings),
       await loadDiscountRules(db, settings),
       now,
     ).map((row) => toPresentationPiece(row, settings)),
@@ -445,7 +458,7 @@ const lookbookSelect = (now: Date) =>
 
 /**
  * The pages of every lookbook catalog (Casa Icona, Milonga, Sordo), in display order. Only
- * products on the web (published or in an active group) placed in a catalog are read; pieces
+ * products on the web (per the manual publication, or the active groups) placed in a catalog are read; pieces
  * without stock or photos drop out in `lookbookPages`.
  */
 export async function listLookbook(
@@ -453,20 +466,15 @@ export async function listLookbook(
   settings: Pick<CatalogSettingsView, "showPrices">,
   now: Date = new Date(),
 ): Promise<Record<CatalogSlug, LookbookPage[]>> {
+  const mode = await webMode(db, now);
   const rows = await db.product.findMany({
-    where: {
-      catalog: { not: null },
-      OR: [
-        { isPublished: true },
-        { variants: { some: { allocations: { some: { group: activeGroupWhere(now) } } } } },
-      ],
-    },
+    where: { catalog: { not: null }, ...webVisibilityWhere(mode, now) },
     orderBy: [{ catalogOrder: "asc" }, { id: "asc" }],
     select: lookbookSelect(now),
   });
   const discounted = withBankPromos(
     withDiscounts(
-      withWebStock(rows, { hideOutOfStock: false }),
+      withWebStock(rows, mode, { hideOutOfStock: false }),
       await loadDiscountRules(db, settings),
       now,
     ),
