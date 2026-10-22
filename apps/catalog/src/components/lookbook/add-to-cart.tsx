@@ -6,8 +6,13 @@ import { effectivePriceGs } from "../../lib/price";
 import { Price } from "../price";
 import { useCart } from "./cart";
 
+/** What the shopper chose for one garment: its color (a product) and its size. */
+type Choice = { pieceId: string; size: string | null };
+
 const preselectedSize = (piece: LookbookPiece | undefined) =>
   piece?.sizes.length === 1 ? (piece.sizes[0] ?? null) : null;
+
+const sizeLabel = (size: string) => (size === "U" ? "Único" : size);
 
 /** Shows the first photo of the chosen color in the page carousel, when that color has one. */
 function showPhotoOf(pieceId: string) {
@@ -15,62 +20,26 @@ function showPhotoOf(pieceId: string) {
   photo?.parentElement?.scrollTo({ left: photo.offsetLeft, behavior: "smooth" });
 }
 
-/**
- * Name, price, color, size chips and "Agregar al carrito" of one garment, in the order shoppers
- * expect from fashion apps. Each color is its own product, so choosing one switches the photo,
- * the sizes and the price. A single size is preselected; the button stays disabled until a size
- * is chosen. `relative` on each chip keeps the hidden radio inside it, so focusing it never
- * scrolls the page somewhere else.
- */
-export function AddToCart({
+function GarmentOptions({
   item,
+  piece,
+  size,
   heading: Heading,
-  description = null,
-  link,
+  description,
+  onColor,
+  onSize,
 }: {
   item: LookbookItem;
-  /** `h2` when the garment is the whole page, `h3` inside a set. */
+  piece: LookbookPiece;
+  size: string | null;
   heading: "h2" | "h3";
-  /** Shown under the name of a single garment (a set shows it under the page title). */
-  description?: string | null;
-  link: string | null;
+  description: string | null;
+  onColor: (option: LookbookPiece) => void;
+  onSize: (size: string | null) => void;
 }) {
-  const { add, open } = useCart();
-  const [pieceId, setPieceId] = useState(item.options[0]?.id);
-  const piece = item.options.find((option) => option.id === pieceId) ?? item.options[0];
-  const [size, setSize] = useState<string | null>(preselectedSize(piece));
-  const [added, setAdded] = useState(false);
-  if (!piece) return null;
-
-  const sizes = piece.sizes;
-  const oneSize = sizes.length === 1 && sizes[0] === "U";
   const colors = item.options.filter((option) => option.color);
-
-  const chooseColor = (option: LookbookPiece) => {
-    setPieceId(option.id);
-    setSize(preselectedSize(option));
-    setAdded(false);
-    showPhotoOf(option.id);
-  };
-
-  const addItem = () => {
-    if (!size) return;
-    add({
-      id: piece.id,
-      name: piece.name,
-      size,
-      color: piece.color?.label ?? null,
-      priceGs: effectivePriceGs(piece),
-      discountPercent: piece.discountPercent,
-      link,
-      quantity: 1,
-    });
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 2500);
-  };
-
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4">
         <Heading
           className={
@@ -85,7 +54,7 @@ export function AddToCart({
           <Price {...piece} />
         </p>
       </div>
-      {description && <p className="-mt-2 hidden text-sm text-fg-muted sm:block">{description}</p>}
+      {description && <p className="-mt-1 hidden text-sm text-fg-muted sm:block">{description}</p>}
 
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         {colors.length > 1 ? (
@@ -110,7 +79,7 @@ export function AddToCart({
                     name={`color-${item.options[0]?.id}`}
                     value={option.id}
                     checked={option.id === piece.id}
-                    onChange={() => chooseColor(option)}
+                    onChange={() => onColor(option)}
                     className="sr-only"
                   />
                   <span className="sr-only">{option.color?.label}</span>
@@ -138,45 +107,133 @@ export function AddToCart({
             </p>
           )
         )}
-        <fieldset className="flex items-center gap-3">
-          <legend className="float-left mr-3 text-[11px] tracking-[2.4px] text-fg-muted uppercase">
-            {oneSize ? "Talle único" : "Talle"}
-          </legend>
-          {!oneSize && (
-            <div className="flex flex-wrap gap-2">
-              {sizes.map((option) => (
-                <label
-                  key={option}
-                  className={`relative inline-flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-[3px] border px-3 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-foreground ${
-                    size === option
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-background text-foreground hover:border-foreground"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`talle-${item.options[0]?.id}`}
-                    value={option}
-                    checked={size === option}
-                    onChange={() => setSize(option)}
-                    className="sr-only"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          )}
-        </fieldset>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] tracking-[2.4px] text-fg-muted uppercase">Talle</span>
+          <div className="flex flex-wrap gap-2">
+            {piece.sizes.map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={size === option}
+                aria-label={`Talle ${sizeLabel(option)} de ${item.name}`}
+                // Tapping the chosen size again leaves the garment out of the order
+                onClick={() => onSize(size === option ? null : option)}
+                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-[3px] border px-3 text-sm transition-colors ${
+                  size === option
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border bg-background text-foreground hover:border-foreground"
+                }`}
+              >
+                {sizeLabel(option)}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The garments of a lookbook page with one "Agregar al carrito" for all of them, like a "shop the
+ * look". Each garment shows name, price, color and size chips; each color is its own product, so
+ * choosing one switches the photo, the sizes and the price. The button adds every garment with a
+ * size chosen (a single size comes preselected; tapping it again leaves the garment out).
+ */
+export function AddToCart({
+  items,
+  set,
+  description,
+  link,
+}: {
+  items: LookbookItem[];
+  /** Several garments on the page: their names are `h3` under the page title. */
+  set: boolean;
+  /** Shown under the name of a single garment (a set shows it under the page title). */
+  description: string | null;
+  link: string | null;
+}) {
+  const { add, open } = useCart();
+  const [choices, setChoices] = useState<Choice[]>(() =>
+    items.map((item) => ({
+      pieceId: item.options[0]?.id ?? "",
+      size: preselectedSize(item.options[0]),
+    })),
+  );
+  const [added, setAdded] = useState(false);
+
+  const pieceOf = (index: number) => {
+    const options = items[index]?.options ?? [];
+    return options.find((option) => option.id === choices[index]?.pieceId) ?? options[0];
+  };
+
+  const choose = (index: number, choice: Choice) => {
+    setChoices((current) => current.map((old, i) => (i === index ? choice : old)));
+    setAdded(false);
+  };
+
+  const chosen = choices.flatMap((choice, index) => {
+    const piece = pieceOf(index);
+    return piece && choice.size ? [{ piece, size: choice.size }] : [];
+  });
+
+  const addAll = () => {
+    for (const { piece, size } of chosen) {
+      add({
+        id: piece.id,
+        name: piece.name,
+        size,
+        color: piece.color?.label ?? null,
+        priceGs: effectivePriceGs(piece),
+        discountPercent: piece.discountPercent,
+        link,
+        quantity: 1,
+      });
+    }
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 2500);
+  };
+
+  const label = added
+    ? "Agregado ✓"
+    : chosen.length === 0
+      ? set
+        ? "Elegí tus talles"
+        : "Elegí tu talle"
+      : set && chosen.length > 1
+        ? `Agregar ${chosen.length} prendas al carrito`
+        : "Agregar al carrito";
+
+  return (
+    <div className="flex flex-col gap-5">
+      {items.map((item, index) => {
+        const piece = pieceOf(index);
+        if (!piece) return null;
+        return (
+          <GarmentOptions
+            key={item.name}
+            item={item}
+            piece={piece}
+            size={choices[index]?.size ?? null}
+            heading={set ? "h3" : "h2"}
+            description={set ? null : description}
+            onColor={(option) => {
+              choose(index, { pieceId: option.id, size: preselectedSize(option) });
+              showPhotoOf(option.id);
+            }}
+            onSize={(size) => choose(index, { pieceId: piece.id, size })}
+          />
+        );
+      })}
 
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={addItem}
-          disabled={!size}
+          onClick={addAll}
+          disabled={chosen.length === 0}
           className="inline-flex min-h-12 flex-1 items-center justify-center bg-primary px-[30px] text-[15px] tracking-[1px] text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {added ? "Agregado ✓" : size ? "Agregar al carrito" : "Elegí tu talle"}
+          {label}
         </button>
         {added && (
           <button

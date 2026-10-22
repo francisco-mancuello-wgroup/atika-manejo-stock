@@ -136,15 +136,7 @@ function PiecePage({
         {set && description && (
           <p className="-mt-2 hidden text-sm text-fg-muted sm:block">{description}</p>
         )}
-        {page.items.map((item) => (
-          <AddToCart
-            key={item.name}
-            item={item}
-            heading={set ? "h3" : "h2"}
-            description={set ? null : description}
-            link={link}
-          />
-        ))}
+        <AddToCart items={page.items} set={set} description={description ?? null} link={link} />
       </div>
     </section>
   );
