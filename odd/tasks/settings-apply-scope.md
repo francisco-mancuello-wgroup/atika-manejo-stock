@@ -21,6 +21,8 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 ## Decisions
 
 - Shipping stays prorated per unit (user decision 2026-10-22); no new shipping parameter.
+- Parámetros is the ONLY place that defines prices (user decision 2026-10-22). Applying writes TC, factor, IVA and % costo into each targeted lot and reprices it.
+- The lot's total shipping is purchase data (what the courier was paid), not a pricing parameter: it is edited in Compras, which never recalculates prices; Parámetros uses each lot's shipping when applying.
 
 ## Out of scope
 
@@ -48,6 +50,9 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 - [x] T3 — Cleaner formula block (numbered steps). See commit after 819d8a1.
 
 - [x] T4 — Singular/plural copy in summary, checklist and success message.
+
+- [ ] T5 — Apply scope writes all four pricing params (TC, factor, IVA, % costo) to targeted lots; each lot keeps only its shipping. Update copy (page description, formula note, summary/success texts if needed).
+- [ ] T6 — Compras lot detail: remove the pricing form ("Parámetros del lote" / "Guardar y recalcular"). Show the lot's pricing values read-only with a link to Parámetros, plus one editable "Envío total (US$)" that saves only the lot's shipping (no repricing) and says prices update when applied from Parámetros.
 
 ## Verification evidence
 
