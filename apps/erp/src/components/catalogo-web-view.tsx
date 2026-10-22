@@ -7,7 +7,8 @@ import {
   catalogHref,
   LOOKBOOK_FILTERS,
 } from "../lib/catalog/filters";
-import { formatGs } from "../lib/format";
+import type { CurrencyDisplay } from "../lib/currency";
+import { moneyFormatter } from "../lib/format";
 import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog";
 import { BulkVisibilitySwitch } from "./bulk-visibility-switch";
 import { CatalogSettingsForm } from "./catalog-settings-form";
@@ -55,12 +56,15 @@ export function CatalogoWebView({
   settings,
   filters,
   actions,
+  display = { currency: "gs" },
 }: {
   products: CatalogProduct[];
   settings: CatalogSettingsView;
   filters: CatalogFilters;
   actions: CatalogActions;
+  display?: CurrencyDisplay;
 }) {
+  const money = moneyFormatter(display.currency, display.exchangeRate);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -172,7 +176,7 @@ export function CatalogoWebView({
                       <span className="bg-warnbg px-2 py-0.5 text-xs text-warn">Sin stock</span>
                     )}
                   </td>
-                  <td className={`${table.td} ${table.num}`}>{formatGs(product.priceGs)}</td>
+                  <td className={`${table.td} ${table.num}`}>{money(product.priceGs)}</td>
                   <td className={table.td}>
                     <CategorySelect
                       productId={product.id}

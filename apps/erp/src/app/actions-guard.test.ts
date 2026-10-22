@@ -34,6 +34,7 @@ describe("Server Actions require a session", () => {
       "./(erp)/compras/[lotId]/actions.ts",
       "./(erp)/descuentos/actions.ts",
       "./(erp)/inventario/actions.ts",
+      "./(erp)/moneda/actions.ts",
       "./(erp)/parametros/actions.ts",
       "./(erp)/seguridad/actions.ts",
       "./(erp)/ventas/actions.ts",

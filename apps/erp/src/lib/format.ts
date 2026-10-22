@@ -1,3 +1,5 @@
+import type { Currency } from "./currency";
+
 const INTEGER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 0 });
 const DECIMAL_2 = new Intl.NumberFormat("es-PY", {
   minimumFractionDigits: 2,
@@ -30,4 +32,37 @@ export function countOf(count: number, singular: string, plural: string): string
 export function formatDate(iso: string): string {
   const [year, month, day] = iso.split("-");
   return `${day}/${month}/${year}`;
+}
+
+/** Guaraní amount in the selected currency; dollars use the exchange rate, falling back to guaraníes without one. */
+export function formatMoney(
+  amountGs: number,
+  currency: Currency,
+  exchangeRate: number | undefined,
+): string {
+  if (currency === "usd" && exchangeRate !== undefined && exchangeRate > 0) {
+    return formatUsd(amountGs / exchangeRate);
+  }
+  return formatGs(amountGs);
+}
+
+/**
+ * Amount held natively in both currencies (a lot's investment): the selected currency leads
+ * with its own stored value and the other one follows as detail, so nothing is re-converted.
+ */
+export function moneyPair(
+  currency: Currency,
+  amountGs: number,
+  amountUsd: number,
+): { value: string; detail: string } {
+  return currency === "usd"
+    ? { value: formatUsd(amountUsd), detail: formatGs(amountGs) }
+    : { value: formatGs(amountGs), detail: formatUsd(amountUsd) };
+}
+
+export function moneyFormatter(
+  currency: Currency,
+  exchangeRate: number | undefined,
+): (amountGs: number) => string {
+  return (amountGs) => formatMoney(amountGs, currency, exchangeRate);
 }

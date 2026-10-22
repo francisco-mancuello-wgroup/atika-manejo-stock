@@ -18,6 +18,10 @@ vi.mock("../../lib/queries/summary", () => ({
   }),
 }));
 
+vi.mock("../../lib/display-currency", () => ({
+  getCurrencyDisplay: async () => ({ currency: "gs" }),
+}));
+
 describe("ERP home page", () => {
   it("renders the Resumen heading with data from the query", async () => {
     render(await HomePage());
