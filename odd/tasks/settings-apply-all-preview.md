@@ -27,11 +27,12 @@ The scope selector (new / selected / all) adds a decision the owner does not wan
 ## Tasks
 
 - [x] T1 — Always-all apply: simplify schema/save/action/form, tests. Commit 97c5400.
-- [ ] T2 — Per-lot calculation preview panel (query for lot products with units and current price, client component using @atika/pricing), tests.
+- [x] T2 — Per-lot calculation preview panel (query for lot products with units and current price, client component using @atika/pricing), tests. Commit 042d9cd.
 
 ## Progress
 
 - 2026-10-22: Document created.
+- 2026-10-22: T2 done (commit 042d9cd).
 - 2026-10-22: T1 done (commit 97c5400).
 
 ## Verification evidence
@@ -40,4 +41,6 @@ The scope selector (new / selected / all) adds a decision the owner does not wan
 
 ## Next step
 
-T2.
+Done; ready for review/merge.
+
+- T2 RED: preview.test.ts failed to load, form tests 8 failed, DB query test failed before implementation. GREEN: `pnpm --filter @atika/erp test` 65 files / 396 tests passed; `pnpm typecheck` 6/6 ok; `pnpm lint` only the known next-path.ts warning.
