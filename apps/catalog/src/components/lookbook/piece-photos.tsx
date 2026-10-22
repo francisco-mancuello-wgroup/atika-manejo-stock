@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { CloseIcon } from "./icons";
 
-type Photo = { url: string; alt: string };
+type Photo = { url: string; alt: string; pieceId?: string };
 
 /**
  * The photos of a lookbook page: swipe sideways when there are several, tap one to see it full
@@ -36,7 +36,16 @@ export function PiecePhotos({
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-surface [scrollbar-width:none]"
       >
         {photos.map((photo, index) => (
-          <li key={photo.url} className="relative h-full w-full shrink-0 snap-center">
+          <li
+            key={photo.url}
+            // Choosing a color scrolls to the first photo of that product
+            data-piece={
+              photos.findIndex((p) => p.pieceId === photo.pieceId) === index
+                ? photo.pieceId
+                : undefined
+            }
+            className="relative h-full w-full shrink-0 snap-center"
+          >
             <button
               type="button"
               onClick={() => show(photo)}

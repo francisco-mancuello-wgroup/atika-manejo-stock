@@ -46,14 +46,27 @@ export interface LookbookPiece extends PriceFields {
   description: string | null;
 }
 
+/**
+ * One garment on a page with the colors it comes in: the workbook keeps each color as its own
+ * product (own stock and price), the shopper picks the color like in any fashion app.
+ */
+export interface LookbookItem {
+  name: string;
+  /** One product per color, in workbook order. */
+  options: LookbookPiece[];
+}
+
 /** One page: usually one product, or the parts of a set that share a PDF page and its photo. */
 export interface LookbookPage {
-  /** Names of the pieces on the page, joined with " + ". */
+  /** Names of the garments on the page, joined with " + ". */
   title: string;
   brand: string | null;
   section: string | null;
   pieces: LookbookPiece[];
-  photos: { url: string; alt: string }[];
+  /** The pieces grouped by name, so each garment shows once with its colors. */
+  items: LookbookItem[];
+  /** `pieceId` is the product the photo belongs to, so choosing a color can show its photo. */
+  photos: { url: string; alt: string; pieceId: string }[];
   /** 1-based position in the catalog, after hiding pieces without stock or photos. */
   page: number;
 }
@@ -87,6 +100,16 @@ function toPiece(
   };
 }
 
+function groupByName(pieces: LookbookPiece[]): LookbookItem[] {
+  const items = new Map<string, LookbookItem>();
+  for (const piece of pieces) {
+    const item = items.get(piece.name);
+    if (item) item.options.push(piece);
+    else items.set(piece.name, { name: piece.name, options: [piece] });
+  }
+  return [...items.values()];
+}
+
 /** The pages of one catalog, in PDF order. A piece without stock or photos disappears. */
 export function lookbookPages(
   rows: readonly LookbookRow[],
@@ -111,15 +134,18 @@ export function lookbookPages(
       .flatMap((row) =>
         [...row.images]
           .sort((a, b) => a.position - b.position)
-          .map((image) => ({ url: image.url, alt: displayName(row) })),
+          .map((image) => ({ url: image.url, alt: displayName(row), pieceId: row.id })),
       )
       .filter((photo) => !seen.has(photo.url) && Boolean(seen.add(photo.url)));
     const first = group[0];
+    const pieces = group.map((row) => toPiece(row, settings));
+    const items = groupByName(pieces);
     return {
-      title: group.map(displayName).join(" + "),
+      title: items.map((item) => item.name).join(" + "),
       brand: first?.brand?.trim() || first?.lot.supplier.name.trim() || null,
       section: first?.catalogSection?.trim() || null,
-      pieces: group.map((row) => toPiece(row, settings)),
+      pieces,
+      items,
       photos,
       page: index + 1,
     };
