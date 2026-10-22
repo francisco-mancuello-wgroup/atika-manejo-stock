@@ -3,15 +3,19 @@ import type { CurrencyDisplay } from "../lib/currency";
 import { formatDate, moneyFormatter } from "../lib/format";
 import { formatOrderNumber } from "../lib/orders/format";
 import type { OrderDetail } from "../lib/queries/orders";
+import { OrderDecision, type OrderDecisionActions } from "./order-decision";
 import { OrderStatusBadge } from "./order-status-badge";
 import { PageHeader } from "./page-header";
 import { table } from "./styles";
 
 export function OrderDetailView({
   order,
+  decision,
   display = { currency: "gs" },
 }: {
   order: OrderDetail;
+  /** Aprobar / Rechazar actions; the buttons show only while the order is pending. */
+  decision?: OrderDecisionActions;
   display?: CurrencyDisplay;
 }) {
   const money = moneyFormatter(display.currency, display.exchangeRate);
@@ -30,7 +34,14 @@ export function OrderDetailView({
       <PageHeader
         title={`Pedido ${formatOrderNumber(order.number)}`}
         description={description}
-        actions={<OrderStatusBadge status={order.status} />}
+        actions={
+          <div className="flex items-start gap-4">
+            <OrderStatusBadge status={order.status} />
+            {order.status === "pending" && decision ? (
+              <OrderDecision orderId={order.id} number={order.number} {...decision} />
+            ) : null}
+          </div>
+        }
       />
 
       <div className={table.wrapper}>

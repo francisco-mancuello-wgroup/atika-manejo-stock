@@ -29,6 +29,8 @@ export async function registerSale(
   tx: SaleTx,
   input: SaleInput,
   now: Date = new Date(),
+  /** `orderId` links the sale to the web order it came from. */
+  options: { orderId?: string } = {},
 ): Promise<RegisterSaleResult> {
   const variant = await tx.productVariant.findUnique({
     where: { productId_size: { productId: input.productId, size: input.size } },
@@ -61,6 +63,7 @@ export async function registerSale(
       chargedGs: input.chargedGs === listPriceGs ? null : (input.chargedGs ?? null),
       customer: input.customer ?? null,
       notes: input.notes ?? null,
+      orderId: options.orderId ?? null,
     },
   });
   return {

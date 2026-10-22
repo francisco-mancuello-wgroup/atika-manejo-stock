@@ -2,6 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import type { OrderDetail } from "../lib/queries/orders";
 import { OrderDetailView } from "./order-detail-view";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
 const order: OrderDetail = {
   id: "o1",
   number: 42,
@@ -78,5 +80,16 @@ describe("OrderDetailView", () => {
     render(<OrderDetailView order={{ ...order, status: "approved", decidedDate: "2026-10-23" }} />);
     expect(screen.getByText("Aprobado")).toBeInTheDocument();
     expect(screen.getByText(/23\/10\/2026/)).toBeInTheDocument();
+  });
+
+  it("offers Aprobar and Rechazar only while the order is pending", () => {
+    const decision = { approve: vi.fn(), reject: vi.fn() };
+    const { rerender } = render(<OrderDetailView order={order} decision={decision} />);
+    expect(screen.getByRole("button", { name: "Aprobar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Rechazar" })).toBeInTheDocument();
+
+    rerender(<OrderDetailView order={{ ...order, status: "approved" }} decision={decision} />);
+    expect(screen.queryByRole("button", { name: "Aprobar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Rechazar" })).not.toBeInTheDocument();
   });
 });
