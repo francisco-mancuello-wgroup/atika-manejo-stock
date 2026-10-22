@@ -121,3 +121,16 @@ describe("InventarioView", () => {
     );
   });
 });
+
+describe("InventarioView barcode scanning", () => {
+  it("searches with a GET form whose submit button makes Enter work for a scanner", () => {
+    render(<InventarioView products={[]} lots={[]} filters={{ query: "AT000123" }} />);
+    const input = screen.getByLabelText("Buscar");
+    expect(input).toHaveValue("AT000123");
+    const form = input.closest("form");
+    expect(form).toHaveAttribute("method", "get");
+    expect(form).toHaveAttribute("action", "/inventario");
+    expect(form?.querySelector('button[type="submit"]')).not.toBeNull();
+    expect(input).toHaveAttribute("placeholder", expect.stringContaining("código de barras"));
+  });
+});
