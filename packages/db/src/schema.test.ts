@@ -15,10 +15,12 @@ describe("schema", () => {
       "CatalogSettings",
       "Discount",
       "DiscountProduct",
+      "GroupAllocation",
       "Lot",
       "Product",
       "ProductImage",
       "ProductVariant",
+      "PublicationGroup",
       "Sale",
       "Session",
       "Supplier",
@@ -67,6 +69,15 @@ describe("schema", () => {
     );
     expect(Object.values(Prisma.DiscountProductScalarFieldEnum)).toEqual(
       expect.arrayContaining(["discountId", "productId"]),
+    );
+  });
+
+  it("keeps publication groups with a window and a per-size allocation with its sold counter", () => {
+    expect(Object.values(Prisma.PublicationGroupScalarFieldEnum)).toEqual(
+      expect.arrayContaining(["name", "isActive", "startsAt", "endsAt"]),
+    );
+    expect(Object.values(Prisma.GroupAllocationScalarFieldEnum)).toEqual(
+      expect.arrayContaining(["groupId", "variantId", "allocated", "sold"]),
     );
   });
 
