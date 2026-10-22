@@ -29,6 +29,7 @@ export function SaleForm({
 }) {
   const [productId, setProductId] = useState("");
   const [size, setSize] = useState("");
+  const [chargedGs, setChargedGs] = useState("");
 
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     async (previous, formData) => {
@@ -37,6 +38,9 @@ export function SaleForm({
       if (next.status === "success") {
         setProductId("");
         setSize("");
+        setChargedGs("");
+      } else if (next.status === "error" && next.values?.chargedGs !== undefined) {
+        setChargedGs(next.values.chargedGs);
       }
       return next;
     },
@@ -61,10 +65,12 @@ export function SaleForm({
           onSelect={(chosen, chosenSize) => {
             setProductId(chosen.id);
             setSize(chosenSize ?? "");
+            setChargedGs(String(chosen.discountedPriceGs ?? chosen.priceGs));
           }}
           onClear={() => {
             setProductId("");
             setSize("");
+            setChargedGs("");
           }}
         />
         <input type="hidden" name="productId" value={productId} />
@@ -122,7 +128,7 @@ export function SaleForm({
         label="Precio cobrado por unidad (₲)"
         htmlFor="chargedGs"
         error={errors.chargedGs}
-        hint="Opcional. Dejalo vacío para cobrar el precio de lista."
+        hint="Precargado con el precio de lista. Cambialo si cobraste otro."
       >
         <Input
           id="chargedGs"
@@ -130,7 +136,8 @@ export function SaleForm({
           type="number"
           min={0}
           step={1}
-          defaultValue={values.chargedGs ?? ""}
+          value={chargedGs}
+          onChange={(event) => setChargedGs(event.target.value)}
           aria-invalid={errors.chargedGs ? true : undefined}
         />
       </Field>

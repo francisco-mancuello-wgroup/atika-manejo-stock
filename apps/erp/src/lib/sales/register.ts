@@ -57,7 +57,8 @@ export async function registerSale(
       quantity: input.quantity,
       soldAt: toDbDate(input.soldAt),
       listPriceGs,
-      chargedGs: input.chargedGs ?? null,
+      // Charging exactly the list price is the same as not overriding it.
+      chargedGs: input.chargedGs === listPriceGs ? null : (input.chargedGs ?? null),
       customer: input.customer ?? null,
       notes: input.notes ?? null,
     },

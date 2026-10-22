@@ -129,6 +129,7 @@ describe("SaleForm", () => {
     fireEvent.change(search(), { target: { value: " at000002 " } });
     expect(container.querySelector<HTMLInputElement>('input[name="productId"]')?.value).toBe("p1");
     expect(screen.getByLabelText("Talle")).toHaveValue("M");
+    expect(screen.getByLabelText("Precio cobrado por unidad (₲)")).toHaveValue(1_000_000);
   });
 
   it("does not submit when a scanner presses Enter after the barcode", () => {
@@ -165,7 +166,22 @@ describe("SaleForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("submits the fields and resets after success", async () => {
+  it("prefills the charged price with the list price, discounted when it applies, and keeps it editable", () => {
+    renderForm();
+    const price = screen.getByLabelText("Precio cobrado por unidad (₲)");
+    expect(price).toHaveValue(null);
+    choose("vestido", /Vestido Lino/);
+    expect(price).toHaveValue(1_000_000);
+    choose("rojo", /Rojo/);
+    expect(price).toHaveValue(400_000);
+    fireEvent.change(price, { target: { value: "350000" } });
+    expect(price).toHaveValue(350_000);
+    expect(
+      screen.getByText("Precargado con el precio de lista. Cambialo si cobraste otro."),
+    ).toBeInTheDocument();
+  });
+
+  it("submits the fields, including the prefilled price, and resets after success", async () => {
     const action = vi.fn(
       async (_prev: FormState, _data: FormData): Promise<FormState> => ({
         status: "success",
@@ -185,8 +201,27 @@ describe("SaleForm", () => {
     expect(data.get("productId")).toBe("p1");
     expect(data.get("size")).toBe("M");
     expect(data.get("quantity")).toBe("1");
+    expect(data.get("chargedGs")).toBe("1000000");
     expect(data.get("customer")).toBe("Ana");
     expect(search()).toHaveValue("");
+    expect(screen.getByLabelText("Precio cobrado por unidad (₲)")).toHaveValue(null);
+  });
+
+  it("repopulates the submitted price and product after an error", async () => {
+    const action = async (): Promise<FormState> => ({
+      status: "error",
+      message: "Revisá los campos marcados.",
+      fieldErrors: { quantity: "La cantidad debe ser al menos 1." },
+      values: { chargedGs: "123000", productId: "p1", size: "M" },
+    });
+    renderForm(action);
+    choose("vestido", /Vestido Lino/);
+    fireEvent.submit(
+      screen.getByRole("button", { name: "Registrar venta" }).closest("form") as HTMLFormElement,
+    );
+    await screen.findByRole("alert");
+    expect(screen.getByLabelText("Precio cobrado por unidad (₲)")).toHaveValue(123_000);
+    expect(search()).toHaveValue("Vestido Lino · Crudo · V-1");
   });
 
   it("shows the out of stock error as an alert", async () => {
