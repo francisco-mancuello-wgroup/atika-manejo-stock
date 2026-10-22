@@ -324,4 +324,41 @@ describe("CatalogoWebView", () => {
       "/catalogo-web?estado=visibles&catalogo=sordo",
     );
   });
+
+  it("links the Prendas and Grupos tabs with Prendas current", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+      />,
+    );
+    const nav = screen.getByRole("navigation", { name: "Secciones del catálogo" });
+    expect(within(nav).getByRole("link", { name: "Prendas" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(nav).getByRole("link", { name: "Grupos" })).toHaveAttribute(
+      "href",
+      "/catalogo-web?tab=grupos",
+    );
+  });
+
+  it("badges the products that sit in an active group", () => {
+    render(
+      <CatalogoWebView
+        products={[
+          { ...(products[0] as CatalogProduct), groupName: "Verano" },
+          products[1] as CatalogProduct,
+        ]}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+      />,
+    );
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(within(rows[0] as HTMLElement).getByText("Grupo: Verano")).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).queryByText(/Grupo:/)).not.toBeInTheDocument();
+  });
 });
