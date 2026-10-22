@@ -1,3 +1,4 @@
+import type { PromoGroup } from "@atika/pricing";
 import { type PriceFields, priceFields } from "./price";
 import { sortSizes } from "./sizes";
 
@@ -42,6 +43,8 @@ export interface CatalogProductDetail extends CatalogProduct {
   description: string | null;
   /** Photos in display order, named after the product (the ERP alt text is not published). */
   images: { url: string; alt: string }[];
+  /** Bank promotions that cover this product today, grouped for display; none when absent. */
+  bankPromos?: PromoGroup[];
 }
 
 export interface ProductSource {
@@ -57,6 +60,8 @@ export interface ProductSource {
   images: readonly { url: string; position: number }[];
   color?: string | null;
   description?: string | null;
+  /** Bank promotions covering the product now (computed on the server from the live promos). */
+  bankPromos?: PromoGroup[];
 }
 
 const DETAIL_MAX_LENGTH = 140;
@@ -107,5 +112,6 @@ export function toCatalogProductDetail(
     images: [...product.images]
       .sort((a, b) => a.position - b.position)
       .map((image) => ({ url: image.url, alt: product.name })),
+    bankPromos: product.bankPromos ?? [],
   };
 }

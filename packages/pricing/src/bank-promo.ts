@@ -36,6 +36,8 @@ export interface BankPromoRule {
 export interface PromoGroup {
   headline: string;
   kind: BankPromoKind;
+  /** Installments or percent of the benefit (orders the groups). */
+  value: number;
   /** Banks of every promo sharing the headline, deduplicated and ordered by name. */
   banks: PromoBank[];
 }
@@ -106,35 +108,55 @@ export function promoHeadline(
   return parts.join(" · ");
 }
 
+type Orderable = Pick<BankPromoRule, "kind" | "value" | "days" | "capGs">;
+
+function compareForDisplay(a: Orderable, b: Orderable): number {
+  return (
+    KIND_ORDER[a.kind] - KIND_ORDER[b.kind] ||
+    b.value - a.value ||
+    promoHeadline(a).localeCompare(promoHeadline(b), "es")
+  );
+}
+
 /**
- * Groups promos by headline merging their banks, ordered installments (highest first), then
- * refunds, then discounts (each highest first).
+ * Display order: installments (highest first), then refunds, then discounts (each highest first);
+ * a promo valid every day goes before one limited to some days. Returns a new array.
  */
-export function groupPromosForDisplay(promos: readonly BankPromoRule[]): PromoGroup[] {
-  const groups = new Map<string, PromoGroup & { value: number }>();
-  for (const promo of promos) {
-    const headline = promoHeadline(promo);
-    const group = groups.get(headline) ?? {
-      headline,
-      kind: promo.kind,
-      value: promo.value,
-      banks: [],
-    };
-    for (const bank of promo.banks) {
-      if (!group.banks.some((b) => b.id === bank.id)) group.banks.push(bank);
+export function sortPromosForDisplay<T extends Orderable>(promos: readonly T[]): T[] {
+  return [...promos].sort(compareForDisplay);
+}
+
+/** Merges groups that share a headline (banks deduplicated, ordered by name) and orders them. */
+export function mergePromoGroups(groups: readonly PromoGroup[]): PromoGroup[] {
+  const merged = new Map<string, PromoGroup>();
+  for (const group of groups) {
+    const found = merged.get(group.headline) ?? { ...group, banks: [] };
+    for (const bank of group.banks) {
+      if (!found.banks.some((b) => b.id === bank.id)) found.banks.push(bank);
     }
-    groups.set(headline, group);
+    merged.set(group.headline, found);
   }
-  return [...groups.values()]
+  return [...merged.values()]
     .sort(
       (a, b) =>
         KIND_ORDER[a.kind] - KIND_ORDER[b.kind] ||
         b.value - a.value ||
         a.headline.localeCompare(b.headline, "es"),
     )
-    .map(({ headline, kind, banks }) => ({
-      headline,
-      kind,
-      banks: banks.sort((a, b) => a.name.localeCompare(b.name, "es")),
+    .map((group) => ({
+      ...group,
+      banks: [...group.banks].sort((a, b) => a.name.localeCompare(b.name, "es")),
     }));
+}
+
+/** Groups promos by headline merging their banks, in display order. */
+export function groupPromosForDisplay(promos: readonly BankPromoRule[]): PromoGroup[] {
+  return mergePromoGroups(
+    promos.map((promo) => ({
+      headline: promoHeadline(promo),
+      kind: promo.kind,
+      value: promo.value,
+      banks: [...promo.banks],
+    })),
+  );
 }

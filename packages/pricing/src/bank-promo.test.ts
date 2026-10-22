@@ -3,8 +3,10 @@ import {
   type BankPromoRule,
   groupPromosForDisplay,
   isPromoLive,
+  mergePromoGroups,
   promoHeadline,
   promosForProduct,
+  sortPromosForDisplay,
 } from "./index";
 
 const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
@@ -184,5 +186,72 @@ describe("groupPromosForDisplay", () => {
 
   it("is empty without promos", () => {
     expect(groupPromosForDisplay([])).toEqual([]);
+  });
+});
+
+describe("groupPromosForDisplay value", () => {
+  it("carries the value of the benefit of each group", () => {
+    const groups = groupPromosForDisplay([
+      promo({ value: 6 }),
+      promo({ kind: "refund", value: 20 }),
+    ]);
+    expect(groups.map((g) => [g.kind, g.value])).toEqual([
+      ["installments", 6],
+      ["refund", 20],
+    ]);
+  });
+});
+
+describe("sortPromosForDisplay", () => {
+  it("orders installments (highest first), refunds, then discounts, keeping the promos intact", () => {
+    const discount = promo({ kind: "discount", value: 15 });
+    const six = promo({ value: 6 });
+    const refund = promo({ kind: "refund", value: 20 });
+    const twelve = promo({ value: 12 });
+    expect(sortPromosForDisplay([discount, six, refund, twelve])).toEqual([
+      twelve,
+      six,
+      refund,
+      discount,
+    ]);
+  });
+
+  it("puts the promo valid every day before the one limited to some days", () => {
+    const thursday = promo({ kind: "refund", value: 20, days: [4] });
+    const everyDay = promo({ kind: "refund", value: 20 });
+    expect(sortPromosForDisplay([thursday, everyDay])).toEqual([everyDay, thursday]);
+  });
+
+  it("does not modify its input", () => {
+    const list = [promo({ value: 6 }), promo({ value: 12 })];
+    sortPromosForDisplay(list);
+    expect(list.map((p) => p.value)).toEqual([6, 12]);
+  });
+});
+
+describe("mergePromoGroups", () => {
+  it("merges groups with the same headline and their banks, ordered like the display groups", () => {
+    const a = groupPromosForDisplay([promo({ banks: [itau] })]);
+    const b = groupPromosForDisplay([
+      promo({ banks: [continental, itau] }),
+      promo({ kind: "refund", value: 20, banks: [continental] }),
+    ]);
+    const merged = mergePromoGroups([...b, ...a]);
+    expect(merged.map((g) => g.headline)).toEqual([
+      "Hasta 12 cuotas sin intereses",
+      "20 % de reintegro",
+    ]);
+    expect(merged[0]?.banks.map((bank) => bank.name)).toEqual(["Continental", "Itaú"]);
+  });
+
+  it("does not modify the groups it receives", () => {
+    const [group] = groupPromosForDisplay([promo({ banks: [itau] })]);
+    const [other] = groupPromosForDisplay([promo({ banks: [continental] })]);
+    mergePromoGroups([group as never, other as never]);
+    expect(group?.banks.map((bank) => bank.name)).toEqual(["Itaú"]);
+  });
+
+  it("is empty without groups", () => {
+    expect(mergePromoGroups([])).toEqual([]);
   });
 });

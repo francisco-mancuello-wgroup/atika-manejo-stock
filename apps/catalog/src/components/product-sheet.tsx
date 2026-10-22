@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { CatalogProductDetail } from "../lib/catalog-view";
 import { discountedPriceLabel } from "../lib/price";
 import { buildWhatsappUrl } from "../lib/whatsapp";
+import { BankPromosBlock } from "./bank-promos-block";
 import { CloseIcon, WhatsappIcon } from "./icons";
 import { Price } from "./price";
 import { ProductPhoto } from "./product-photo";
@@ -185,6 +186,8 @@ export function ProductSheet({
             {product.description ? <p>{product.description}</p> : null}
           </div>
         ) : null}
+
+        <BankPromosBlock groups={product.bankPromos ?? []} />
 
         <a
           href={href}

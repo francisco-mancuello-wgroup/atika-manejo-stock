@@ -96,9 +96,11 @@ export {
   type BankPromoScope,
   groupPromosForDisplay,
   isPromoLive,
+  mergePromoGroups,
   type PromoBank,
   type PromoGroup,
   promoHeadline,
   promosForProduct,
+  sortPromosForDisplay,
 } from "./bank-promo";
 export { applyDiscount, type DiscountRule, effectiveDiscount } from "./discount";

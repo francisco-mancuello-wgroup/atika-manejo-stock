@@ -47,6 +47,41 @@ beforeEach(() => {
   replace.mockClear();
 });
 
+const installments = {
+  headline: "Hasta 12 cuotas sin intereses",
+  kind: "installments" as const,
+  value: 12,
+  banks: [{ id: "b1", name: "Itaú", logoUrl: null }],
+};
+
+describe("ProductSheet bank promos", () => {
+  it("shows the bank promotions block between the sizes and the order button", () => {
+    renderSheet({ bankPromos: [installments] });
+    const region = screen.getByRole("region", { name: "Nuestras promociones bancarias" });
+    expect(region).toHaveTextContent("Hasta 12 cuotas sin intereses");
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toContainElement(region);
+    const order = screen.getByRole("link", { name: "Consultar por WhatsApp" });
+    expect(region.compareDocumentPosition(order) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Ver bases y condiciones" })).toHaveAttribute(
+      "href",
+      "/promociones-bancarias",
+    );
+  });
+
+  it("hides the block when no promo applies", () => {
+    renderSheet();
+    expect(
+      screen.queryByRole("region", { name: "Nuestras promociones bancarias" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides the block when the promo list is empty, with its link", () => {
+    renderSheet({ bankPromos: [] });
+    expect(screen.queryByText("Ver bases y condiciones")).not.toBeInTheDocument();
+  });
+});
+
 describe("ProductSheet", () => {
   it("is a modal dialog labelled by the product name", () => {
     renderSheet();

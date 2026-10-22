@@ -9,6 +9,7 @@ import {
   listCollections,
   listLookbook,
   listProducts,
+  listPublicBankPromos,
 } from "./queries";
 
 const noFilters = { talle: null, q: null, orden: "recientes" as const, p: null };
@@ -449,6 +450,191 @@ describe.skipIf(!hasDatabase)("catalog discounts (database)", () => {
         discountPercent: 20,
         discountedPriceGs: 400_000,
       });
+    });
+  });
+});
+
+describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
+  afterAll(disconnectTestDb);
+
+  // Wednesday 2026-10-21 12:00 in Asunción.
+  const now = new Date("2026-10-21T15:00:00.000Z");
+  const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+
+  async function setup(tx: Parameters<Parameters<typeof withRollback>[0]>[0]) {
+    await tx.bankPromo.deleteMany();
+    await tx.product.updateMany({ data: { isPublished: false } });
+    const [a, b] = await createProducts(tx, [
+      { name: "A", variants: [["M", 1]] },
+      { name: "B", variants: [["M", 1]] },
+    ]);
+    const [c] = await createProducts(tx, [{ name: "C", variants: [["M", 1]] }]);
+    const lotOf = async (id: string | undefined) =>
+      (await tx.product.findUniqueOrThrow({ where: { id: id ?? "" } })).lotId;
+    const itau = await tx.bank.create({ data: { name: "Itaú catalog test", logoUrl: "/i.webp" } });
+    const conti = await tx.bank.create({ data: { name: "Continental catalog test" } });
+    return { a: a ?? "", b: b ?? "", c: c ?? "", lotAB: await lotOf(a), itau, conti };
+  }
+
+  it("attaches the grouped promos that cover each product to its detail", async () => {
+    await withRollback(async (tx) => {
+      const { a, b, c, lotAB, itau, conti } = await setup(tx);
+      const banks = (...ids: string[]) => ({ create: ids.map((bankId) => ({ bankId })) });
+      await tx.bankPromo.create({
+        data: { kind: "installments", value: 12, scope: "all", banks: banks(itau.id) },
+      });
+      await tx.bankPromo.create({
+        data: {
+          kind: "refund",
+          value: 20,
+          days: [3],
+          scope: "lots",
+          banks: banks(conti.id),
+          lots: { create: [{ lotId: lotAB }] },
+        },
+      });
+      await tx.bankPromo.create({
+        data: {
+          kind: "discount",
+          value: 15,
+          scope: "products",
+          banks: banks(itau.id),
+          products: { create: [{ productId: a }] },
+        },
+      });
+
+      const headlines = async (id: string) =>
+        (await getProductDetail(tx, open, id, now))?.bankPromos?.map((g) => g.headline);
+      expect(await headlines(a)).toEqual([
+        "Hasta 12 cuotas sin intereses",
+        "20 % de reintegro · Miércoles",
+        "15 % de descuento",
+      ]);
+      expect(await headlines(b)).toEqual([
+        "Hasta 12 cuotas sin intereses",
+        "20 % de reintegro · Miércoles",
+      ]);
+      expect(await headlines(c)).toEqual(["Hasta 12 cuotas sin intereses"]);
+
+      const detail = await getProductDetail(tx, open, a, now);
+      expect(detail?.bankPromos?.[0]?.banks).toEqual([
+        { id: itau.id, name: "Itaú catalog test", logoUrl: "/i.webp" },
+      ]);
+    });
+  });
+
+  it("leaves out promos that are inactive, expired, scheduled or not valid on the weekday", async () => {
+    await withRollback(async (tx) => {
+      const { a, itau } = await setup(tx);
+      const base = { kind: "installments" as const, scope: "all" as const };
+      const banks = { create: [{ bankId: itau.id }] };
+      await tx.bankPromo.create({ data: { ...base, value: 2, isActive: false, banks } });
+      await tx.bankPromo.create({ data: { ...base, value: 3, endsAt: day("2026-10-20"), banks } });
+      await tx.bankPromo.create({
+        data: { ...base, value: 4, startsAt: day("2026-10-22"), banks },
+      });
+      await tx.bankPromo.create({ data: { ...base, value: 5, days: [4], banks } });
+      await tx.bankPromo.create({
+        data: { ...base, value: 6, startsAt: day("2026-10-21"), endsAt: day("2026-10-21"), banks },
+      });
+      const detail = await getProductDetail(tx, open, a, now);
+      expect(detail?.bankPromos?.map((g) => g.headline)).toEqual(["Hasta 6 cuotas sin intereses"]);
+    });
+  });
+
+  it("shows no promos while prices are hidden, and none when there are none", async () => {
+    await withRollback(async (tx) => {
+      const { a, itau } = await setup(tx);
+      expect((await getProductDetail(tx, open, a, now))?.bankPromos).toEqual([]);
+      await tx.bankPromo.create({
+        data: {
+          kind: "installments",
+          value: 12,
+          scope: "all",
+          banks: { create: [{ bankId: itau.id }] },
+        },
+      });
+      const hidden = await getProductDetail(tx, { ...open, showPrices: false }, a, now);
+      expect(hidden?.bankPromos).toEqual([]);
+    });
+  });
+
+  it("attaches the promos to the lookbook pieces", async () => {
+    await withRollback(async (tx) => {
+      const { a, itau } = await setup(tx);
+      await tx.product.update({
+        where: { id: a },
+        data: { isPublished: true, catalog: "milonga", catalogOrder: 1 },
+      });
+      await tx.productImage.create({ data: { productId: a, url: "/media/a.webp", position: 0 } });
+      await tx.bankPromo.create({
+        data: {
+          kind: "refund",
+          value: 20,
+          scope: "all",
+          banks: { create: [{ bankId: itau.id }] },
+        },
+      });
+      const lookbook = await listLookbook(tx, open, now);
+      const piece = lookbook.milonga.flatMap((page) => page.pieces).find((p) => p.id === a);
+      expect(piece?.bankPromos?.map((g) => g.headline)).toEqual(["20 % de reintegro"]);
+    });
+  });
+
+  it("lists the live promos for the terms page, without lot or product ids", async () => {
+    await withRollback(async (tx) => {
+      const { a, itau, conti } = await setup(tx);
+      await tx.bankPromo.create({
+        data: {
+          kind: "refund",
+          value: 20,
+          days: [3],
+          capGs: 200_000,
+          terms: "Bases del reintegro.",
+          scope: "products",
+          startsAt: day("2026-10-01"),
+          endsAt: day("2026-10-31"),
+          banks: { create: [{ bankId: conti.id }, { bankId: itau.id }] },
+          products: { create: [{ productId: a }] },
+        },
+      });
+      await tx.bankPromo.create({
+        data: {
+          kind: "installments",
+          value: 12,
+          scope: "all",
+          banks: { create: [{ bankId: itau.id }] },
+        },
+      });
+      await tx.bankPromo.create({
+        data: {
+          kind: "discount",
+          value: 10,
+          scope: "all",
+          isActive: false,
+          banks: { create: [{ bankId: itau.id }] },
+        },
+      });
+      const promos = await listPublicBankPromos(tx, open, now);
+      expect(promos.map((p) => p.headline)).toEqual([
+        "Hasta 12 cuotas sin intereses",
+        "20 % de reintegro · Miércoles · Tope ₲ 200.000",
+      ]);
+      expect(promos[1]).toMatchObject({
+        kind: "refund",
+        terms: "Bases del reintegro.",
+        startsAt: "2026-10-01",
+        endsAt: "2026-10-31",
+        appliesTo: "selected",
+        banks: [
+          { id: conti.id, name: "Continental catalog test", logoUrl: null },
+          { id: itau.id, name: "Itaú catalog test", logoUrl: "/i.webp" },
+        ],
+      });
+      expect(Object.keys(promos[1] ?? {}).sort()).toEqual(
+        ["appliesTo", "banks", "endsAt", "headline", "id", "kind", "startsAt", "terms"].sort(),
+      );
+      expect(await listPublicBankPromos(tx, { ...open, showPrices: false }, now)).toEqual([]);
     });
   });
 });

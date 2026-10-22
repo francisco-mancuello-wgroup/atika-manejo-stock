@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { LookbookItem, LookbookPiece } from "../../lib/lookbook";
 import { effectivePriceGs } from "../../lib/price";
+import { BankPromosBlock } from "../bank-promos-block";
 import { Price } from "../price";
 import { useCart } from "./cart";
 
@@ -225,6 +226,8 @@ export function AddToCart({
           />
         );
       })}
+
+      <BankPromosBlock groups={items.flatMap((_, index) => pieceOf(index)?.bankPromos ?? [])} />
 
       <div className="flex gap-2">
         <button
