@@ -164,6 +164,29 @@ Same rules as the admin account: lowercase email, at least 8 characters, only th
 Signed-in users can change their own password in ERP → Seguridad.
 
 
+## Publication group from an event stock list
+
+`pnpm db:group-list` REPLACES the contents of a publication group from a simple event workbook
+(`pnpm db:group` stays the one for inventory sheets). Unlike `db:group` it spans every lot.
+
+```bash
+GROUP_NAME="Evento Pink" GROUP_FILE=~/Descargas/stock.xlsx pnpm db:group-list
+# optional: GROUP_STARTS_AT / GROUP_ENDS_AT (YYYY-MM-DD); DRY_RUN=1 prints the plan and writes nothing
+```
+
+- First worksheet, header row 1; columns found by label `DESCRIPCION` and `TALLES` (others ignored).
+  Blank rows are skipped. `TALLES` is `<qty> <size>` (`1 S`, `2 U`, `1M`).
+- `DESCRIPCION` is a product code or name (case and accents ignored); the exact code wins over the
+  name. A name shared by several products is ambiguous. A `TALLES` value under an empty
+  `DESCRIPCION` continues the product above. Repeated product + size lines add up.
+- One transaction. If any line is unreadable, unmatched, ambiguous or has no such size variant, every
+  problem is listed and nothing is written.
+- The group is created when missing (`isActive` is never changed). Each listed variant gets
+  `capAllocation` (listed qty, capped by `variant.stock`, never below `sold`). Allocations not in the
+  list are deleted when `sold = 0`, or set to `allocated = sold` (kept for history, nothing left for
+  the web). `variant.stock` is never written.
+- The summary prints matched lines, units, capped lines (qty > stock), removed and kept-for-history.
+
 ## Categories
 
 `categories/infer.ts` assigns a catalog category from the product name, then its description, then the

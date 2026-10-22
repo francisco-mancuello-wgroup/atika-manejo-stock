@@ -21,6 +21,7 @@
     "db:export-looks": "tsx seed/categories/export-looks.ts",
     "db:user": "tsx seed/user.ts",
     "db:group": "tsx seed/group.ts",
+    "db:group-list": "tsx seed/group-list.ts",
     "db:banks": "tsx seed/banks/seed-banks.ts"
   },
   "dependencies": {
