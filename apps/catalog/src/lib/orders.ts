@@ -2,6 +2,7 @@ import "server-only";
 import type { PrismaClient } from "@atika/db";
 import { effectivePriceGs } from "./price";
 import { type CatalogDb, getCatalogSettings, getProductDetail } from "./queries";
+import { activeGroupWhere } from "./web-stock";
 
 /** Abuse limits: a real cart is a handful of pieces, so these are generous but bounded. */
 export const MAX_LINES = 20;
@@ -79,23 +80,35 @@ export async function createOrder(
 
   const variants = await db.productVariant.findMany({
     where: { productId: { in: productIds } },
-    select: { id: true, productId: true, size: true },
+    select: {
+      id: true,
+      productId: true,
+      size: true,
+      // The Pink event price of the size, when the active group sets one
+      allocations: {
+        where: { group: activeGroupWhere(now), priceGs: { not: null } },
+        select: { priceGs: true },
+      },
+    },
   });
-  const variantId = (productId: string, size: string) =>
-    variants.find((variant) => variant.productId === productId && variant.size === size)?.id;
+  const variantOf = (productId: string, size: string) =>
+    variants.find((variant) => variant.productId === productId && variant.size === size);
 
   const items = [];
   for (const line of parsed.lines) {
     const detail = details.get(line.productId);
-    const id = variantId(line.productId, line.size);
-    const price = detail ? effectivePriceGs(detail) : null;
+    const variant = variantOf(line.productId, line.size);
+    const id = variant?.id;
+    // The event price is final, as on the Pink page: no catalog discount on top of it
+    const eventPrice = variant?.allocations[0]?.priceGs ?? null;
+    const price = eventPrice ?? (detail ? effectivePriceGs(detail) : null);
     const onWeb = detail?.sizes.some((entry) => entry.size === line.size && entry.available);
     if (!detail || !id || !onWeb || price === null) return { ok: false, reason: "unavailable" };
     items.push({
       variantId: id,
       quantity: line.quantity,
       unitPriceGs: price,
-      discountPercent: detail.discountPercent,
+      discountPercent: eventPrice === null ? detail.discountPercent : null,
       productName: detail.name,
       size: line.size,
       color: detail.color,

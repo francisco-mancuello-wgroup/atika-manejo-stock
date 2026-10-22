@@ -71,6 +71,56 @@ describe.skipIf(!hasDatabase)("createOrder (database)", () => {
     });
   });
 
+  it("charges the event price of a size held by the active group, like Pink shows it", async () => {
+    await withRollback(async (tx) => {
+      const [id = ""] = await createProducts(tx, [
+        {
+          name: "Lia Dress",
+          priceGs: 1_584_000,
+          variants: [
+            ["S", 1],
+            ["M", 1],
+          ],
+        },
+      ]);
+      const variants = await tx.productVariant.findMany({ where: { productId: id } });
+      const sizeId = (size: string) => variants.find((variant) => variant.size === size)?.id ?? "";
+      await tx.discount.create({
+        data: {
+          name: "Test",
+          percent: 10,
+          scope: "selected",
+          products: { create: [{ productId: id }] },
+        },
+      });
+      await tx.publicationGroup.create({
+        data: {
+          name: "Pink test",
+          isActive: true,
+          allocations: {
+            create: [
+              { variantId: sizeId("S"), allocated: 1, priceGs: 1_553_000 },
+              { variantId: sizeId("M"), allocated: 1 },
+            ],
+          },
+        },
+      });
+      const result = await createOrder(
+        tx,
+        [
+          { productId: id, size: "S", quantity: 1 },
+          { productId: id, size: "M", quantity: 1 },
+        ],
+        NOW,
+      );
+      if (!result.ok) throw new Error(result.reason);
+      const items = await tx.orderItem.findMany({ where: { orderId: result.id } });
+      const bySize = Object.fromEntries(items.map((item) => [item.size, item]));
+      expect(bySize.S).toMatchObject({ unitPriceGs: 1_553_000, discountPercent: null });
+      expect(bySize.M).toMatchObject({ unitPriceGs: 1_426_000, discountPercent: 10 });
+    });
+  });
+
   it("merges repeated lines of the same piece and size", async () => {
     await withRollback(async (tx) => {
       const [id] = await createProducts(tx, [{ name: "Pollera", variants: [["M", 5]] }]);
