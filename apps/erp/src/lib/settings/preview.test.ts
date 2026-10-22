@@ -5,6 +5,7 @@ const form = { exchangeRate: "7400", saleFactor: "2.5", vatPercent: "10", costPe
 const lot: PreviewLot = {
   id: "lot-a",
   name: "Lote A",
+  pricingMode: "global",
   totalShippingUsd: 20,
   products: [
     { id: "p1", name: "Remera", originalValueUsd: 100, unitsBought: 3, priceGs: 2_000_000 },

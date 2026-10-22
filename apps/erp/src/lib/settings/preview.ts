@@ -1,3 +1,4 @@
+import type { LotPricingMode } from "@atika/db";
 import { priceLot } from "@atika/pricing";
 import { parseAppSettings } from "./schema";
 
@@ -13,6 +14,8 @@ export interface PreviewProduct {
 export interface PreviewLot {
   id: string;
   name: string;
+  /** Only `global` lots follow the Parámetros form; `custom` lots are never repriced by it. */
+  pricingMode: LotPricingMode;
   totalShippingUsd: number;
   products: PreviewProduct[];
 }

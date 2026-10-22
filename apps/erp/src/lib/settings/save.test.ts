@@ -81,6 +81,38 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
     });
   });
 
+  it("leaves lots with their own parameters untouched and says so", async () => {
+    await withRollback(async (tx) => {
+      const own = await createFixtureLot(tx, [
+        { name: "Own", originalValueUsd: 100, priceGs: 1234000, variants: [["M", 3, 3]] },
+      ]);
+      await tx.lot.update({ where: { id: own.lot.id }, data: { pricingMode: "custom" } });
+      const followsGlobal = await createFixtureLot(tx, [
+        { name: "Global", originalValueUsd: 100, variants: [["M", 3, 3]] },
+      ]);
+      const customCount = await tx.lot.count({ where: { pricingMode: "custom" } });
+      const globalCount = await tx.lot.count({ where: { pricingMode: "global" } });
+      const productCount = await tx.product.count({ where: { lot: { pricingMode: "global" } } });
+
+      const state = await saveAndApplySettings(dbOver(tx), form);
+      expect(state).toEqual({
+        status: "success",
+        message: `Parámetros guardados. Se actualizaron ${globalCount} lotes y se recalcularon ${productCount} precios. ${customCount === 1 ? "1 lote con parámetros propios no se modificó." : `${customCount} lotes con parámetros propios no se modificaron.`}`,
+      });
+
+      const storedOwn = await tx.lot.findUniqueOrThrow({ where: { id: own.lot.id } });
+      expect(storedOwn.exchangeRate.toNumber()).toBe(7000);
+      expect(storedOwn.saleFactor.toNumber()).toBe(2.5);
+      expect(storedOwn.vatRate.toNumber()).toBe(0.1);
+      expect(storedOwn.costRate.toNumber()).toBe(0.5);
+      const ownProduct = await tx.product.findUniqueOrThrow({ where: { id: own.products[0]?.id } });
+      expect(ownProduct.priceGs).toBe(1234000);
+
+      const storedGlobal = await tx.lot.findUniqueOrThrow({ where: { id: followsGlobal.lot.id } });
+      expect(storedGlobal.saleFactor.toNumber()).toBe(3);
+    });
+  });
+
   it("ignores a scope field sent by an old client", async () => {
     await withRollback(async (tx) => {
       const a = await createFixtureLot(tx, [

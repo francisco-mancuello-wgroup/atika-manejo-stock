@@ -46,7 +46,14 @@ export function SettingsForm({
   );
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
 
-  const products = lots.reduce((sum, lot) => sum + lot.products.length, 0);
+  // Lots with their own parameters are not repriced by this form, so they stay out of the preview.
+  const globalLots = lots.filter((lot) => lot.pricingMode === "global");
+  const customLots = lots.filter((lot) => lot.pricingMode === "custom");
+  const products = globalLots.reduce((sum, lot) => sum + lot.products.length, 0);
+  const lotsSummary =
+    customLots.length === 0
+      ? countOf(globalLots.length, "lote", "lotes")
+      : `${globalLots.length} de ${countOf(lots.length, "lote", "lotes")}`;
 
   return (
     <div className="flex max-w-5xl flex-col gap-6">
@@ -77,8 +84,13 @@ export function SettingsForm({
           ))}
 
           <p className="text-sm text-muted">
-            {`${lots.length === 1 ? "Se recalcula" : "Se recalculan"} ${countOf(lots.length, "lote", "lotes")} · ${countOf(products, "producto", "productos")}`}
+            {`${globalLots.length === 1 && customLots.length === 0 ? "Se recalcula" : "Se recalculan"} ${lotsSummary} · ${countOf(products, "producto", "productos")}`}
           </p>
+          {customLots.length > 0 ? (
+            <p className="text-sm text-muted">
+              {`${countOf(customLots.length, "lote con parámetros propios no se modifica", "lotes con parámetros propios no se modifican")}: ${customLots.map((lot) => lot.name).join(", ")}.`}
+            </p>
+          ) : null}
           <Button type="submit" disabled={pending}>
             {pending ? "Aplicando…" : "Aplicar"}
           </Button>
@@ -106,12 +118,12 @@ export function SettingsForm({
             ))}
           </ol>
           <p className="text-xs text-muted">
-            Al guardar, todos los lotes toman de acá el TC, el factor, el IVA y el % de costo, y
-            conservan su propio envío.
+            Al guardar, los lotes en modo Global toman de acá el TC, el factor, el IVA y el % de
+            costo, y conservan su propio envío. Los lotes con parámetros propios no cambian.
           </p>
         </section>
       </div>
-      <LotPricePreview lots={lots} values={typed} display={display} />
+      <LotPricePreview lots={globalLots} values={typed} display={display} />
     </div>
   );
 }

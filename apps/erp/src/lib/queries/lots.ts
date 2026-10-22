@@ -31,6 +31,7 @@ export async function getLotsForPricingPreview(): Promise<PreviewLot[]> {
     select: {
       id: true,
       name: true,
+      pricingMode: true,
       totalShippingUsd: true,
       products: {
         orderBy: { name: "asc" },
@@ -47,6 +48,7 @@ export async function getLotsForPricingPreview(): Promise<PreviewLot[]> {
   return lots.map((lot) => ({
     id: lot.id,
     name: lot.name,
+    pricingMode: lot.pricingMode,
     totalShippingUsd: lot.totalShippingUsd.toNumber(),
     products: lot.products.map((product) => ({
       id: product.id,
