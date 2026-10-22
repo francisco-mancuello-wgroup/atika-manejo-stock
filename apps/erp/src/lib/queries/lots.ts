@@ -1,5 +1,6 @@
 import "server-only";
 import { getDb } from "../db";
+import type { PreviewLot } from "../settings/preview";
 import { type LotDetail, type LotSummary, toLotDetail, toLotSummary } from "../view-models";
 
 const lotInclude = {
@@ -23,17 +24,36 @@ export async function getLotDetail(lotId: string): Promise<LotDetail | null> {
   return lot ? toLotDetail(lot) : null;
 }
 
-export interface SettingsLot {
-  id: string;
-  name: string;
-  productCount: number;
-}
-
-/** Lots a parameters change can be applied to, newest first. */
-export async function getLotsForSettings(): Promise<SettingsLot[]> {
+/** Every lot with what the settings preview needs to reprice it, newest first. */
+export async function getLotsForPricingPreview(): Promise<PreviewLot[]> {
   const lots = await getDb().lot.findMany({
     orderBy: { purchasedAt: "desc" },
-    select: { id: true, name: true, _count: { select: { products: true } } },
+    select: {
+      id: true,
+      name: true,
+      totalShippingUsd: true,
+      products: {
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          originalValueUsd: true,
+          priceGs: true,
+          variants: { select: { unitsBought: true } },
+        },
+      },
+    },
   });
-  return lots.map((lot) => ({ id: lot.id, name: lot.name, productCount: lot._count.products }));
+  return lots.map((lot) => ({
+    id: lot.id,
+    name: lot.name,
+    totalShippingUsd: lot.totalShippingUsd.toNumber(),
+    products: lot.products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      originalValueUsd: product.originalValueUsd.toNumber(),
+      unitsBought: product.variants.reduce((sum, variant) => sum + variant.unitsBought, 0),
+      priceGs: product.priceGs,
+    })),
+  }));
 }

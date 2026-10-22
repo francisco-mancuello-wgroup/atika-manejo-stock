@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { disconnectTestDb, hasDatabase } from "../../test/db";
 import { getDb } from "../db";
 import { getInventory, getLotOptions } from "./inventory";
-import { getLotDetail, getLotSummaries, getLotsForSettings } from "./lots";
+import { getLotDetail, getLotSummaries, getLotsForPricingPreview } from "./lots";
 import { getLatestSales, getSellableProducts } from "./sales";
 import { getResumen } from "./summary";
 
@@ -24,18 +24,32 @@ describe.skipIf(!hasDatabase)("read queries (database)", () => {
     expect(typeof detail?.rows[0]?.originalValueUsd).toBe("number");
   });
 
-  it("lists every lot with its product count for the settings form", async () => {
-    const lots = await getLotsForSettings();
+  it("lists every lot with shipping and products priced for the settings preview", async () => {
+    const lots = await getLotsForPricingPreview();
     const summaries = await getLotSummaries();
     expect(lots).toHaveLength(summaries.length);
     const [first] = lots;
     expect(first).toEqual({
       id: expect.any(String),
       name: expect.any(String),
-      productCount: expect.any(Number),
+      totalShippingUsd: expect.any(Number),
+      products: expect.any(Array),
     });
     const detail = first ? await getLotDetail(first.id) : null;
-    expect(first?.productCount).toBe(detail?.rows.length);
+    expect(first?.products).toHaveLength(detail?.rows.length ?? -1);
+    const [product] = first?.products ?? [];
+    expect(product).toEqual({
+      id: expect.any(String),
+      name: expect.any(String),
+      originalValueUsd: expect.any(Number),
+      unitsBought: expect.any(Number),
+      priceGs: expect.any(Number),
+    });
+    const row = detail?.rows.find((r) => r.id === product?.id);
+    expect(first?.products.reduce((sum, p) => sum + p.unitsBought, 0)).toBe(
+      detail?.summary.unitsBought,
+    );
+    expect(product?.priceGs).toBe(row?.priceGs);
   });
 
   it("filters the inventory by lot and by text", async () => {
