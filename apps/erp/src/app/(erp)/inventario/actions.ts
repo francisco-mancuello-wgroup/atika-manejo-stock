@@ -6,8 +6,8 @@ import { type FormState, formValues } from "../../../lib/action-state";
 import { requireSession } from "../../../lib/auth/session";
 import { getDb } from "../../../lib/db";
 import { readPhotoFields } from "../../../lib/products/form-data";
-import { localPhotoStorage } from "../../../lib/products/local-photo-storage";
 import { createProduct, updateProduct } from "../../../lib/products/save";
+import { productPhotoStorage } from "../../../lib/products/storage";
 
 const FAILED = {
   status: "error",
@@ -40,7 +40,7 @@ export async function saveProductAction(
     const photos = await readPhotoFields(formData);
     const state = await updateProduct(getDb(), productId, values, {
       ...photos,
-      storage: localPhotoStorage(),
+      storage: productPhotoStorage(),
     });
     if (state.status === "success") revalidateProduct(productId);
     return state;
@@ -60,7 +60,10 @@ export async function createProductAction(
   let productId: string;
   try {
     const photos = await readPhotoFields(formData);
-    const state = await createProduct(getDb(), values, { ...photos, storage: localPhotoStorage() });
+    const state = await createProduct(getDb(), values, {
+      ...photos,
+      storage: productPhotoStorage(),
+    });
     if (state.status !== "success") return state;
     productId = state.productId;
     revalidateProduct(productId);

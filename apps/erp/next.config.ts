@@ -9,6 +9,14 @@ config({ path: fileURLToPath(new URL("../../.env", import.meta.url)), quiet: tru
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@atika/ui", "@atika/pricing", "@atika/db"],
+  // Photos and logos uploaded from the ERP live in Vercel Blob (the server disk is not kept).
+  images: {
+    remotePatterns: ["products", "banks"].map((folder) => ({
+      protocol: "https" as const,
+      hostname: "*.public.blob.vercel-storage.com",
+      pathname: `/${folder}/uploads/**`,
+    })),
+  },
   // The dev-only Next.js badge covers the sidebar logo (its position is user-draggable and
   // persisted per browser), so hide it; compile and runtime errors are still shown.
   devIndicators: false,

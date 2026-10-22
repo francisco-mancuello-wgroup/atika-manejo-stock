@@ -41,6 +41,46 @@ const expectedPrice = (original: number, units: number, otherUnits = 4) => {
 };
 
 describe("ProductForm (edit)", () => {
+  it("blocks saving photos that together do not fit in one upload", async () => {
+    render(
+      <ProductForm
+        mode="edit"
+        lots={[lots[0] as LotContext]}
+        lotId="lot-1"
+        initial={initial}
+        photos={photos}
+        action={idle}
+      />,
+    );
+    const big = (name: string) =>
+      new File([new Uint8Array(3 * 1024 * 1024)], name, { type: "image/jpeg" });
+    fireEvent.change(screen.getByLabelText("Agregar fotos"), {
+      target: { files: [big("a.jpg"), big("b.jpg")] },
+    });
+    expect(
+      await screen.findByText("Las fotos pesan demasiado juntas: subí menos por vez."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+  });
+
+  it("lets a photo batch that fits be saved", async () => {
+    render(
+      <ProductForm
+        mode="edit"
+        lots={[lots[0] as LotContext]}
+        lotId="lot-1"
+        initial={initial}
+        photos={photos}
+        action={idle}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Agregar fotos"), {
+      target: { files: [new File([new Uint8Array(1000)], "a.jpg", { type: "image/jpeg" })] },
+    });
+    expect(await screen.findByText("a.jpg")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Guardar" })).toBeEnabled());
+  });
+
   const renderEdit = (action: (p: FormState, d: FormData) => Promise<FormState> = idle) =>
     render(
       <ProductForm

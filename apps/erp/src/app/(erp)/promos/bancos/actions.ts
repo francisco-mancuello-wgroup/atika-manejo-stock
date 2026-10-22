@@ -11,8 +11,8 @@ import {
 } from "../../../../lib/bank-promos/save";
 import { workspaceHref } from "../../../../lib/bank-promos/workspace";
 import { readLogoFields } from "../../../../lib/banks/form-data";
-import { localLogoStorage } from "../../../../lib/banks/local-logo-storage";
 import { deleteBank, saveBank } from "../../../../lib/banks/save";
+import { bankLogoStorage } from "../../../../lib/banks/storage";
 import { getDb } from "../../../../lib/db";
 
 const FAILED = {
@@ -50,7 +50,7 @@ export async function saveBankAction(
   let createdId: string | null = null;
   try {
     const logo = await readLogoFields(formData);
-    const state = await saveBank(getDb(), bankId, values, { ...logo, storage: localLogoStorage() });
+    const state = await saveBank(getDb(), bankId, values, { ...logo, storage: bankLogoStorage() });
     if (state.status !== "success") return state;
     revalidateBanks();
     if (bankId !== null || !("bankId" in state)) return state;
@@ -65,7 +65,7 @@ export async function saveBankAction(
 export async function deleteBankAction(bankId: string): Promise<FormState> {
   await requireSession();
   try {
-    const state = await deleteBank(getDb(), bankId, localLogoStorage());
+    const state = await deleteBank(getDb(), bankId, bankLogoStorage());
     if (state.status === "success") revalidateBanks();
     return state;
   } catch (error) {

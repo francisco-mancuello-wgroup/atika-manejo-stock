@@ -3,6 +3,7 @@ import { createPrismaClient, type Prisma } from "../../src/index";
 import {
   BANK_MEDIA_URL_PREFIX,
   type BankLogoEntry,
+  isUploadedLogoUrl,
   logoUrlFor,
   parseBankManifest,
   planBankLogoFiles,
@@ -20,6 +21,23 @@ const entry = (over: Partial<BankLogoEntry> = {}): BankLogoEntry => {
     ...over,
   };
 };
+
+describe("isUploadedLogoUrl", () => {
+  it("recognizes logos uploaded from the ERP to local disk or Vercel Blob", () => {
+    expect(isUploadedLogoUrl("/media/banks/uploads/abc/own.webp")).toBe(true);
+    expect(
+      isUploadedLogoUrl("https://x1y2.public.blob.vercel-storage.com/banks/uploads/abc/own.webp"),
+    ).toBe(true);
+  });
+
+  it("does not treat seed logos, other blob folders or missing logos as uploads", () => {
+    expect(isUploadedLogoUrl("/media/banks/seed/itau.webp")).toBe(false);
+    expect(
+      isUploadedLogoUrl("https://x1y2.public.blob.vercel-storage.com/products/uploads/a/b.webp"),
+    ).toBe(false);
+    expect(isUploadedLogoUrl(null)).toBe(false);
+  });
+});
 
 describe("parseBankManifest", () => {
   it("reads valid entries, with and without a logo file", () => {

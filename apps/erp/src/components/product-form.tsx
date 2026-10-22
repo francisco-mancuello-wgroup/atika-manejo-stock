@@ -5,10 +5,11 @@ import type { LotPricingParams } from "@atika/pricing";
 import { Button, Input } from "@atika/ui";
 import Image from "next/image";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
 import { formatGs, formatUsd } from "../lib/format";
 import { previewPrice } from "../lib/products/preview";
+import { shrinkInputPhotos, tooBigToUpload } from "../lib/products/shrink-photos";
 import { SIZE_ORDER } from "../lib/sizes";
 import { Field, FormMessage, Select } from "./form-controls";
 import { table } from "./styles";
@@ -90,6 +91,10 @@ export function ProductForm({
   const [nextKey, setNextKey] = useState(initial.sizes.length);
   const [rows, setRows] = useState(initial.sizes.map((row, key) => ({ ...row, key })));
   const [fileNames, setFileNames] = useState<{ id: string; name: string }[]>([]);
+  // Photos are shrunk in the browser before upload; saving waits until they are ready
+  const [preparing, setPreparing] = useState(false);
+  const [uploadError, setUploadError] = useState<string | undefined>();
+  const pick = useRef(0);
 
   const lot = lots.find((candidate) => candidate.id === chosenLot);
   const preview = lot
@@ -337,8 +342,8 @@ export function ProductForm({
         <Field
           label="Agregar fotos"
           htmlFor="photos"
-          error={errors.photos}
-          hint="JPG, PNG o WebP, hasta 10 MB cada una."
+          error={uploadError ?? errors.photos}
+          hint="JPG, PNG o WebP. Se achican solas antes de subir."
         >
           <input
             id="photos"
@@ -346,14 +351,22 @@ export function ProductForm({
             type="file"
             multiple
             accept="image/jpeg,image/png,image/webp"
-            onChange={(event) =>
+            onChange={async (event) => {
+              const input = event.target;
               setFileNames(
-                Array.from(event.target.files ?? [], (file, i) => ({
-                  id: `new:${i}`,
-                  name: file.name,
-                })),
-              )
-            }
+                Array.from(input.files ?? [], (file, i) => ({ id: `new:${i}`, name: file.name })),
+              );
+              const current = ++pick.current;
+              setPreparing(true);
+              const files = await shrinkInputPhotos(input, () => current === pick.current);
+              if (current !== pick.current) return;
+              setUploadError(
+                tooBigToUpload(files.map((file) => file.size))
+                  ? "Las fotos pesan demasiado juntas: subí menos por vez."
+                  : undefined,
+              );
+              setPreparing(false);
+            }}
             className="text-sm"
           />
         </Field>
@@ -379,8 +392,8 @@ export function ProductForm({
 
       <FormMessage state={state} />
       <div className="flex items-center gap-4">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Guardando…" : "Guardar"}
+        <Button type="submit" disabled={pending || preparing || uploadError !== undefined}>
+          {pending ? "Guardando…" : preparing ? "Preparando fotos…" : "Guardar"}
         </Button>
         <Link href="/inventario" className="text-sm text-muted underline-offset-4 hover:underline">
           Cancelar
