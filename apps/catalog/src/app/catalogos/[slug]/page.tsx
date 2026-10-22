@@ -17,14 +17,14 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
   if (slug === ALL_CATALOGS) return { title: "Catálogos · Átika" };
-  if (slug === PINK_EVENT) return { title: "Evento Pink · Átika" };
+  if (slug === PINK_EVENT) return { title: "Pink · Átika" };
   const catalog = findCatalog(slug);
   return { title: catalog ? `${catalog.name} — ${catalog.tagline} · Átika` : "Átika" };
 }
 
 /**
  * `/catalogos/<slug>`: one lookbook; `/catalogos/todos` chains the three, and
- * `/catalogos/pink` chains only their pink pieces (Evento Pink).
+ * `/catalogos/pink` chains only their pink pieces (Pink).
  */
 export default async function CatalogPage({ params }: { params: Params }) {
   const { slug } = await params;
@@ -40,14 +40,14 @@ export default async function CatalogPage({ params }: { params: Params }) {
   return (
     <CartProvider whatsappNumber={settings.whatsappNumber}>
       <LookbookBook
-        title={pink ? "Evento Pink" : all ? "Átika" : first.name}
+        title={pink ? "Pink" : all ? "Átika" : first.name}
         catalogs={shown
           .map((catalog) => ({
             ...catalog,
             cover: CATALOG_COVERS[catalog.slug],
             pages: pink ? pinkPages(pages[catalog.slug]) : pages[catalog.slug],
           }))
-          // The Evento Pink skips the catalogs without pink pieces
+          // Pink skips the catalogs without pink pieces
           .filter((catalog) => !pink || catalog.pages.length > 0)}
         origin={requestOrigin((name) => requestHeaders.get(name))}
         pagePath={`/catalogos/${slug}`}

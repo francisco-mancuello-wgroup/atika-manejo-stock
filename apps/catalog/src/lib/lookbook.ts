@@ -25,7 +25,7 @@ export type CatalogValue = (typeof CATALOGS)[number]["value"];
 /** `/catalogos/todos` chains the three catalogs. */
 export const ALL_CATALOGS = "todos";
 
-/** `/catalogos/pink`: the pieces of the Evento Pink, from every catalog. */
+/** `/catalogos/pink`: the Pink selection, the pink pieces of every catalog. */
 export const PINK_EVENT = "pink";
 
 export function findCatalog(slug: string) {
@@ -164,10 +164,10 @@ export function pageAnchor(slug: string, page: number): string {
   return `${slug}-pagina-${page}`;
 }
 
-/** Colors that enter the Evento Pink selection. */
+/** Colors that enter the Pink selection. */
 const PINK_COLORS = new Set(["Fucsia", "Rosa"]);
 
-/** The pages with a fuchsia or pink piece, numbered again from 1 for the Evento Pink. */
+/** The pages with a fuchsia or pink piece, numbered again from 1 for the Pink selection. */
 export function pinkPages(pages: readonly LookbookPage[]): LookbookPage[] {
   return pages
     .filter((page) => page.pieces.some((piece) => PINK_COLORS.has(piece.color?.label ?? "")))
