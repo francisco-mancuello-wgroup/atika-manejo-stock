@@ -11,8 +11,8 @@ Objective: the Pink page shows exactly the event workbook, with its own prices. 
 
 ## Tasks
 
-- [ ] T1 (S3) migration + schema: `GroupAllocation.priceGs Int?` — route: inline
-- [ ] T2 (S2, S3) store: catalog-less group pieces on Pink only; Pink price on Pink page, cart and message — route: inline
+- [x] T1 (S3) migration + schema: `GroupAllocation.priceGs Int?` — route: inline — 60edaf6; applied in prod alone (db execute + migrate resolve)
+- [x] T2 (S2, S3) store: catalog-less group pieces on Pink only; Pink price on Pink page, cart and message — route: inline
 - [ ] T3 (S4) apply migration in production, deploy, load the two prices, verify Pink — route: inline
 
 ## Log
@@ -20,3 +20,6 @@ Objective: the Pink page shows exactly the event workbook, with its own prices. 
 - L1 (2026-10-22) "pnpm db:group "C:\Users\fmancuello\Downloads\STOCK EVENTO PINK (1).xlsx" en prod" → "si reemplazamos lo que ahora tiene pink por este nuevo excel lo que tiene este excel es lo que tiene pink el evento pink" → "por ahora solo van todos a pink" → "y si tiene precio ese es el precio en pink" → "si dale avanzá con 1 a 3".
 - L2 S1 applied in production by one transaction: removed 27 old allocations (none sold), loaded 30; skipped stock-0 rows (Costa Black XS, ATL701 M, LUN701 M, MISC01 S, MISC02 S) and MAUC06 "U" (ERP only has M); PALC04 S/M mapped to "XS/S"/"M/L". Variant stock unchanged (217).
 - L3 Still open, outside this feature: store names for ATLC06, PALC05, ETNC01; ATLC06 has no photo.
+- L4 Fabián's `variant_barcode` migration applied in prod with the user's OK ("si dale aplicala"): 193 sizes, AT000001..AT000193, stock 217 unchanged. `drop_product_in_pink` left pending on purpose ("dejalo asi").
+- L5 T2 evidence: lookbook unit RED (3 failing) → GREEN; DB tests could not go RED for the logic because prod lacked the columns, GREEN after both migrations. Store 279/279, ERP 757/757. packages/db: 4 pre-existing Windows failures (path separators, EBUSY temp files), unrelated.
+- L6 Assumptions: one event price per product (first priced size); the event price replaces catalog discounts on Pink; cart lines key on product+size, so the same size added from a brand catalog and from Pink merges into one line.

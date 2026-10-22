@@ -21,7 +21,15 @@ import {
   toCatalogProductDetail,
 } from "./catalog-view";
 import { CATEGORIES } from "./categories";
-import { CATALOGS, type CatalogSlug, type LookbookPage, lookbookPages } from "./lookbook";
+import {
+  CATALOGS,
+  type CatalogSlug,
+  type LookbookPage,
+  lookbookPages,
+  OTHER_BRANDS,
+  type PinkOnlySlug,
+  pinkOnlySection,
+} from "./lookbook";
 import {
   type CollectionSummary,
   collectionSlug,
@@ -48,7 +56,7 @@ function stockSelect(now: Date) {
         stock: true,
         allocations: {
           where: { group: activeGroupWhere(now) },
-          select: { allocated: true, sold: true },
+          select: { allocated: true, sold: true, priceGs: true },
         },
       },
     },
@@ -452,6 +460,42 @@ const lookbookSelect = (now: Date) =>
     catalogName: true,
   }) satisfies Prisma.ProductSelect;
 
+/** Lookbook rows matching `where`, with web stock, discounts, bank promos and their Pink fields. */
+async function readLookbookRows(
+  db: CatalogDb,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+  now: Date,
+  where: Prisma.ProductWhereInput,
+) {
+  const rows = await db.product.findMany({
+    where,
+    orderBy: [{ catalogOrder: "asc" }, { id: "asc" }],
+    select: lookbookSelect(now),
+  });
+  // The Pink event is whatever sits in an active group; read before the stock rewrite drops it.
+  const flagged = rows.map((row) => {
+    const allocations = row.variants.flatMap((variant) => variant.allocations);
+    return {
+      ...row,
+      inGroup: allocations.length > 0,
+      pinkPriceGs: allocations.find((allocation) => allocation.priceGs != null)?.priceGs ?? null,
+    };
+  });
+  return withBankPromos(
+    withDiscounts(
+      withWebStock(flagged, { hideOutOfStock: false }),
+      await loadDiscountRules(db, settings),
+      now,
+    ),
+    await loadBankPromoRules(db, settings),
+    now,
+  );
+}
+
+const inActiveGroup = (now: Date): Prisma.ProductWhereInput => ({
+  variants: { some: { allocations: { some: { group: activeGroupWhere(now) } } } },
+});
+
 /**
  * The pages of every lookbook catalog (Casa Icona, Milonga, Sordo), in display order. Only
  * products on the web (published or in an active group) placed in a catalog are read; pieces
@@ -462,39 +506,40 @@ export async function listLookbook(
   settings: Pick<CatalogSettingsView, "showPrices">,
   now: Date = new Date(),
 ): Promise<Record<CatalogSlug, LookbookPage[]>> {
-  const rows = await db.product.findMany({
-    where: {
-      catalog: { not: null },
-      OR: [
-        { isPublished: true },
-        { variants: { some: { allocations: { some: { group: activeGroupWhere(now) } } } } },
-      ],
-    },
-    orderBy: [{ catalogOrder: "asc" }, { id: "asc" }],
-    select: lookbookSelect(now),
+  const rows = await readLookbookRows(db, settings, now, {
+    catalog: { not: null },
+    OR: [{ isPublished: true }, inActiveGroup(now)],
   });
-  // The Pink event is whatever sits in an active group; read before the stock rewrite drops it.
-  const flagged = rows.map((row) => ({
-    ...row,
-    inGroup: row.variants.some((variant) => variant.allocations.length > 0),
-  }));
-  const discounted = withBankPromos(
-    withDiscounts(
-      withWebStock(flagged, { hideOutOfStock: false }),
-      await loadDiscountRules(db, settings),
-      now,
-    ),
-    await loadBankPromoRules(db, settings),
-    now,
-  );
   const byCatalog = Object.fromEntries(
     CATALOGS.map(({ slug, value }) => [
       slug,
       lookbookPages(
-        discounted.filter((row) => row.catalog === value),
+        rows.filter((row) => row.catalog === value),
         settings,
       ),
     ]),
   );
   return byCatalog as Record<CatalogSlug, LookbookPage[]>;
+}
+
+/**
+ * Pink pieces placed in no catalog: they show on Pink only, after the catalog of their brand or
+ * under Otras marcas (`pinkOnlySection`).
+ */
+export async function listPinkOnly(
+  db: CatalogDb,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+  now: Date = new Date(),
+): Promise<Record<PinkOnlySlug, LookbookPage[]>> {
+  const rows = await readLookbookRows(db, settings, now, { catalog: null, ...inActiveGroup(now) });
+  const slugs: PinkOnlySlug[] = [...CATALOGS.map((catalog) => catalog.slug), OTHER_BRANDS.slug];
+  return Object.fromEntries(
+    slugs.map((slug) => [
+      slug,
+      lookbookPages(
+        rows.filter((row) => pinkOnlySection(row) === slug),
+        settings,
+      ),
+    ]),
+  ) as Record<PinkOnlySlug, LookbookPage[]>;
 }

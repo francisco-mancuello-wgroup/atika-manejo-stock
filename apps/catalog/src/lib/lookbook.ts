@@ -28,6 +28,15 @@ export const ALL_CATALOGS = "todos";
 /** `/catalogos/pink`: the Pink selection, the pink pieces of every catalog. */
 export const PINK_EVENT = "pink";
 
+/** Pink's closing section: event pieces of a brand without its own catalog (Baobab, Zunilda). */
+export const OTHER_BRANDS = {
+  slug: "otras-marcas",
+  name: "Otras marcas",
+  tagline: "Selección Pink",
+} as const;
+
+export type PinkOnlySlug = CatalogSlug | typeof OTHER_BRANDS.slug;
+
 export function findCatalog(slug: string) {
   return CATALOGS.find((catalog) => catalog.slug === slug) ?? null;
 }
@@ -45,6 +54,8 @@ export interface LookbookRow extends ProductSource {
   catalogSection: string | null;
   /** Holds assigned stock in an active publication group: part of the Pink event. */
   inGroup: boolean;
+  /** Event price from the active group (the event workbook's price); null keeps `priceGs`. */
+  pinkPriceGs?: number | null;
 }
 
 /** One product on a page: a dress, or the top of a set. Nothing about costs or stock counts. */
@@ -57,6 +68,8 @@ export interface LookbookPiece extends PriceFields {
   description: string | null;
   /** In an active publication group: part of the Pink event. */
   inGroup: boolean;
+  /** What Pink charges instead of the price above, or null when the event keeps it. */
+  pinkPrice?: PriceFields | null;
   /** Bank promotions that cover this product today, grouped for display; none when absent. */
   bankPromos?: PromoGroup[];
 }
@@ -113,6 +126,9 @@ function toPiece(
     color: resolveColor(row.color, row.name),
     description: row.description?.trim() || null,
     inGroup: row.inGroup,
+    // The event price is final: catalog discounts don't stack on it
+    pinkPrice:
+      row.pinkPriceGs == null ? null : priceFields(row.pinkPriceGs, null, settings.showPrices),
     bankPromos: row.bankPromos ?? [],
   };
 }
@@ -174,11 +190,30 @@ export function pageAnchor(slug: string, page: number): string {
   return `${slug}-pagina-${page}`;
 }
 
-/** The pages with a piece in an active publication group (the Pink event), numbered again from 1. */
+/**
+ * The pages with a piece in an active publication group (the Pink event), numbered again from 1,
+ * each piece at its event price when the group sets one.
+ */
 export function pinkPages(pages: readonly LookbookPage[]): LookbookPage[] {
   return pages
     .filter((page) => page.pieces.some((piece) => piece.inGroup))
-    .map((page, index) => ({ ...page, page: index + 1 }));
+    .map((page, index) => {
+      const pieces = page.pieces.map((piece) =>
+        piece.pinkPrice ? { ...piece, ...piece.pinkPrice } : piece,
+      );
+      return { ...page, pieces, items: groupByName(pieces), page: index + 1 };
+    });
+}
+
+const normalized = (text: string | null | undefined) => text?.trim().toLowerCase() ?? "";
+
+/**
+ * Where a Pink piece without a catalog shows on Pink: after the catalog of its brand (Milonga),
+ * or under Otras marcas when its brand has none.
+ */
+export function pinkOnlySection(row: Pick<LookbookRow, "brand">): PinkOnlySlug {
+  const brand = normalized(row.brand);
+  return CATALOGS.find((catalog) => normalized(catalog.name) === brand)?.slug ?? OTHER_BRANDS.slug;
 }
 
 /** Whether any catalog has something for the Pink event: the home shows its banner only then. */
