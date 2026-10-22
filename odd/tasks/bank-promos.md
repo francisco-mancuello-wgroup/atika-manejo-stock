@@ -1,0 +1,58 @@
+# Feature: bank-promos
+
+## Objective
+
+Let the owner publish bank card promotions (installments, refunds, discounts) from the ERP (Promos → Bancos) and show them to customers in the catalog, like Nissei's "¡Nuestras promociones bancarias!" block.
+
+## Decisions (user, 2026-10-22)
+
+- Informational only: bank promos never change list prices, discounts or sales.
+- Scope per promo: all products, selected lots, or selected products.
+- Reference: Nissei product page (benefit headline, e.g. "Hasta 12 cuotas", with bank logos below; link "Ver bases y condiciones").
+
+## Scope
+
+### Data (packages/db)
+- `Bank`: name (unique), optional logo image (stored like product photos), createdAt/updatedAt.
+- `BankPromo`: kind (`installments` | `refund` | `discount`), value (installments: integer 2–48; refund/discount: percent 1–100), optional days of week (subset of Mon–Sun; empty = every day), optional cap in ₲ (`capGs`), optional startsAt/endsAt (`@db.Date`, inclusive, Asunción calendar like Discount), optional terms text, isActive, scope (`all` | `lots` | `products`), banks (≥1, join table), lots / products join tables (used only for their scope), timestamps.
+- Migration; seed untouched.
+
+### Pure rules (shared, next to the discount rules in packages/pricing or a similar shared package both apps already import)
+- `isPromoLive(promo, now)`: active, inside its window (Asunción day), and today's weekday is allowed.
+- `promosForProduct(promos, {productId, lotId}, now)`: live promos whose scope covers the product.
+- `promoHeadline(promo)`: "Hasta 12 cuotas sin intereses", "20 % de reintegro", "15 % de descuento", plus " · Jueves" / " · Lunes y jueves" and " · Tope ₲ 200.000" when present.
+- Group for display: by headline, banks merged, ordered installments (desc value) → refund → discount.
+
+### ERP (Promos → Bancos, /promos/bancos)
+- Banks management: list + create/edit/delete (name, logo upload, preview; fallback shows name). Deleting a bank used by promos is refused with a clear message.
+- Promos list like Descuentos: headline, banks, scope summary ("Todos los productos" / "3 lotes" / "12 productos"), window, status (Vigente / Programada / Vencida / Inactiva), active switch, edit, delete.
+- Promo form: kind, value, banks (checkboxes with logos), days of week, cap, window, terms, scope radios (Todos / Lotes / Productos) with lot checklist or the existing product picker (reuse Descuentos' picker). Validation in Spanish.
+- All server actions guarded by requireSession (actions guard test).
+
+### Catalog (apps/catalog)
+- Product sheet / size picker area: block "Nuestras promociones bancarias" with grouped headlines and bank logos (name chip when no logo). Hidden when no promo applies.
+- Link "Ver bases y condiciones" to a page `/promociones-bancarias` listing every live promo with banks, days, cap, window and terms.
+- Read from DB with the same "today in Asunción" rule as discounts.
+
+## TDD
+
+- Strict, Vitest in each package (`pnpm --filter <pkg> test`); DB tests roll back.
+
+## Tasks
+
+- [ ] T1 — Schema + migration + pure rules (live, scope, headline, grouping) with tests.
+- [ ] T2 — ERP banks management (CRUD + logo) with tests.
+- [ ] T3 — ERP promos list + form (scope all/lots/products) with tests.
+- [ ] T4 — Catalog block on the product sheet + bases y condiciones page with tests.
+
+## Progress
+
+- 2026-10-22: Document created.
+
+## Verification evidence
+
+(pending)
+
+## Next step
+
+T1.
