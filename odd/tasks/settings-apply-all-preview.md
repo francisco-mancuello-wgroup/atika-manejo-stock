@@ -39,8 +39,8 @@ The scope selector (new / selected / all) adds a decision the owner does not wan
 
 - T1 RED: 9 tests failed (schema 2, form 5, save 2) before implementation. GREEN: settings/schema/form/actions tests 41 passed. `pnpm typecheck` ok, `pnpm lint` only the known next-path.ts warning.
 
+- T2 RED: preview.test.ts failed to load, form tests 8 failed, DB query test failed before implementation. GREEN: `pnpm --filter @atika/erp test` 65 files / 396 tests passed; `pnpm typecheck` 6/6 ok; `pnpm lint` only the known next-path.ts warning.
+
 ## Next step
 
 Done; ready for review/merge.
-
-- T2 RED: preview.test.ts failed to load, form tests 8 failed, DB query test failed before implementation. GREEN: `pnpm --filter @atika/erp test` 65 files / 396 tests passed; `pnpm typecheck` 6/6 ok; `pnpm lint` only the known next-path.ts warning.
