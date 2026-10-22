@@ -7,14 +7,21 @@ import { useId, useState } from "react";
 import { logoutAction } from "../app/login/actions";
 import { formatInteger } from "../lib/format";
 
-type NavLink = { href: string; label: string };
+/** `exact` links only match their own URL (their group has pages nested under the same prefix). */
+type NavLink = { href: string; label: string; exact?: boolean };
 type NavGroup = { label: string; items: readonly NavLink[] };
 
 const NAV_ITEMS: readonly (NavLink | NavGroup)[] = [
   { href: "/", label: "Resumen" },
   { href: "/inventario", label: "Inventario" },
   { href: "/compras", label: "Compras" },
-  { href: "/ventas", label: "Ventas" },
+  {
+    label: "Ventas",
+    items: [
+      { href: "/ventas", label: "Registradas", exact: true },
+      { href: "/ventas/pedidos", label: "Pedidos" },
+    ],
+  },
   { href: "/catalogo-web", label: "Catálogo web" },
   { href: "/datos-bancarios", label: "Datos bancarios" },
   {
@@ -37,7 +44,7 @@ function NavItem({
   currentPath: string;
   nested?: boolean;
 }) {
-  const active = isActive(item.href, currentPath);
+  const active = isActive(item, currentPath);
   return (
     <Link
       href={item.href}
@@ -57,7 +64,7 @@ function NavItem({
 
 /** Collapsible group; it starts open when one of its pages is the current one. */
 function NavDropdown({ group, currentPath }: { group: NavGroup; currentPath: string }) {
-  const containsCurrent = group.items.some((item) => isActive(item.href, currentPath));
+  const containsCurrent = group.items.some((item) => isActive(item, currentPath));
   const [open, setOpen] = useState(containsCurrent);
   const listId = useId();
   return (
@@ -91,10 +98,9 @@ function NavDropdown({ group, currentPath }: { group: NavGroup; currentPath: str
   );
 }
 
-function isActive(href: string, currentPath: string): boolean {
-  return href === "/"
-    ? currentPath === "/"
-    : currentPath === href || currentPath.startsWith(`${href}/`);
+function isActive({ href, exact }: NavLink, currentPath: string): boolean {
+  if (href === "/" || exact) return currentPath === href;
+  return currentPath === href || currentPath.startsWith(`${href}/`);
 }
 
 export function Sidebar({
