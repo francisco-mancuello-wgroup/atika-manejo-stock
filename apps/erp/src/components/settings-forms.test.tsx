@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { vi } from "vitest";
 import type { FormState } from "../lib/action-state";
 import { SettingsForm } from "./settings-forms";
@@ -91,9 +91,16 @@ describe("SettingsForm", () => {
     expect(screen.getByRole("group", { name: "Lotes" })).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("explains how prices are calculated", () => {
+  it("explains how prices are calculated as numbered steps", () => {
     renderForm();
-    expect(screen.getByText(/envío total del lote ÷ unidades compradas/)).toBeInTheDocument();
-    expect(screen.getByText(/redondeado a 1\.000 ₲/)).toBeInTheDocument();
+    const steps = within(
+      screen.getByRole("list", { name: "Cómo se calcula el precio" }),
+    ).getAllByRole("listitem");
+    expect(steps).toHaveLength(3);
+    expect(steps[0]).toHaveTextContent("Envío por unidad");
+    expect(steps[0]).toHaveTextContent("Envío total del lote ÷ unidades compradas");
+    expect(steps[1]).toHaveTextContent("Costo unitario");
+    expect(steps[2]).toHaveTextContent("Precio de venta");
+    expect(steps[2]).toHaveTextContent("Redondeado a 1.000 ₲");
   });
 });

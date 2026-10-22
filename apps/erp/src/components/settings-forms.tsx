@@ -23,10 +23,14 @@ const SCOPE_OPTIONS: { value: SettingsScope; label: string }[] = [
   { value: "all", label: "Todos los lotes" },
 ];
 
-const FORMULA = [
-  "Envío por unidad = envío total del lote ÷ unidades compradas.",
-  "Costo unitario = valor original × % costo + envío por unidad.",
-  "Precio = costo × factor × (1 + IVA) × TC, redondeado a 1.000 ₲.",
+const FORMULA_STEPS = [
+  { label: "Envío por unidad", formula: "Envío total del lote ÷ unidades compradas" },
+  { label: "Costo unitario", formula: "Valor original × % costo + envío por unidad" },
+  {
+    label: "Precio de venta",
+    formula: "Costo unitario × factor × (1 + IVA) × TC",
+    note: "Redondeado a 1.000 ₲",
+  },
 ];
 
 export function SettingsForm({
@@ -137,14 +141,25 @@ export function SettingsForm({
         <FormMessage state={state} />
       </form>
 
-      <section className="flex flex-col gap-3 self-start border border-line bg-surface p-5">
-        <h2 className="font-display text-2xl text-ink">Cómo se calcula el precio</h2>
-        <ul className="flex flex-col gap-2 text-sm text-muted">
-          {FORMULA.map((line) => (
-            <li key={line}>{line}</li>
+      <section className="flex flex-col gap-4 self-start border border-line bg-surface p-5">
+        <h2 id="formula-title" className="font-display text-2xl text-ink">
+          Cómo se calcula el precio
+        </h2>
+        <ol aria-labelledby="formula-title" className="divide-y divide-line border-y border-line">
+          {FORMULA_STEPS.map((step, index) => (
+            <li key={step.label} className="flex gap-4 py-3">
+              <span className="pt-0.5 text-xs tabular-nums text-muted">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs uppercase tracking-[0.12em] text-muted">{step.label}</span>
+                <span className="text-sm text-ink">{step.formula}</span>
+                {step.note ? <span className="text-xs text-muted">{step.note}</span> : null}
+              </div>
+            </li>
           ))}
-        </ul>
-        <p className="text-sm text-muted">
+        </ol>
+        <p className="text-xs text-muted">
           Al aplicar, cada lote conserva su tipo de cambio, su costo y su envío; solo cambian el
           factor de venta y el IVA.
         </p>

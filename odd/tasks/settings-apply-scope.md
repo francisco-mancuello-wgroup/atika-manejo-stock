@@ -37,9 +37,13 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 
 ## Progress
 
+- 2026-10-22: T3 — formula block redesigned as numbered steps (label, formula, rounding note) after user feedback ("más limpio y profesional"). RED: `vitest run src/components/settings-forms` 1 failed (no list named "Cómo se calcula el precio"); GREEN 6/6; tsc ok.
+
 - 2026-10-22: Document created.
 - 2026-10-22: T1 done. `saveAndApplySettings(db, raw, lotIds)` replaces `saveAppSettings` and `applySettingsToAllLots`; `applyToAllLotsAction` removed. The page/component still reference the old action until T2 (typecheck red between T1 and T2).
 - 2026-10-22: T2 done. `SettingsForm` (single form), `getLotsForSettings` query, page wired. Actions guard test unchanged (still enumerates the same modules; the removed action is simply gone).
+
+- [x] T3 — Cleaner formula block (numbered steps). See commit after 819d8a1.
 
 ## Verification evidence
 
