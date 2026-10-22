@@ -95,6 +95,16 @@ describe("InventarioView", () => {
     expect(screen.getByText("No hay productos que coincidan con el filtro.")).toBeInTheDocument();
   });
 
+  it("lets the whole row open the product while the lot link stays clickable", () => {
+    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    const productLink = screen.getByRole("link", { name: "Vestido Lino" });
+    // Stretched link: its ::after covers the row, which is the positioning context.
+    expect(productLink).toHaveClass("after:absolute", "after:inset-0");
+    expect(productLink.closest("tr")).toHaveClass("relative");
+    const lotLink = within(productLink.closest("tr") as HTMLElement).getAllByRole("link")[1];
+    expect(lotLink).toHaveClass("relative", "z-10");
+  });
+
   it("links each product to its edit page and offers a new product button", () => {
     render(<InventarioView products={products} lots={lots} filters={{}} />);
     expect(screen.getByRole("link", { name: "Vestido Lino" })).toHaveAttribute(

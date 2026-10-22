@@ -95,14 +95,18 @@ export function InventarioView({
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id} className={table.row}>
+                // The product link is stretched over the row, so clicking anywhere opens it.
+                <tr
+                  key={product.id}
+                  className={cn(table.row, "relative cursor-pointer hover:bg-subtle")}
+                >
                   <td className={table.td}>
                     <div className="flex items-center gap-3">
                       <ProductThumb src={product.imageUrl} name={product.name} />
                       <div className="flex flex-col">
                         <Link
                           href={`/inventario/${product.id}`}
-                          className="font-medium underline-offset-4 hover:underline"
+                          className="font-medium underline-offset-4 after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-ink"
                         >
                           {product.name}
                         </Link>
@@ -115,7 +119,7 @@ export function InventarioView({
                   <td className={table.td}>
                     <Link
                       href={`/compras/${product.lotId}`}
-                      className="underline-offset-4 hover:underline"
+                      className="relative z-10 underline-offset-4 hover:underline"
                     >
                       {product.lotName}
                     </Link>
