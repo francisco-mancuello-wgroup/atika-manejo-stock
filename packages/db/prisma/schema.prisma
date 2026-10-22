@@ -104,6 +104,8 @@ model ProductVariant {
   stock       Int
   sales       Sale[]
   allocations GroupAllocation[]
+  /// Opaque internal code (AT000123) printed as a Code 128 barcode. Comes from a Postgres sequence, so it is never reused or changed.
+  barcode     String            @unique @default(dbgenerated("('AT'::text || lpad((nextval('product_variant_barcode_seq'::regclass))::text, 6, '0'::text))"))
 
   @@unique([productId, size])
   @@map("product_variants")
