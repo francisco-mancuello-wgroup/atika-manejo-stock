@@ -32,6 +32,8 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 - [x] T2 — Parámetros applies only to `global` lots (save, preview, count copy) with tests.
 - [x] T3 — Compras: mode switch, custom params form + save/reprice action, back-to-global action, "Difiere del global" flags, with tests.
 
+- [x] T4 — Saving the lot shipping reprices the lot with its current parameters (user request after review: the old message pointed to Parámetros, misleading for Propio lots).
+
 ## Acceptance criteria
 
 - Saving Parámetros never changes a `custom` lot's params or prices.
@@ -58,9 +60,12 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 - T2 GREEN: same command + `src/components` -> 171 passed; `pnpm typecheck` ok.
 - T3 RED: `pnpm exec vitest run src/components/lot-pricing-panel.test.tsx src/components/lot-detail-view.test.tsx src/lib/lots/pricing-mode.test.ts src/lib/view-models.test.ts` (apps/erp) -> modules `./lot-pricing-panel` and `./pricing-mode` unresolved; view-model `pricingMode` undefined; lot detail missing `Guardar y recalcular` for a custom lot.
 - T3 GREEN: `pnpm --filter @atika/erp test` -> 82 files / 554 tests passed; typecheck and lint ok.
-- Decision: `saveLotShipping` keeps its behavior (no reprice) and message.
+- Decision (superseded by T4): `saveLotShipping` kept its behavior (no reprice) and message.
 - Parent spot check: `pnpm --filter @atika/erp test` -> 82 files / 554 passed. Native risk assess (base main, committed-only): medium; RDD off, so no review ran. Branch total ~1000 authored lines (over the ~400 budget); no PR planned, user decides delivery.
+
+- T4 RED: `pnpm exec vitest run src/lib/lots/save.test.ts` (apps/erp) -> 1 failed (message + price not repriced).
+- T4 GREEN: lots + shipping form tests 28 passed; `pnpm --filter @atika/erp test` 554 passed; typecheck 6/6; lint ok (2 known warnings).
 
 ## Next step
 
-Review and merge decision (user).
+Merge/push decision (user).

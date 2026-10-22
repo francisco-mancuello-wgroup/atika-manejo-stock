@@ -6,12 +6,13 @@ import {
   hasDatabase,
   withRollback,
 } from "../../test/db";
+import { computeLotPrices } from "./recalculate";
 import { saveLotShipping } from "./save";
 
 describe.skipIf(!hasDatabase)("saveLotShipping (database)", () => {
   afterAll(disconnectTestDb);
 
-  it("saves only the shipping and leaves pricing params and product prices untouched", async () => {
+  it("saves the shipping and reprices the lot with its own parameters", async () => {
     await withRollback(async (tx) => {
       const { lot } = await createFixtureLot(tx, [
         { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
@@ -20,7 +21,7 @@ describe.skipIf(!hasDatabase)("saveLotShipping (database)", () => {
       const state = await saveLotShipping(dbOver(tx), lot.id, { totalShippingUsd: "45.5" });
       expect(state).toEqual({
         status: "success",
-        message: "Envío guardado. Los precios se actualizan al aplicar desde Parámetros.",
+        message: "Envío guardado. Se recalculó 1 precio.",
       });
       const after = await tx.lot.findUniqueOrThrow({ where: { id: lot.id } });
       expect(after.totalShippingUsd.toNumber()).toBe(45.5);
@@ -29,7 +30,18 @@ describe.skipIf(!hasDatabase)("saveLotShipping (database)", () => {
       expect(after.vatRate).toEqual(before.vatRate);
       expect(after.costRate).toEqual(before.costRate);
       const product = await tx.product.findFirstOrThrow({ where: { lotId: lot.id } });
-      expect(product.priceGs).toBe(1000);
+      const [expected] = computeLotPrices(
+        {
+          exchangeRate: before.exchangeRate.toNumber(),
+          saleFactor: before.saleFactor.toNumber(),
+          vatRate: before.vatRate.toNumber(),
+          costRate: before.costRate.toNumber(),
+          totalShippingUsd: 45.5,
+        },
+        [{ id: product.id, originalValueUsd: 100, variants: [{ unitsBought: 3 }] }],
+      );
+      expect(product.priceGs).toBe(expected?.priceGs);
+      expect(product.priceGs).not.toBe(1000);
     });
   });
 

@@ -8,7 +8,7 @@ import { getDb } from "../../../../lib/db";
 import { saveLotParams, setLotPricingMode } from "../../../../lib/lots/pricing-mode";
 import { saveLotShipping } from "../../../../lib/lots/save";
 
-/** "Guardar envío": saves only the shipping, never reprices. Bound to the lot id by the page. */
+/** "Guardar envío": saves the shipping and reprices the lot with its current parameters. Bound to the lot id by the page. */
 export async function saveLotShippingAction(
   lotId: string,
   _previous: FormState,
