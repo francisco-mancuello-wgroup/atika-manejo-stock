@@ -22,6 +22,9 @@
   --color-on-accent-muted: rgb(239 236 236 / 0.75);
   --color-badge: #3f5147;
   --color-hover: rgb(37 37 37 / 0.04);
+  /* Evento Pink */
+  --color-pink: #f4d9e2;
+  --color-pink-deep: #c2185b;
 
   --font-sans: var(--font-quattrocento), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-trirong), ui-serif, Georgia, serif;

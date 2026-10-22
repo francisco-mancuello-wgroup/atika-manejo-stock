@@ -39,9 +39,10 @@ function GarmentOptions({
   onSize: (size: string | null) => void;
 }) {
   const colors = item.options.filter((option) => option.color);
+  // Baobab-style rows split by hairlines: name and price, color, size
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between gap-4">
+    <div className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-4 border-b border-border pb-3">
         <Heading
           className={
             Heading === "h2"
@@ -55,80 +56,81 @@ function GarmentOptions({
           <Price {...piece} />
         </p>
       </div>
-      {description && <p className="-mt-1 hidden text-sm text-fg-muted sm:block">{description}</p>}
+      {description && <p className="mt-3 hidden text-sm text-fg-muted sm:block">{description}</p>}
 
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        {colors.length > 1 ? (
-          <fieldset className="flex items-center gap-3">
-            <legend className="float-left mr-3 text-sm text-fg-muted">
-              <span className="sr-only">Color: </span>
-              {piece.color?.label}
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {colors.map((option) => (
-                <label
-                  key={option.id}
-                  title={option.color?.label}
-                  className={`relative inline-flex size-9 cursor-pointer items-center justify-center rounded-full border transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-foreground ${
-                    option.id === piece.id
-                      ? "border-foreground"
-                      : "border-transparent hover:border-border"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`color-${item.options[0]?.id}`}
-                    value={option.id}
-                    checked={option.id === piece.id}
-                    onChange={() => onColor(option)}
-                    className="sr-only"
-                  />
-                  <span className="sr-only">{option.color?.label}</span>
-                  <span
-                    aria-hidden="true"
-                    className="size-6 rounded-full border border-foreground/15"
-                    style={{ backgroundColor: option.color?.hex ?? undefined }}
-                  />
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        ) : (
-          piece.color && (
-            <p className="flex items-center gap-2 text-sm text-fg-muted">
-              {piece.color.hex && (
+      {colors.length > 1 ? (
+        <fieldset className="flex flex-col gap-1 border-b border-border py-3">
+          <legend className="float-left mb-1 text-sm">
+            <span className="text-fg-muted">Color: </span>
+            {piece.color?.label}
+          </legend>
+          <div className="clear-left flex flex-wrap gap-1">
+            {colors.map((option) => (
+              <label
+                key={option.id}
+                title={option.color?.label}
+                className="relative inline-flex h-11 w-12 cursor-pointer flex-col items-center justify-center gap-1.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-foreground"
+              >
+                <input
+                  type="radio"
+                  name={`color-${item.options[0]?.id}`}
+                  value={option.id}
+                  checked={option.id === piece.id}
+                  onChange={() => onColor(option)}
+                  className="sr-only"
+                />
+                <span className="sr-only">{option.color?.label}</span>
                 <span
                   aria-hidden="true"
-                  className="size-4 rounded-full border border-foreground/15"
-                  style={{ backgroundColor: piece.color.hex }}
+                  className="h-3.5 w-11 border border-foreground/15"
+                  style={{ backgroundColor: option.color?.hex ?? undefined }}
                 />
-              )}
-              <span className="sr-only">Color: </span>
-              {piece.color.label}
-            </p>
-          )
-        )}
-        <div className="flex items-center gap-3">
-          <span className="text-[11px] tracking-[2.4px] text-fg-muted uppercase">Talle</span>
-          <div className="flex flex-wrap gap-2">
-            {piece.sizes.map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={size === option}
-                aria-label={`Talle ${sizeLabel(option)} de ${item.name}`}
-                // Tapping the chosen size again leaves the garment out of the order
-                onClick={() => onSize(size === option ? null : option)}
-                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-[3px] border px-3 text-sm transition-colors ${
-                  size === option
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-background text-foreground hover:border-foreground"
-                }`}
-              >
-                {sizeLabel(option)}
-              </button>
+                <span
+                  aria-hidden="true"
+                  className={`h-[2px] w-11 ${option.id === piece.id ? "bg-foreground" : "bg-transparent"}`}
+                />
+              </label>
             ))}
           </div>
+        </fieldset>
+      ) : (
+        piece.color && (
+          <div className="flex flex-col gap-2 border-b border-border py-3">
+            <p className="text-sm">
+              <span className="text-fg-muted">Color: </span>
+              {piece.color.label}
+            </p>
+            {piece.color.hex && (
+              <span
+                aria-hidden="true"
+                className="h-3.5 w-11 border border-foreground/15"
+                style={{ backgroundColor: piece.color.hex }}
+              />
+            )}
+          </div>
+        )
+      )}
+
+      <div className="flex flex-col gap-1 border-b border-border py-3">
+        <span className="text-sm text-fg-muted">Talle</span>
+        <div className="flex flex-wrap gap-1">
+          {piece.sizes.map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={size === option}
+              aria-label={`Talle ${sizeLabel(option)} de ${item.name}`}
+              // Tapping the chosen size again leaves the garment out of the order
+              onClick={() => onSize(size === option ? null : option)}
+              className={`inline-flex min-h-11 min-w-11 items-center justify-center px-2 text-[15px] transition-colors ${
+                size === option
+                  ? "font-bold underline decoration-2 underline-offset-[6px]"
+                  : "text-foreground/70 hover:text-foreground"
+              }`}
+            >
+              {sizeLabel(option)}
+            </button>
+          ))}
         </div>
       </div>
     </div>

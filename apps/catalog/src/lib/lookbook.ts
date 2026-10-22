@@ -25,6 +25,9 @@ export type CatalogValue = (typeof CATALOGS)[number]["value"];
 /** `/catalogos/todos` chains the three catalogs. */
 export const ALL_CATALOGS = "todos";
 
+/** `/catalogos/pink`: the pieces of the Evento Pink, from every catalog. */
+export const PINK_EVENT = "pink";
+
 export function findCatalog(slug: string) {
   return CATALOGS.find((catalog) => catalog.slug === slug) ?? null;
 }
@@ -159,4 +162,14 @@ export function lookbookPages(
 /** Anchor of a page, unique when catalogs are chained (`milonga-pagina-3`). */
 export function pageAnchor(slug: string, page: number): string {
   return `${slug}-pagina-${page}`;
+}
+
+/** Colors that enter the Evento Pink selection. */
+const PINK_COLORS = new Set(["Fucsia", "Rosa"]);
+
+/** The pages with a fuchsia or pink piece, numbered again from 1 for the Evento Pink. */
+export function pinkPages(pages: readonly LookbookPage[]): LookbookPage[] {
+  return pages
+    .filter((page) => page.pieces.some((piece) => PINK_COLORS.has(piece.color?.label ?? "")))
+    .map((page, index) => ({ ...page, page: index + 1 }));
 }
