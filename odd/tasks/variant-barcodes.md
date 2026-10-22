@@ -65,6 +65,9 @@ The owner wants to label garments with their own barcodes (no supplier EAN reuse
 
 - T3 RED: `pnpm exec vitest run src/lib/queries/queries.db.test.ts` (apps/erp): 1 failed (expected product, got []). GREEN: full ERP suite 105 files / 754 tests passed. Commit 1639197.
 
+- Risk assessment (`gentle-ai review assess`, base 778e8fc, committed only): high; RDD off, so an independent read-only verifier ran: no confirmed defects. Migration applied to a throwaway Postgres 16 with 50 legacy variants: backfill AT000001–AT000050, next insert AT000051, no drift. Note: backfill order between environments is not strictly guaranteed (codes unique; not a requirement).
+- Pending: no physical scan of a printed label yet; route handler and `getProductLabelData` have no direct test.
+
 ## Next step
 
-Final verification done; ready for the user to review/merge.
+User: print a test label and scan it; then merge/push decision.
