@@ -101,7 +101,7 @@ export function BanksView({ banks, actions }: { banks: BankSummary[]; actions: B
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="font-display text-2xl text-ink">Bancos</h2>
+          <h2 className="font-display text-2xl text-ink">Bancos y tarjetas</h2>
           <p className="text-sm text-muted">
             Los bancos y tarjetas que aparecen en las promociones, con su logo.
           </p>

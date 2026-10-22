@@ -92,7 +92,9 @@ function daysLabel(days: readonly number[]): string {
 }
 
 /** "Hasta 12 cuotas sin intereses", "20 % de reintegro · Jueves · Tope ₲ 200.000". */
-export function promoHeadline(promo: BankPromoRule): string {
+export function promoHeadline(
+  promo: Pick<BankPromoRule, "kind" | "value" | "days" | "capGs">,
+): string {
   const benefit =
     promo.kind === "installments"
       ? `Hasta ${promo.value} cuotas sin intereses`

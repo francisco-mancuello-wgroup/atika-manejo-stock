@@ -15,11 +15,13 @@ export function ProductPicker({
   selectedIds,
   onChange,
   error,
+  legend = "Productos del descuento",
 }: {
   products: PickerProduct[];
   selectedIds: readonly string[];
   onChange: (ids: string[]) => void;
   error?: string;
+  legend?: string;
 }) {
   const [filters, setFilters] = useState({ query: "", lotId: "", category: "" });
   const filtered = useMemo(() => filterPickerProducts(products, filters), [products, filters]);
@@ -49,7 +51,7 @@ export function ProductPicker({
 
   return (
     <fieldset className="flex flex-col gap-4 border border-line bg-surface p-5">
-      <legend className="px-2 text-xs font-medium text-ink">Productos del descuento</legend>
+      <legend className="px-2 text-xs font-medium text-ink">{legend}</legend>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Field label="Buscar producto" htmlFor="picker-query">
           <Input

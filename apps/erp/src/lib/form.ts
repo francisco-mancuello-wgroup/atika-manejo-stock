@@ -33,3 +33,23 @@ export function percentField(label: string) {
     .pipe(z.number().min(0, { error: `${label} no puede ser negativo.` }))
     .pipe(z.number().max(100, { error: `${label} no puede superar 100.` }));
 }
+
+/** A checkbox arrives as "on" (or "true") when ticked and is absent otherwise. */
+export const checkbox = z.preprocess((value) => value === "on" || value === "true", z.boolean());
+
+function isRealDate(value: string): boolean {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+/** `yyyy-mm-dd`; blank or missing means "no limit" (null). */
+export function optionalDate(message: string) {
+  return z.preprocess(
+    (value) => (typeof value === "string" && value.trim() !== "" ? value.trim() : null),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { error: message })
+      .refine(isRealDate, { error: message })
+      .nullable(),
+  );
+}
