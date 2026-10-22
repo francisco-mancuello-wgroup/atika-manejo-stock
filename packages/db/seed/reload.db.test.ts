@@ -193,7 +193,7 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
         catalogName: "Cubagua",
       });
       expect(first?.priceGs).toBeGreaterThan(0);
-      expect((first?.priceGs ?? 1) % 1000).toBe(0);
+      expect(Number.isInteger(first?.priceGs)).toBe(true);
       const preserved = await readPreserved(tx);
       expect(preserved.get(productKeys(lot.lotName, lot.products)[0] ?? "")?.lookbook).toEqual(
         lookbook,

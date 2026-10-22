@@ -25,7 +25,8 @@ export interface PricedModel {
   priceGs: number;
 }
 
-const GS_ROUNDING_STEP = 1000;
+// Whole guaraníes (no cents), matching the price workbooks; no commercial rounding.
+const GS_ROUNDING_STEP = 1;
 
 function assertNonNegative(name: string, value: number): void {
   if (!Number.isFinite(value) || value < 0) {

@@ -26,7 +26,7 @@ export function asuncionDay(now: Date): string {
   }).format(now);
 }
 
-/** Price after taking `percent` off, rounded to the nearest 1.000 Gs like every other price. */
+/** Price after taking `percent` off, rounded to the nearest whole guaraní like every other price. */
 export function applyDiscount(priceGs: number, percent: number): number {
   if (!Number.isFinite(priceGs) || priceGs < 0) {
     throw new RangeError(`priceGs must be a non-negative number, got ${priceGs}`);

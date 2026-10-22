@@ -17,7 +17,7 @@ describe("priceFields", () => {
       discountPercent: 20,
       discountedPriceGs: 360_000,
     });
-    expect(priceFields(259_000, 20, true).discountedPriceGs).toBe(207_000);
+    expect(priceFields(259_000, 20, true).discountedPriceGs).toBe(207_200);
   });
 
   it("hides every price field when the store hides prices", () => {
