@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { LotDetailView } from "../../../../components/lot-detail-view";
 import { getLotDetail } from "../../../../lib/queries/lots";
-import { saveLotParams } from "./actions";
+import { saveLotShippingAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,5 +11,5 @@ export default async function LotPage({ params }: { params: Promise<{ lotId: str
   const { lotId } = await params;
   const lot = UUID.test(lotId) ? await getLotDetail(lotId) : null;
   if (!lot) notFound();
-  return <LotDetailView lot={lot} action={saveLotParams.bind(null, lot.id)} />;
+  return <LotDetailView lot={lot} action={saveLotShippingAction.bind(null, lot.id)} />;
 }

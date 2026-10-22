@@ -4,13 +4,21 @@ import { formatDate, formatGs, formatInteger, formatUsd } from "../lib/format";
 import type { LotDetail } from "../lib/view-models";
 import { KpiCard } from "./kpi-card";
 import { LotGrid } from "./lot-grid";
-import { LotParamsForm } from "./lot-params-form";
+import { LotShippingForm } from "./lot-shipping-form";
 import { PageHeader } from "./page-header";
+
+const NUMBER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 4 });
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
 export function LotDetailView({ lot, action }: { lot: LotDetail; action: Action }) {
-  const { summary } = lot;
+  const { summary, params } = lot;
+  const pricing = [
+    ["Tipo de cambio (₲ / US$)", NUMBER.format(params.exchangeRate)],
+    ["Factor de venta", NUMBER.format(params.saleFactor)],
+    ["IVA (%)", NUMBER.format(params.vatPercent)],
+    ["Costo sobre valor original (%)", NUMBER.format(params.costPercent)],
+  ] as const;
   return (
     <div className="flex flex-col gap-6">
       <Link href="/compras" className="text-sm text-muted underline-offset-4 hover:underline">
@@ -47,7 +55,28 @@ export function LotDetailView({ lot, action }: { lot: LotDetail; action: Action 
             <LotGrid sizes={lot.sizes} rows={lot.rows} />
           )}
         </section>
-        <LotParamsForm params={lot.params} action={action} />
+        <div className="flex flex-col gap-6">
+          <section
+            aria-labelledby="lot-pricing-title"
+            className="flex flex-col gap-4 border border-line bg-surface p-5"
+          >
+            <h2 id="lot-pricing-title" className="font-display text-2xl text-ink">
+              Precios del lote
+            </h2>
+            <dl className="flex flex-col gap-2 text-sm">
+              {pricing.map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4">
+                  <dt className="text-muted">{label}</dt>
+                  <dd className="text-ink">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <Link href="/parametros" className="text-sm text-ink underline underline-offset-4">
+              Editar en Parámetros
+            </Link>
+          </section>
+          <LotShippingForm totalShippingUsd={lot.params.totalShippingUsd} action={action} />
+        </div>
       </div>
     </div>
   );

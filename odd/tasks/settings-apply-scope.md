@@ -39,6 +39,8 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 
 ## Progress
 
+- 2026-10-22: T6 — Compras lot detail: pricing form and `saveLotParameters`/`parseLotParams` removed; read-only pricing block with link to /parametros; `LotShippingForm` + `saveLotShipping` + `saveLotShippingAction` save only `totalShippingUsd` (no repricing). T5 commit: b843a2f. Tests were written together with the code (no separate RED observed for T6); GREEN: erp suite, typecheck, lint (only pre-existing warnings).
+
 - 2026-10-22: T5 — `saveAndApplySettings` passes saved TC, factor, IVA and % costo to `recalculateLot`; only shipping comes from the lot. Copy updated (page description, formula note). RED: save.test 2 failed (+ new copy test); GREEN: settings, settings-forms, app 44/44.
 
 - 2026-10-22: T4 — singular/plural copy ("Se recalcula 1 lote · 12 productos", "Se actualizó 1 lote y se recalcularon 12 precios.", "1 producto" in the checklist) via `countOf` in lib/format. RED: 4 failed (format, save, settings-forms x2); GREEN: erp 372/372, lint ok (pre-existing warning), tsc ok.
@@ -54,7 +56,7 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 - [x] T4 — Singular/plural copy in summary, checklist and success message.
 
 - [x] T5 (commit: `feat(erp): apply every pricing parameter from Parámetros`) — Apply scope writes all four pricing params (TC, factor, IVA, % costo) to targeted lots; each lot keeps only its shipping. Update copy (page description, formula note, summary/success texts if needed).
-- [ ] T6 — Compras lot detail: remove the pricing form ("Parámetros del lote" / "Guardar y recalcular"). Show the lot's pricing values read-only with a link to Parámetros, plus one editable "Envío total (US$)" that saves only the lot's shipping (no repricing) and says prices update when applied from Parámetros.
+- [x] T6 (commit: `feat(erp): compras edits lot shipping only`) — Compras lot detail: remove the pricing form ("Parámetros del lote" / "Guardar y recalcular"). Show the lot's pricing values read-only with a link to Parámetros, plus one editable "Envío total (US$)" that saves only the lot's shipping (no repricing) and says prices update when applied from Parámetros.
 
 ## Verification evidence
 

@@ -1,68 +1,33 @@
-import { lotParamsSchema, parseLotParams } from "./schema";
+import { lotShippingSchema, parseLotShipping } from "./schema";
 
-const valid = {
-  exchangeRate: "7400",
-  saleFactor: "2.5",
-  vatPercent: "10",
-  costPercent: "55",
-  totalShippingUsd: "320.5",
-};
-
-describe("parseLotParams", () => {
-  it("converts percentages to stored fractions", () => {
-    const result = parseLotParams(valid);
-    expect(result).toEqual({
+describe("parseLotShipping", () => {
+  it("keeps only the shipping, rounded to two decimals", () => {
+    expect(parseLotShipping({ totalShippingUsd: "320.456" })).toEqual({
       success: true,
-      data: {
-        exchangeRate: 7400,
-        saleFactor: 2.5,
-        vatRate: 0.1,
-        costRate: 0.55,
-        totalShippingUsd: 320.5,
-      },
+      data: { totalShippingUsd: 320.46 },
     });
   });
 
-  it("keeps four decimals of a fraction and accepts a decimal comma", () => {
-    const result = parseLotParams({ ...valid, vatPercent: "7,5", costPercent: "33.333" });
-    expect(result.success && result.data.vatRate).toBe(0.075);
-    expect(result.success && result.data.costRate).toBe(0.3333);
+  it("ignores any pricing field a stale form might still send", () => {
+    const result = parseLotShipping({ totalShippingUsd: "10", saleFactor: "9", exchangeRate: "1" });
+    expect(result).toEqual({ success: true, data: { totalShippingUsd: 10 } });
   });
 
-  it("accepts a zero shipping cost and the 0 and 100 percent limits", () => {
-    const result = parseLotParams({
-      ...valid,
-      totalShippingUsd: "0",
-      vatPercent: "0",
-      costPercent: "100",
+  it("accepts a decimal comma and zero", () => {
+    expect(parseLotShipping({ totalShippingUsd: "12,5" })).toMatchObject({
+      success: true,
+      data: { totalShippingUsd: 12.5 },
     });
-    expect(result.success && result.data).toMatchObject({
-      totalShippingUsd: 0,
-      vatRate: 0,
-      costRate: 1,
-    });
+    expect(parseLotShipping({ totalShippingUsd: "0" })).toMatchObject({ success: true });
   });
 
-  it.each([
-    ["exchangeRate", "0"],
-    ["exchangeRate", "-7000"],
-    ["exchangeRate", ""],
-    ["exchangeRate", "abc"],
-    ["saleFactor", "0"],
-    ["vatPercent", "-1"],
-    ["vatPercent", "100.5"],
-    ["costPercent", "101"],
-    ["totalShippingUsd", "-5"],
-  ])("rejects %s = %j with a field error", (field, value) => {
-    const result = parseLotParams({ ...valid, [field]: value });
+  it.each(["-5", "", "abc"])("rejects %j with a field error", (value) => {
+    const result = parseLotShipping({ totalShippingUsd: value });
     expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(Object.keys(result.fieldErrors)).toContain(field);
-      expect(result.fieldErrors[field]).toBeTruthy();
-    }
+    if (!result.success) expect(result.fieldErrors.totalShippingUsd).toBeTruthy();
   });
 
   it("exposes the schema for reuse", () => {
-    expect(lotParamsSchema.safeParse(valid).success).toBe(true);
+    expect(lotShippingSchema.safeParse({ totalShippingUsd: "1" }).success).toBe(true);
   });
 });
