@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { FormState } from "../../../../lib/action-state";
 import { requireSession } from "../../../../lib/auth/session";
+import { notifyCatalogChanged } from "../../../../lib/catalog-live";
 import { getDb } from "../../../../lib/db";
 import {
   approveOrder,
@@ -33,6 +34,7 @@ export async function approveOrderAction(orderId: string): Promise<FormState> {
       revalidatePath("/inventario");
       revalidatePath("/compras");
       for (const lotId of result.lotIds) revalidatePath(`/compras/${lotId}`);
+      notifyCatalogChanged();
     }
     return approveState(result);
   } catch (error) {

@@ -26,6 +26,7 @@ import {
 } from "../../../lib/catalog-groups/groups";
 import type { Proposal } from "../../../lib/catalog-groups/stock";
 import { groupHref } from "../../../lib/catalog-groups/workspace";
+import { notifyCatalogChanged } from "../../../lib/catalog-live";
 import { getDb } from "../../../lib/db";
 import { type GroupCandidate, getGroupCandidates } from "../../../lib/queries/catalog-groups";
 
@@ -36,6 +37,7 @@ const FAILED = {
 
 function revalidateCatalogAdmin() {
   revalidatePath("/catalogo-web");
+  notifyCatalogChanged();
 }
 
 /** Group changes move the free stock, so the inventory and the sales form refresh too. */
@@ -44,6 +46,7 @@ function revalidateGroups(groupId?: string) {
   if (groupId) revalidatePath(groupHref(groupId));
   revalidatePath("/inventario");
   revalidatePath("/ventas");
+  notifyCatalogChanged();
 }
 
 export async function setVisibilityAction(

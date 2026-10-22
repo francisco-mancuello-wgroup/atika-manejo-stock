@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { type FormState, formValues } from "../../../lib/action-state";
 import { requireSession } from "../../../lib/auth/session";
+import { notifyCatalogChanged } from "../../../lib/catalog-live";
 import { getDb } from "../../../lib/db";
 import { saveAndApplySettings } from "../../../lib/settings/save";
 
 /** The exchange rate shows in the sidebar of every page, so the whole layout is revalidated. */
 function revalidateEverything() {
   revalidatePath("/", "layout");
+  notifyCatalogChanged();
 }
 
 export async function saveSettingsAction(

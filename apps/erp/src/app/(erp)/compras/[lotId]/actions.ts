@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { FormState } from "../../../../lib/action-state";
 import { formValues } from "../../../../lib/action-state";
 import { requireSession } from "../../../../lib/auth/session";
+import { notifyCatalogChanged } from "../../../../lib/catalog-live";
 import { getDb } from "../../../../lib/db";
 import { saveLotParams, setLotPricingMode } from "../../../../lib/lots/pricing-mode";
 import { saveLotShipping } from "../../../../lib/lots/save";
@@ -22,6 +23,7 @@ export async function saveLotShippingAction(
       revalidatePath("/");
       revalidatePath("/compras");
       revalidatePath(`/compras/${lotId}`);
+      notifyCatalogChanged();
     }
     return state;
   } catch (error) {
@@ -40,6 +42,7 @@ function revalidateLot(lotId: string) {
   revalidatePath(`/compras/${lotId}`);
   revalidatePath("/productos");
   revalidatePath("/parametros");
+  notifyCatalogChanged();
 }
 
 /** "Guardar y recalcular": saves the lot's own pricing values and reprices it. Bound to the lot id. */

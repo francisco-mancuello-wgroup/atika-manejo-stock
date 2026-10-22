@@ -13,6 +13,7 @@ import { workspaceHref } from "../../../../lib/bank-promos/workspace";
 import { readLogoFields } from "../../../../lib/banks/form-data";
 import { deleteBank, saveBank } from "../../../../lib/banks/save";
 import { bankLogoStorage } from "../../../../lib/banks/storage";
+import { notifyCatalogChanged } from "../../../../lib/catalog-live";
 import { getDb } from "../../../../lib/db";
 
 const FAILED = {
@@ -23,6 +24,7 @@ const FAILED = {
 /** Banks and promos show on this section; the catalog reads them from the database per request. */
 function revalidateBanks() {
   revalidatePath("/promos/bancos");
+  notifyCatalogChanged();
 }
 
 function listsOf(formData: FormData) {
