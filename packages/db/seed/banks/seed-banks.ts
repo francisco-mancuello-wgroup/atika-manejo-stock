@@ -8,6 +8,13 @@ import { BANK_APP_MEDIA_DIRS, BANK_LOGOS_DIR } from "./paths";
 /** Public URL prefix of the copied logos (the ERP's own uploads live under /media/banks/uploads). */
 export const BANK_MEDIA_URL_PREFIX = "/media/banks/seed";
 const UPLOADS_PREFIX = "/media/banks/uploads/";
+/** Logos the ERP uploaded to Vercel Blob (production) live under `banks/uploads/`. */
+const BLOB_UPLOAD = /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\/banks\/uploads\//i;
+
+/** A logo the owner uploaded from the ERP (local disk or Vercel Blob), which the seed never replaces. */
+export function isUploadedLogoUrl(url: string | null): boolean {
+  return url !== null && (url.startsWith(UPLOADS_PREFIX) || BLOB_UPLOAD.test(url));
+}
 
 export interface BankLogoEntry {
   name: string;
@@ -92,7 +99,7 @@ export async function upsertBanks(
     if (!existing) {
       await tx.bank.create({ data: { name: entry.name, logoUrl } });
       result.created++;
-    } else if (existing.logoUrl?.startsWith(UPLOADS_PREFIX)) {
+    } else if (isUploadedLogoUrl(existing.logoUrl)) {
       result.keptUpload++;
     } else if (logoUrl === null || existing.logoUrl === logoUrl) {
       result.unchanged++;

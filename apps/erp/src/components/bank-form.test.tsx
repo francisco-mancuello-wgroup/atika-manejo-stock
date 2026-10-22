@@ -66,6 +66,17 @@ describe("BankForm", () => {
     expect(screen.getByRole("img", { name: "Logo nuevo" })).toHaveAttribute("src", "blob:preview");
   });
 
+  it("blocks saving a logo too heavy to upload", async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => "blob:preview"), revokeObjectURL: vi.fn() });
+    renderForm(conti);
+    const heavy = new File([new Uint8Array(5 * 1024 * 1024)], "logo.png", { type: "image/png" });
+    fireEvent.change(screen.getByLabelText("Logo"), { target: { files: [heavy] } });
+    expect(
+      await screen.findByText("El logo pesa demasiado: probá con uno más liviano."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+  });
+
   it("saves bound to the bank id (null when creating)", async () => {
     const a = actions();
     const { unmount } = renderForm(null, a);

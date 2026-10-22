@@ -2,8 +2,9 @@
 
 import { Button, Input } from "@atika/ui";
 import Image from "next/image";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
+import { shrinkInputPhotos, tooBigToUpload } from "../lib/products/shrink-photos";
 import type { BankSummary } from "../lib/queries/banks";
 import { BankLogo } from "./bank-logo";
 import { ConfirmDeleteButton } from "./confirm-delete-button";
@@ -31,6 +32,10 @@ export function BankForm({
   const [name, setName] = useState(bank?.name ?? "");
   const [removeLogo, setRemoveLogo] = useState(false);
   const [chosen, setChosen] = useState<string | null>(null);
+  // The logo is shrunk in the browser before upload (Vercel caps requests at 4.5 MB)
+  const [preparing, setPreparing] = useState(false);
+  const [logoError, setLogoError] = useState<string | undefined>();
+  const pick = useRef(0);
 
   // The object URL of the chosen file is released when it is replaced or the pane closes.
   useEffect(() => {
@@ -61,7 +66,7 @@ export function BankForm({
               variant="outlined"
             />
           ) : null}
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending || preparing || logoError !== undefined}>
             {pending ? "Guardando…" : "Guardar"}
           </Button>
         </div>
@@ -83,7 +88,7 @@ export function BankForm({
       <Field
         label="Logo"
         htmlFor="bank-logo"
-        error={errors.logo}
+        error={logoError ?? errors.logo}
         hint="Opcional. JPG, PNG o WebP; si no hay logo se muestra el nombre."
       >
         <input
@@ -92,11 +97,22 @@ export function BankForm({
           type="file"
           accept="image/jpeg,image/png,image/webp"
           className="text-sm"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
+          onChange={async (event) => {
+            const input = event.target;
+            const file = input.files?.[0];
             setChosen(
               file && typeof URL.createObjectURL === "function" ? URL.createObjectURL(file) : null,
             );
+            const current = ++pick.current;
+            setPreparing(true);
+            const files = await shrinkInputPhotos(input, () => current === pick.current);
+            if (current !== pick.current) return;
+            setLogoError(
+              tooBigToUpload(files.map((logo) => logo.size))
+                ? "El logo pesa demasiado: probá con uno más liviano."
+                : undefined,
+            );
+            setPreparing(false);
           }}
         />
       </Field>
