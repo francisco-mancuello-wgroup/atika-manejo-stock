@@ -27,7 +27,7 @@ User screenshot 2026-10-22 08:25: rounded pill with two segments "Gs" and "US$";
 ## Tasks
 
 - [x] T1 (1c89874) — Currency model: cookie read/write (server action or route), `formatMoney(amountGs, currency, rate)` helper in lib/format, tests.
-- [x] T2 — Toggle UI (pill like the reference) in the ERP layout + wire every display view to the selected currency; tests.
+- [x] T2 (6d4eb56) — Toggle UI (pill like the reference) in the ERP layout + wire every display view to the selected currency; tests.
 
 ## Progress
 
