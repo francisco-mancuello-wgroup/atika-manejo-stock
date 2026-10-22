@@ -49,6 +49,8 @@ Let the owner publish bank card promotions (installments, refunds, discounts) fr
 - [x] T3 — ERP promos list + form (scope all/lots/products) with tests.
 - [x] T4 — Catalog block on the product sheet + bases y condiciones page with tests.
 
+- [ ] T5 — ERP master-detail layout (Pencil board "E · Promos bancarias · Opciones", option C, user choice 2026-10-22): `/promos/bancos` becomes a two-pane screen. Left pane (≈400px, full height): title "Bancos", button "Nueva", search "Buscar por banco o beneficio", segmented control "Promociones | Bancos", compact list items (headline + status pill; second line banks + days), selected item highlighted. Right pane: edit the selected promo inline (eyebrow "EDITAR PROMOCIÓN", title = headline, actions "Eliminar" / "Guardar"): kind as segmented buttons (Cuotas / Reintegro / Descuento), value + cap side by side, banks picked by clicking logo chips, days as L M X J V S D toggle buttons, scope segmented (Todos los productos / Lotes / Productos) with lot checklist or product picker, window desde/hasta, terms, active switch. Beside the form a live preview "ASÍ LO VE EL CLIENTE" rendering the catalog block for the values being typed + a one-line note of where/when it applies. "Nueva" opens the same right pane empty. Bancos segment shows banks list on the left and the bank form (name + logo) on the right. Selection in the URL (`?promo=<id>` / `?banco=<id>` / `?nueva=1`) so it survives reloads; existing `/promos/bancos/[id]` and `/nueva` routes redirect into it.
+
 ## Progress
 
 - 2026-10-22: Document created.
