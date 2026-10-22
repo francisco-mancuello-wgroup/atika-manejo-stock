@@ -47,6 +47,7 @@ export function GroupDataCard({
               id="group-starts"
               name="startsAt"
               type="date"
+              className="px-2"
               defaultValue={values?.startsAt ?? detail?.startsAt ?? ""}
             />
           </Field>
@@ -55,6 +56,7 @@ export function GroupDataCard({
               id="group-ends"
               name="endsAt"
               type="date"
+              className="px-2"
               defaultValue={values?.endsAt ?? detail?.endsAt ?? ""}
             />
           </Field>
@@ -115,14 +117,16 @@ export function GroupDangerCard({
           <p className="text-xs text-muted">Despublicá el grupo para poder eliminarlo.</p>
         </div>
       ) : (
-        <ConfirmDeleteButton
-          id={detail.id}
-          name={detail.name}
-          noun="el grupo"
-          action={action}
-          redirectTo={GROUPS_LIST_HREF}
-          variant="outlined"
-        />
+        <div className="[&>div]:items-start">
+          <ConfirmDeleteButton
+            id={detail.id}
+            name={detail.name}
+            noun="el grupo"
+            action={action}
+            redirectTo={GROUPS_LIST_HREF}
+            variant="outlined"
+          />
+        </div>
       )}
     </Card>
   );
