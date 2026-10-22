@@ -19,6 +19,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
   - Deactivating a group stops counting its remainder (it returns to inventory with no writes to `stock`).
 - Assigned quantity can be raised up to free inventory + its current remainder; it can't go below what was already sold.
 - A variant can be in only one active group at a time (activation is refused otherwise).
+- Web stock per size (T4): a size with an active allocation shows its remainder; any other size shows its free inventory (stock minus active remainders, i.e. all its stock) only if the product is `isPublished`, otherwise 0. A product is visible if published, or if some size keeps remainder > 0 in an active group (even with `hideOutOfStock` off); `hideOutOfStock` and the size filter are judged on web stock.
 
 ## Scope
 
@@ -49,7 +50,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - [x] T1 — DB: `PublicationGroup` + `GroupAllocation` models, migration, schema test.
 - [x] T2 — ERP domain: stock math + group save/allocations/bulk add/activate-deactivate with validations, tests.
 - [x] T3 — Sales consume the active group remainder first (`registerSale`), tests.
-- [ ] T4 — Public catalog: visibility and size stock from groups, tests.
+- [x] T4 — Public catalog: visibility and size stock from groups, tests.
 - [ ] T5 — ERP UI: Grupos tab (table, switch, editor panel with per-size quantities, vigencia, bulk add, preview) + actions, tests.
 
 ## Acceptance criteria
@@ -70,6 +71,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - 2026-10-22: T1 done (commit 4e970bb). `GroupAllocation.variantId` is Restrict (like `Sale`): a variant in a group can't be deleted and silently drop its sold history; deleting a group cascades to its allocations.
 - 2026-10-22: T2 done (commit 9a8b9bc). `apps/erp/src/lib/catalog-groups/`: `stock.ts` (pure math, `activeGroupWhere`), `schema.ts`, `groups.ts` (create/update, `setGroupAllocations`, `addProductsToGroup`, activate/deactivate/delete). "Active" for stock math = switch on and `now` inside the window (ends inclusive); the one-active-group-per-variant check uses the switch only (stricter, so overlapping future windows can't collide). The "up to free stock" limit is enforced while the group is switched on and re-checked at activation.
 - 2026-10-22: T3 done (commit d4b8a24). `registerSale` uses its `now` (registration instant, not the date-only `soldAt`) to decide whether the group is active; consumed = min(quantity, remainder computed with the stock before the sale).
+- 2026-10-22: T4 done (commit COMMIT). Pure math in `apps/catalog/src/lib/web-stock.ts` (small duplicate of the ERP remainder math, no shared package: apps can't import each other and it is a few lines). The DB `where` only narrows (published OR some active allocation, physical stock > 0); remainder > 0 and web-stock filters apply in memory in `withWebStock`. `countProductsByCategory` now counts in memory over the same rows as `listProducts` so counts and lists agree.
 
 ## Verification evidence
 
@@ -80,7 +82,9 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - T3 RED: `pnpm exec vitest run src/lib/sales/register.test.ts` -> 3 failed (group `sold` not incremented), 17 passed.
 - T3 GREEN: `pnpm exec vitest run src/lib/sales` -> 34 passed.
 - Final (T1-T3): `pnpm --filter @atika/db test` 208 passed; `pnpm --filter @atika/erp test` 89 files / 624 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings).
+- T4 RED: `pnpm exec vitest run src/lib/web-stock.test.ts` (apps/catalog) -> suite failed (module `./web-stock` missing); `pnpm exec vitest run src/lib/queries.db.test.ts` -> 4 failed, 27 passed (groups not read).
+- T4 GREEN: `pnpm --filter @atika/catalog test` -> 32 files / 258 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings).
 
 ## Next step
 
-T4.
+T5.

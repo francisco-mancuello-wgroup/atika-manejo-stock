@@ -638,3 +638,180 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
     });
   });
 });
+
+describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
+  afterAll(disconnectTestDb);
+
+  const now = new Date("2030-06-15T12:00:00.000Z");
+  const day = 86_400_000;
+
+  /** Puts `[size, allocated, sold]` of a product into a new group. */
+  async function group(
+    tx: Parameters<Parameters<typeof withRollback>[0]>[0],
+    productId: string,
+    allocations: [string, number, number?][],
+    data: { isActive?: boolean; startsAt?: Date; endsAt?: Date } = {},
+  ) {
+    const variants = await tx.productVariant.findMany({ where: { productId } });
+    await tx.publicationGroup.create({
+      data: {
+        name: "Test group",
+        isActive: data.isActive ?? true,
+        startsAt: data.startsAt ?? null,
+        endsAt: data.endsAt ?? null,
+        allocations: {
+          create: allocations.map(([size, allocated, sold]) => ({
+            variantId: variants.find((variant) => variant.size === size)?.id ?? "",
+            allocated,
+            sold: sold ?? 0,
+          })),
+        },
+      },
+    });
+  }
+
+  const sizesOf = async (products: { sizes: { size: string }[] }[]) =>
+    products.map((product) => product.sizes.map((size) => size.size));
+
+  it("shows an unpublished product of an active group with only its grouped sizes", async () => {
+    await withRollback(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id] = await createProducts(tx, [
+        {
+          name: "Grouped",
+          isPublished: false,
+          variants: [
+            ["S", 5],
+            ["M", 5],
+          ],
+        },
+      ]);
+      await group(tx, id ?? "", [["S", 3]]);
+      const products = await listProducts(tx, open, null, noFilters, now);
+      expect(products.map((p) => p.name)).toEqual(["Grouped"]);
+      expect(await sizesOf(products)).toEqual([["S"]]);
+      expect((await getProduct(tx, open, id ?? "", now))?.name).toBe("Grouped");
+      expect((await getProductDetail(tx, open, id ?? "", now))?.name).toBe("Grouped");
+      expect((await countProductsByCategory(tx, open, noFilters, now)).novedades).toBe(1);
+    });
+  });
+
+  it("hides the product of an inactive, scheduled or expired group", async () => {
+    await withRollback(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const ids = await createProducts(tx, [
+        { name: "Off", isPublished: false, variants: [["M", 5]] },
+        { name: "Soon", isPublished: false, variants: [["M", 5]] },
+        { name: "Over", isPublished: false, variants: [["M", 5]] },
+      ]);
+      await group(tx, ids[0] ?? "", [["M", 3]], { isActive: false });
+      await group(tx, ids[1] ?? "", [["M", 3]], { startsAt: new Date(now.getTime() + day) });
+      await group(tx, ids[2] ?? "", [["M", 3]], { endsAt: new Date(now.getTime() - day) });
+      expect(await listProducts(tx, open, null, noFilters, now)).toEqual([]);
+      expect(await getProduct(tx, open, ids[0] ?? "", now)).toBeNull();
+      expect((await countProductsByCategory(tx, open, noFilters, now)).novedades).toBe(0);
+    });
+  });
+
+  it("hides an unpublished product once its group is sold out, even without hideOutOfStock", async () => {
+    await withRollback(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id] = await createProducts(tx, [
+        { name: "Gone", isPublished: false, variants: [["M", 5]] },
+      ]);
+      await group(tx, id ?? "", [["M", 3, 3]]);
+      const showAll = { ...open, hideOutOfStock: false };
+      expect(await listProducts(tx, showAll, null, noFilters, now)).toEqual([]);
+      expect(await getProduct(tx, showAll, id ?? "", now)).toBeNull();
+      expect(await listCollections(tx, showAll, now)).toEqual([]);
+    });
+  });
+
+  it("shows the group remainder on the grouped size and free inventory on the others", async () => {
+    await withRollback(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id] = await createProducts(tx, [
+        {
+          name: "Mixed",
+          variants: [
+            ["S", 5],
+            ["M", 5],
+            ["L", 0],
+          ],
+        },
+      ]);
+      // S keeps 2 of 3 for the web; M is free inventory; L has no stock.
+      await group(tx, id ?? "", [["S", 3, 1]]);
+      const shown = { ...open, showSoldOutSizes: true };
+      const [product] = await listProducts(tx, shown, null, noFilters, now);
+      expect(product?.sizes).toEqual([
+        { size: "S", available: true },
+        { size: "M", available: true },
+        { size: "L", available: false },
+      ]);
+      // A sold-out group size drops out while the rest stays published.
+      await tx.groupAllocation.updateMany({ data: { sold: 3 } });
+      const [after] = await listProducts(tx, open, null, noFilters, now);
+      expect(after?.sizes).toEqual([{ size: "M", available: true }]);
+    });
+  });
+
+  it("applies the size filter and the counts on web stock", async () => {
+    await withRollback(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id] = await createProducts(tx, [
+        {
+          name: "Sized",
+          category: "vestidos",
+          isPublished: false,
+          variants: [
+            ["S", 5],
+            ["M", 5],
+          ],
+        },
+      ]);
+      await group(tx, id ?? "", [["S", 3]]);
+      const withS = { ...noFilters, talle: "S" };
+      const withM = { ...noFilters, talle: "M" };
+      expect((await listProducts(tx, open, null, withS, now)).length).toBe(1);
+      expect(await listProducts(tx, open, null, withM, now)).toEqual([]);
+      expect((await countProductsByCategory(tx, open, withS, now)).vestidos).toBe(1);
+      expect((await countProductsByCategory(tx, open, withM, now)).vestidos).toBe(0);
+    });
+  });
+
+  it("includes grouped products in collections, presentation and lookbook", async () => {
+    await withRollback(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id] = await createProducts(
+        tx,
+        [
+          {
+            name: "Piece",
+            isPublished: false,
+            photos: ["/a.jpg"],
+            variants: [
+              ["S", 5],
+              ["M", 5],
+            ],
+          },
+        ],
+        "Group collection",
+      );
+      await tx.product.update({
+        where: { id: id ?? "" },
+        data: { catalog: "milonga", catalogOrder: 1 },
+      });
+      await group(tx, id ?? "", [["S", 2]]);
+      expect(await listCollections(tx, open, now)).toMatchObject([
+        { name: "Group collection", count: 1 },
+      ]);
+      const collection = await getCollectionPresentation(tx, open, "group-collection", now);
+      expect(collection?.pieces.map((piece) => piece.sizes.map((s) => s.size))).toEqual([["S"]]);
+      const lookbook = await listLookbook(tx, open, now);
+      expect(lookbook.milonga.flatMap((page) => page.pieces.map((piece) => piece.sizes))).toEqual([
+        ["S"],
+      ]);
+    });
+  });
+});
