@@ -26,17 +26,18 @@ The scope selector (new / selected / all) adds a decision the owner does not wan
 
 ## Tasks
 
-- [ ] T1 — Always-all apply: simplify schema/save/action/form, tests.
+- [x] T1 — Always-all apply: simplify schema/save/action/form, tests. Commit 97c5400.
 - [ ] T2 — Per-lot calculation preview panel (query for lot products with units and current price, client component using @atika/pricing), tests.
 
 ## Progress
 
 - 2026-10-22: Document created.
+- 2026-10-22: T1 done (commit 97c5400).
 
 ## Verification evidence
 
-(pending)
+- T1 RED: 9 tests failed (schema 2, form 5, save 2) before implementation. GREEN: settings/schema/form/actions tests 41 passed. `pnpm typecheck` ok, `pnpm lint` only the known next-path.ts warning.
 
 ## Next step
 
-T1.
+T2.
