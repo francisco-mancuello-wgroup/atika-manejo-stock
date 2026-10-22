@@ -163,6 +163,7 @@ USER_EMAIL=someone@example.com USER_PASSWORD='a-long-unique-passphrase' pnpm db:
 Same rules as the admin account: lowercase email, at least 8 characters, only the scrypt hash is stored.
 Signed-in users can change their own password in ERP → Seguridad.
 
+
 ## Categories
 
 `categories/infer.ts` assigns a catalog category from the product name, then its description, then the

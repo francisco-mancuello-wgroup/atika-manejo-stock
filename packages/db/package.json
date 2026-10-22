@@ -20,6 +20,7 @@
     "db:export-images-pdf": "tsx seed/images-pdf/export-images-pdf.ts",
     "db:export-looks": "tsx seed/categories/export-looks.ts",
     "db:user": "tsx seed/user.ts",
+    "db:group": "tsx seed/group.ts",
     "db:banks": "tsx seed/banks/seed-banks.ts"
   },
   "dependencies": {
