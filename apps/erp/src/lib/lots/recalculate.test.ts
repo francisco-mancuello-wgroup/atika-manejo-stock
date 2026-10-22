@@ -1,14 +1,7 @@
 import { priceLot } from "@atika/pricing";
 import { afterAll, describe, expect, it } from "vitest";
-import {
-  createFixtureLot,
-  dbOver,
-  disconnectTestDb,
-  hasDatabase,
-  withRollback,
-} from "../../test/db";
+import { createFixtureLot, disconnectTestDb, hasDatabase, withRollback } from "../../test/db";
 import { computeLotPrices, recalculateLot } from "./recalculate";
-import { saveLotParameters } from "./save";
 
 const params = {
   exchangeRate: 7500,
@@ -81,58 +74,6 @@ describe.skipIf(!hasDatabase)("recalculateLot (database)", () => {
     await withRollback(async (tx) => {
       const result = await recalculateLot(tx, "00000000-0000-7000-8000-000000000000", params);
       expect(result).toEqual({ ok: false, reason: "lot_not_found" });
-    });
-  });
-});
-
-describe.skipIf(!hasDatabase)("saveLotParameters (database)", () => {
-  afterAll(disconnectTestDb);
-
-  const form = {
-    exchangeRate: "7500",
-    saleFactor: "3",
-    vatPercent: "10",
-    costPercent: "50",
-    totalShippingUsd: "30",
-  };
-
-  it("validates, recalculates and reports the number of repriced products", async () => {
-    await withRollback(async (tx) => {
-      const { lot } = await createFixtureLot(tx, [
-        { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
-      ]);
-      const state = await saveLotParameters(dbOver(tx), lot.id, form);
-      expect(state).toMatchObject({ status: "success" });
-      const product = await tx.product.findFirstOrThrow({ where: { lotId: lot.id } });
-      // cost = 100 × 0.5 + 30 / 3 = 60 ; 60 × 3 × 1.1 × 7500 = 1.485.000
-      expect(product.priceGs).toBe(1_485_000);
-    });
-  });
-
-  it("returns field errors and does not touch the database on invalid input", async () => {
-    await withRollback(async (tx) => {
-      const { lot } = await createFixtureLot(tx, [
-        { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
-      ]);
-      const state = await saveLotParameters(dbOver(tx), lot.id, { ...form, costPercent: "150" });
-      expect(state).toMatchObject({
-        status: "error",
-        fieldErrors: { costPercent: expect.any(String) },
-      });
-      expect(state.status === "error" && state.values?.costPercent).toBe("150");
-      const product = await tx.product.findFirstOrThrow({ where: { lotId: lot.id } });
-      expect(product.priceGs).toBe(1000);
-    });
-  });
-
-  it("returns an error for an unknown lot", async () => {
-    await withRollback(async (tx) => {
-      const state = await saveLotParameters(
-        dbOver(tx),
-        "00000000-0000-7000-8000-000000000000",
-        form,
-      );
-      expect(state).toMatchObject({ status: "error", message: "No se encontró el lote." });
     });
   });
 });

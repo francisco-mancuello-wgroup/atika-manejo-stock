@@ -21,6 +21,11 @@ export function formatUsd(value: number): string {
   return `${sign}US$\u00a0${DECIMAL_2.format(Math.abs(value))}`;
 }
 
+/** `1 lote`, `3 lotes`: the singular only for exactly one. */
+export function countOf(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 /** ISO `yyyy-mm-dd` to `dd/mm/yyyy`. */
 export function formatDate(iso: string): string {
   const [year, month, day] = iso.split("-");

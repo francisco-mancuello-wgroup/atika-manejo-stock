@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { disconnectTestDb, hasDatabase } from "../../test/db";
 import { getDb } from "../db";
 import { getInventory, getLotOptions } from "./inventory";
-import { getLotDetail, getLotSummaries } from "./lots";
+import { getLotDetail, getLotSummaries, getLotsForSettings } from "./lots";
 import { getLatestSales, getSellableProducts } from "./sales";
 import { getResumen } from "./summary";
 
@@ -22,6 +22,20 @@ describe.skipIf(!hasDatabase)("read queries (database)", () => {
     const detail = lot ? await getLotDetail(lot.id) : null;
     expect(typeof detail?.params.exchangeRate).toBe("number");
     expect(typeof detail?.rows[0]?.originalValueUsd).toBe("number");
+  });
+
+  it("lists every lot with its product count for the settings form", async () => {
+    const lots = await getLotsForSettings();
+    const summaries = await getLotSummaries();
+    expect(lots).toHaveLength(summaries.length);
+    const [first] = lots;
+    expect(first).toEqual({
+      id: expect.any(String),
+      name: expect.any(String),
+      productCount: expect.any(Number),
+    });
+    const detail = first ? await getLotDetail(first.id) : null;
+    expect(first?.productCount).toBe(detail?.rows.length);
   });
 
   it("filters the inventory by lot and by text", async () => {
