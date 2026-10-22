@@ -345,6 +345,41 @@ describe("CatalogoWebView", () => {
     );
   });
 
+  it("tells the web shows only the active groups, with a link to the Grupos tab", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+        activeGroupNames={["Evento Pink", "Verano"]}
+      />,
+    );
+    const notice = screen.getByRole("status");
+    expect(notice).toHaveTextContent(
+      "Hay un grupo activo (Evento Pink, Verano): la web muestra solo sus prendas. La publicación manual vuelve a aplicar cuando no haya grupos activos.",
+    );
+    expect(within(notice).getByRole("link", { name: "Ver grupos" })).toHaveAttribute(
+      "href",
+      "/catalogo-web?tab=grupos",
+    );
+    // The switches keep working.
+    expect(screen.getAllByRole("switch").length).toBeGreaterThan(0);
+  });
+
+  it("shows no notice when no group is active", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+        activeGroupNames={[]}
+      />,
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
   it("badges the products that sit in an active group", () => {
     render(
       <CatalogoWebView

@@ -58,12 +58,15 @@ export function CatalogoWebView({
   filters,
   actions,
   display = { currency: "gs" },
+  activeGroupNames = [],
 }: {
   products: CatalogProduct[];
   settings: CatalogSettingsView;
   filters: CatalogFilters;
   actions: CatalogActions;
   display?: CurrencyDisplay;
+  /** Names of the groups active now: while any is, the web ignores the manual publication. */
+  activeGroupNames?: string[];
 }) {
   const money = moneyFormatter(display.currency, display.exchangeRate);
   return (
@@ -74,6 +77,19 @@ export function CatalogoWebView({
         actions={<PublishAllForm action={actions.publishAll} />}
       />
       <CatalogTabs active="prendas" />
+      {activeGroupNames.length > 0 ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 border border-line bg-surface px-4 py-3 text-sm text-ink"
+        >
+          <p>
+            {`Hay un grupo activo (${activeGroupNames.join(", ")}): la web muestra solo sus prendas. La publicación manual vuelve a aplicar cuando no haya grupos activos.`}
+          </p>
+          <Link href="/catalogo-web?tab=grupos" className="font-medium underline">
+            Ver grupos
+          </Link>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <nav aria-label="Filtro por estado" className="flex gap-1">

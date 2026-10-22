@@ -6,7 +6,7 @@ import { legacyGroupRedirect, parseCatalogTab } from "../../../lib/catalog-group
 import { getDb } from "../../../lib/db";
 import { getCurrencyDisplay } from "../../../lib/display-currency";
 import { getCatalogProducts, getCatalogSettings } from "../../../lib/queries/catalog";
-import { getGroupList } from "../../../lib/queries/catalog-groups";
+import { getActiveGroupNames, getGroupList } from "../../../lib/queries/catalog-groups";
 import {
   publishAllAction,
   saveCatalogSettingsAction,
@@ -29,10 +29,11 @@ export default async function CatalogoWebPage({
   if (legacy) redirect(legacy);
   if (parseCatalogTab(params) === "grupos") return <GroupsTab />;
   const filters = parseCatalogFilters(params);
-  const [products, settings, display] = await Promise.all([
+  const [products, settings, display, activeGroupNames] = await Promise.all([
     getCatalogProducts(filters),
     getCatalogSettings(),
     getCurrencyDisplay(),
+    getActiveGroupNames(getDb()),
   ]);
   return (
     <CatalogoWebView
@@ -40,6 +41,7 @@ export default async function CatalogoWebPage({
       settings={settings}
       filters={filters}
       display={display}
+      activeGroupNames={activeGroupNames}
       actions={{
         setVisibility: setVisibilityAction,
         setCategory: setCategoryAction,

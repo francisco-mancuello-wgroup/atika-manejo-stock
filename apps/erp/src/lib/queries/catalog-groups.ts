@@ -204,6 +204,19 @@ export async function getGroupOptions(db: Reader): Promise<GroupOptions> {
   };
 }
 
+/** Names of the groups active right now (switch on, inside the window), alphabetically. */
+export async function getActiveGroupNames(
+  db: Pick<Prisma.TransactionClient, "publicationGroup">,
+  now: Date = new Date(),
+): Promise<string[]> {
+  const rows = await db.publicationGroup.findMany({
+    where: activeGroupWhere(now),
+    orderBy: { name: "asc" },
+    select: { name: true },
+  });
+  return rows.map((row) => row.name);
+}
+
 /** Name of the active group each of the products sits in (the first one if several). */
 export async function getProductGroupNames(
   db: Pick<Prisma.TransactionClient, "groupAllocation">,

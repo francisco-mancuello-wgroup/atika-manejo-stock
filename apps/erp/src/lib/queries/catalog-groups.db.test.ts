@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { createFixtureLot, disconnectTestDb, hasDatabase, withRollback } from "../../test/db";
 import {
+  getActiveGroupNames,
   getGroupCandidates,
   getGroupDetail,
   getGroupList,
@@ -191,6 +192,29 @@ describe.skipIf(!hasDatabase)("catalog group queries (database)", () => {
       });
       const detail = await getGroupDetail(tx, group.id, NOW);
       expect(detail?.products[0]?.imageUrl).toBe("/a.jpg");
+    });
+  });
+
+  describe("getActiveGroupNames", () => {
+    it("lists the names of the groups that are on and inside their window", async () => {
+      await withRollback(async (tx) => {
+        await tx.publicationGroup.updateMany({ data: { isActive: false } });
+        const now = new Date("2030-06-15T12:00:00.000Z");
+        const day = 86_400_000;
+        const base = { isActive: true };
+        await tx.publicationGroup.createMany({
+          data: [
+            { ...base, name: "Zeta" },
+            { ...base, name: "Alfa", startsAt: new Date(now.getTime() - day) },
+            { ...base, name: "Soon", startsAt: new Date(now.getTime() + day) },
+            { ...base, name: "Over", endsAt: new Date(now.getTime() - day) },
+            { name: "Off", isActive: false },
+          ],
+        });
+        expect(await getActiveGroupNames(tx, now)).toEqual(["Alfa", "Zeta"]);
+        await tx.publicationGroup.updateMany({ data: { isActive: false } });
+        expect(await getActiveGroupNames(tx, now)).toEqual([]);
+      });
     });
   });
 
