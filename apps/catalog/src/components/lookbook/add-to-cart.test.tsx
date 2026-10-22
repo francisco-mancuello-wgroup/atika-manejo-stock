@@ -10,7 +10,7 @@ function piece(id: string, name: string, color: string, sizes: string[], priceGs
     sizes,
     color: { label: color, hex: color === "Negro" ? "#000000" : "#efe6d2" },
     description: null,
-    inPink: false,
+    inGroup: false,
     priceGs,
     discountPercent: null,
     discountedPriceGs: null,

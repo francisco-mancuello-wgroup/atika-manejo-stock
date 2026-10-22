@@ -20,7 +20,7 @@ const catalogs: BookCatalog[] = [
 
 describe("CatalogShelf", () => {
   it("opens with Pink, linking to its selection", () => {
-    render(<CatalogShelf catalogs={catalogs} />);
+    render(<CatalogShelf catalogs={catalogs} pink />);
     expect(screen.getByRole("heading", { name: "Pink" })).toBeInTheDocument();
     expect(screen.queryByText(/evento/i)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver selección Pink" })).toHaveAttribute(
@@ -29,8 +29,15 @@ describe("CatalogShelf", () => {
     );
   });
 
+  it("has no Pink banner when no group has pieces to show", () => {
+    render(<CatalogShelf catalogs={catalogs} pink={false} />);
+    expect(screen.queryByRole("heading", { name: "Pink" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Ver selección Pink" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Catálogos" })).toBeInTheDocument();
+  });
+
   it("still lists every catalog with Ver todo", () => {
-    render(<CatalogShelf catalogs={catalogs} />);
+    render(<CatalogShelf catalogs={catalogs} pink={false} />);
     expect(screen.getByRole("heading", { name: "Catálogos" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver todo" })).toHaveAttribute("href", "#casa-icona");
     expect(screen.getAllByText("Ver catálogo")).toHaveLength(2);

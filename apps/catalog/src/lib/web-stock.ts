@@ -40,35 +40,28 @@ function groupRemainder(variant: WebVariant): number {
 }
 
 /**
- * Which rule decides what the public web shows. While at least one group is active the groups
- * override everything ("groups"); otherwise the manual publication of each product applies
- * ("manual"), with its full physical stock.
+ * Units of a size the web can sell. A grouped size shows its group remainder. Any other size
+ * shows the free inventory (stock minus what active groups hold, which for an ungrouped size is
+ * its whole stock), but only when the product is published: an unpublished product is on the web
+ * through its groups alone, so its other sizes read as sold out.
  */
-export type WebMode = "manual" | "groups";
-
-export function webModeFor(activeGroups: number): WebMode {
-  return activeGroups > 0 ? "groups" : "manual";
+export function webStock(variant: WebVariant, isPublished: boolean): number {
+  if (variant.allocations.length > 0) return groupRemainder(variant);
+  return isPublished ? Math.max(0, variant.stock) : 0;
 }
 
-/**
- * Units of a size the web can sell. Manual mode shows the whole physical stock. Groups mode shows
- * the group remainder, and any size outside every active group reads as sold out.
- */
-export function webStock(variant: WebVariant, mode: WebMode): number {
-  if (mode === "manual") return Math.max(0, variant.stock);
-  return groupRemainder(variant);
-}
-
-/** The rows the web can show in a mode (published, or allocated in an active group). */
-export function webVisibilityWhere(mode: WebMode, now: Date): Prisma.ProductWhereInput {
-  if (mode === "manual") return { isPublished: true };
-  return { variants: { some: { allocations: { some: { group: activeGroupWhere(now) } } } } };
+/** Some size still has units held by an active group: that alone makes a product visible. */
+export function hasActiveGroupStock(variants: readonly WebVariant[]): boolean {
+  return variants.some((variant) => groupRemainder(variant) > 0);
 }
 
 /** The variants as the view models read them: `stock` is the web stock. */
 export function toWebVariants(
   variants: readonly WebVariant[],
-  mode: WebMode,
+  isPublished: boolean,
 ): { size: string; stock: number }[] {
-  return variants.map((variant) => ({ size: variant.size, stock: webStock(variant, mode) }));
+  return variants.map((variant) => ({
+    size: variant.size,
+    stock: webStock(variant, isPublished),
+  }));
 }
