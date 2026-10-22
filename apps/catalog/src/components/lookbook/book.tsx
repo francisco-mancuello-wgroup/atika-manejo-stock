@@ -1,7 +1,8 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { type LookbookPage, pageAnchor } from "../../lib/lookbook";
+import pinkPhoto from "../../../public/atika/pink.jpg";
+import { type LookbookPage, PINK_EVENT, pageAnchor } from "../../lib/lookbook";
 import { searchEntriesOf } from "../../lib/search";
 import { AddToCart } from "./add-to-cart";
 import { ArrowIcon } from "./icons";
@@ -217,15 +218,55 @@ export function LookbookBook({
   );
 }
 
-/** Home's first screen: the three catalog covers, upright like the PDFs, and "Ver todo". */
+/** The Pink banner on top of the home: its photo and a link to its selection. */
+function PinkBanner() {
+  return (
+    <section
+      aria-labelledby="pink-heading"
+      className="mb-12 flex flex-col overflow-hidden rounded-[4px] bg-pink sm:flex-row-reverse lg:mb-16"
+    >
+      <div className="relative aspect-[9/10] sm:aspect-auto sm:w-[42%] sm:shrink-0">
+        <Image
+          src={pinkPhoto}
+          alt="Vestido Cora Fucsia de Casa Icona"
+          fill
+          priority
+          sizes="(min-width: 640px) 42vw, 100vw"
+          placeholder="blur"
+          className="object-cover object-top"
+        />
+      </div>
+      <div className="flex flex-1 flex-col justify-center gap-4 px-6 py-8 sm:px-10 sm:py-12 lg:px-20">
+        <h2 id="pink-heading" className="font-heading text-[44px] leading-tight lg:text-[76px]">
+          Pink
+        </h2>
+        <p className="max-w-[440px] text-[15px] leading-relaxed text-foreground/80 lg:text-[17px]">
+          Las piezas en rosa de Casa Icona, Milonga y Sordo, juntas en un solo lugar. Elegí la tuya
+          y pagá por WhatsApp.
+        </p>
+        <a
+          href={`/catalogos/${PINK_EVENT}`}
+          className="mt-2 inline-flex min-h-12 w-fit items-center justify-center bg-foreground px-8 text-[15px] tracking-[1px] text-background transition-colors hover:bg-foreground/90"
+        >
+          Ver selección Pink
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/** Home's first screen: Pink, then the three catalog covers and "Ver todo". */
 export function CatalogShelf({ catalogs }: { catalogs: BookCatalog[] }) {
   return (
     <section
       aria-labelledby="shelf-heading"
-      className="mx-auto w-full max-w-[1440px] px-4 py-12 lg:px-10 lg:py-16"
+      className="mx-auto w-full max-w-[1440px] px-4 py-6 lg:px-10 lg:py-8"
     >
-      <div className="mb-8 flex flex-col items-center gap-3 text-center lg:mb-12">
+      <div className="mb-6 flex justify-center lg:mb-8">
         <AtikaWordmark />
+      </div>
+      <PinkBanner />
+      <div className="mb-8 flex flex-col items-center gap-3 text-center lg:mb-12">
         <h1 id="shelf-heading" className="font-heading text-[34px] leading-tight lg:text-[44px]">
           Catálogos
         </h1>

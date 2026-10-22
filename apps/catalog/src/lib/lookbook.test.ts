@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATALOGS, type LookbookRow, lookbookPages } from "./lookbook";
+import { CATALOGS, type LookbookRow, lookbookPages, pinkPages } from "./lookbook";
 
 const settings = { showPrices: true, showSoldOutSizes: false };
 
@@ -153,5 +153,29 @@ describe("lookbookPages", () => {
   it("hides prices when the store hides them", () => {
     const [page] = lookbookPages([row(1)], { ...settings, showPrices: false });
     expect(page?.pieces[0]?.priceGs).toBeNull();
+  });
+});
+
+describe("pinkPages", () => {
+  it("keeps the pages with a fuchsia or pink piece, numbered again from 1", () => {
+    const pages = lookbookPages(
+      [
+        row(1, { color: "Negro" }),
+        row(2, { color: "FUCSIA" }),
+        row(3, { color: "Blanco" }),
+        row(4, { catalogOrder: 4, name: "Top", color: "Negro" }),
+        row(5, { catalogOrder: 4, name: "Falda", color: "Rosa" }),
+      ],
+      settings,
+    );
+    const pink = pinkPages(pages);
+    expect(pink.map((page) => [page.title, page.page])).toEqual([
+      ["Pieza 2", 1],
+      ["Top + Falda", 2],
+    ]);
+  });
+
+  it("is empty when no piece is pink", () => {
+    expect(pinkPages(lookbookPages([row(1, { color: "Negro" })], settings))).toEqual([]);
   });
 });
