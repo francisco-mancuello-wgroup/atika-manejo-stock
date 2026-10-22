@@ -3,12 +3,19 @@ import { recalculateLot } from "../lots/recalculate";
 import type { TransactionRunner } from "../lots/save";
 import { parseAppSettings } from "./schema";
 
-/** Validates the form and stores the singleton settings row (percentages become fractions). */
-export async function saveAppSettings(
+const UNKNOWN_LOTS = "Alguno de los lotes elegidos no existe.";
+
+/**
+ * Validates the form, stores the singleton settings row (percentages become fractions) and, in
+ * the same transaction, writes the saved sale factor and IVA into the targeted lots and reprices
+ * their products. Each lot keeps its own exchange rate, cost share and shipping.
+ */
+export async function saveAndApplySettings(
   db: TransactionRunner,
   raw: Record<string, string>,
+  lotIds: readonly string[] = [],
 ): Promise<FormState> {
-  const parsed = parseAppSettings(raw);
+  const parsed = parseAppSettings(raw, lotIds);
   if (!parsed.success) {
     return {
       status: "error",
@@ -17,44 +24,50 @@ export async function saveAppSettings(
       values: raw,
     };
   }
-  await db.$transaction((tx) =>
-    tx.appSettings.upsert({
-      where: { id: 1 },
-      create: { id: 1, ...parsed.data },
-      update: parsed.data,
-    }),
-  );
-  return { status: "success", message: "Parámetros guardados." };
-}
+  const { scope, lotIds: selected, ...settings } = parsed.data;
 
-/**
- * Writes the saved sale factor and IVA to every lot and reprices all their products in one
- * transaction. Each lot keeps its own exchange rate, cost share and shipping.
- */
-export async function applySettingsToAllLots(db: TransactionRunner): Promise<FormState> {
   const outcome = await db.$transaction(async (tx) => {
-    const settings = await tx.appSettings.findUnique({ where: { id: 1 } });
-    if (!settings) return null;
-    const lots = await tx.lot.findMany({ select: { id: true } });
+    const targets =
+      scope === "all"
+        ? (await tx.lot.findMany({ select: { id: true } })).map((lot) => lot.id)
+        : selected;
+    if (scope === "selected") {
+      const found = await tx.lot.count({ where: { id: { in: targets } } });
+      if (found !== targets.length) return null;
+    }
+
+    await tx.appSettings.upsert({
+      where: { id: 1 },
+      create: { id: 1, ...settings },
+      update: settings,
+    });
+
     let products = 0;
-    for (const { id } of lots) {
+    for (const id of targets) {
       const lot = await tx.lot.findUniqueOrThrow({ where: { id } });
       const result = await recalculateLot(tx, id, {
         exchangeRate: lot.exchangeRate.toNumber(),
-        saleFactor: settings.saleFactor.toNumber(),
-        vatRate: settings.vatRate.toNumber(),
+        saleFactor: settings.saleFactor,
+        vatRate: settings.vatRate,
         costRate: lot.costRate.toNumber(),
         totalShippingUsd: lot.totalShippingUsd.toNumber(),
       });
       if (result.ok) products += result.updatedProducts;
     }
-    return { lots: lots.length, products };
+    return { lots: targets.length, products };
   });
+
   if (!outcome) {
-    return { status: "error", message: "Guardá los parámetros antes de aplicarlos." };
+    return {
+      status: "error",
+      message: "Revisá los campos marcados.",
+      fieldErrors: { lotIds: UNKNOWN_LOTS },
+      values: raw,
+    };
   }
+  if (scope === "new") return { status: "success", message: "Parámetros guardados." };
   return {
     status: "success",
-    message: `Se actualizaron ${outcome.lots} lotes y se recalcularon ${outcome.products} precios.`,
+    message: `Parámetros guardados. Se actualizaron ${outcome.lots} lotes y se recalcularon ${outcome.products} precios.`,
   };
 }

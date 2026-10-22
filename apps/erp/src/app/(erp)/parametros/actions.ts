@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { type FormState, formValues } from "../../../lib/action-state";
 import { requireSession } from "../../../lib/auth/session";
 import { getDb } from "../../../lib/db";
-import { applySettingsToAllLots, saveAppSettings } from "../../../lib/settings/save";
+import { saveAndApplySettings } from "../../../lib/settings/save";
 
 /** The exchange rate shows in the sidebar of every page, so the whole layout is revalidated. */
 function revalidateEverything() {
@@ -17,8 +17,9 @@ export async function saveSettingsAction(
 ): Promise<FormState> {
   await requireSession();
   const values = formValues(formData);
+  const lotIds = formData.getAll("lotIds").filter((id) => typeof id === "string");
   try {
-    const state = await saveAppSettings(getDb(), values);
+    const state = await saveAndApplySettings(getDb(), values, lotIds);
     if (state.status === "success") revalidateEverything();
     return state;
   } catch (error) {
@@ -28,17 +29,5 @@ export async function saveSettingsAction(
       message: "No se pudo guardar. Intentá de nuevo en unos segundos.",
       values,
     };
-  }
-}
-
-export async function applyToAllLotsAction(): Promise<FormState> {
-  await requireSession();
-  try {
-    const state = await applySettingsToAllLots(getDb());
-    if (state.status === "success") revalidateEverything();
-    return state;
-  } catch (error) {
-    console.error("applyToAllLotsAction failed", error);
-    return { status: "error", message: "No se pudo aplicar. Intentá de nuevo en unos segundos." };
   }
 }
