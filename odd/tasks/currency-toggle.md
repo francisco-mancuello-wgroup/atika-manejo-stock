@@ -26,17 +26,20 @@ User screenshot 2026-10-22 08:25: rounded pill with two segments "Gs" and "US$";
 
 ## Tasks
 
-- [ ] T1 — Currency model: cookie read/write (server action or route), `formatMoney(amountGs, currency, rate)` helper in lib/format, tests.
+- [x] T1 — Currency model: cookie read/write (server action or route), `formatMoney(amountGs, currency, rate)` helper in lib/format, tests.
 - [ ] T2 — Toggle UI (pill like the reference) in the ERP layout + wire every display view to the selected currency; tests.
 
 ## Progress
 
 - 2026-10-22: Document created.
+- 2026-10-22: T1 done (lib/currency.ts, formatMoney/moneyFormatter, display-currency.ts, moneda/actions.ts).
 
 ## Verification evidence
 
-(pending)
+- T1 RED: `vitest run currency.test.ts moneda/` failed with "Failed to resolve import ./currency / ./actions" (2 files failed). GREEN: `pnpm --filter @atika/erp test` 62 files / 380 tests pass; `pnpm lint` only the known next-path.ts warning; `pnpm typecheck` ok.
+
+(T2 pending)
 
 ## Next step
 
-T1.
+T2.
