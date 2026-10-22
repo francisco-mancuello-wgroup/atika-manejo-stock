@@ -127,7 +127,7 @@ describe("GroupsView table", () => {
     );
   });
 
-  it("lists each group with counts, window, status and a switch", () => {
+  it("lists each group with counts, window and a switch", () => {
     renderView();
     const rows = screen.getAllByRole("row").slice(1);
     expect(rows).toHaveLength(2);
@@ -136,7 +136,7 @@ describe("GroupsView table", () => {
       "href",
       "/catalogo-web?tab=grupos&grupo=g1",
     );
-    expect(first.getByText("Activo", { selector: "span" })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Estado" })).not.toBeInTheDocument();
     expect(first.getByText("2026-10-01 – 2026-10-31")).toBeInTheDocument();
     expect(
       within(rows[0] as HTMLElement)
@@ -154,6 +154,26 @@ describe("GroupsView table", () => {
       "aria-checked",
       "false",
     );
+  });
+
+  it("flags next to the switch only a switched-on group the web isn't showing", () => {
+    const base = groups[0] as GroupSummary;
+    renderView({
+      groups: [
+        base,
+        { ...base, id: "g3", name: "Pink", startsAt: "2026-11-01", status: "Programado" },
+        { ...base, id: "g4", name: "Invierno", status: "Vencido" },
+        groups[1] as GroupSummary,
+      ],
+    });
+    const [active, scheduled, expired, inactive] = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getByRole("switch").closest("td") as HTMLElement);
+    expect(active?.textContent).toBe("");
+    expect(scheduled).toHaveTextContent("Programado · desde 2026-11-01");
+    expect(expired).toHaveTextContent("Vencido");
+    expect(inactive?.textContent).toBe("");
   });
 
   it("opens the group from anywhere on the row, keeping the switch clickable", () => {

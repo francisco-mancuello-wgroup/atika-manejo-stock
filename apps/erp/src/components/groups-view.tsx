@@ -1,7 +1,6 @@
 import { buttonVariants, cn } from "@atika/ui";
 import Link from "next/link";
 import type { FormState } from "../lib/action-state";
-import type { GroupStatus } from "../lib/catalog-groups/format";
 import type { ProductFilter } from "../lib/catalog-groups/groups";
 import { type GroupsSelection, groupsHref } from "../lib/catalog-groups/workspace";
 import type { GroupDetail, GroupOptions, GroupSummary } from "../lib/queries/catalog-groups";
@@ -29,12 +28,12 @@ export interface GroupsViewActions {
   deleteGroup: (groupId: string) => Promise<FormState>;
 }
 
-const STATUS_STYLE: Record<GroupStatus, string> = {
-  Activo: "bg-subtle text-ok",
-  Programado: "bg-subtle text-ink",
-  Vencido: "bg-subtle text-muted",
-  Inactivo: "bg-subtle text-muted",
-};
+/** Note next to the switch when it is on but the web isn't showing the group (out of its window). */
+function offWindowNote(group: GroupSummary): string | null {
+  if (group.status === "Programado") return `Programado · desde ${group.startsAt}`;
+  if (group.status === "Vencido") return "Vencido";
+  return null;
+}
 
 function windowLabel(group: GroupSummary): string {
   if (!group.startsAt && !group.endsAt) return "Sin fecha";
@@ -93,13 +92,13 @@ export function GroupsView({
                     <th className={`${table.th} ${table.num}`}>Vendidas</th>
                     <th className={`${table.th} ${table.num}`}>Restantes</th>
                     <th className={table.th}>Vigencia</th>
-                    <th className={table.th}>Estado</th>
                     <th className={table.th}>Activo</th>
                   </tr>
                 </thead>
                 <tbody>
                   {groups.map((group) => {
                     const selected = group.id === selection.groupId;
+                    const note = offWindowNote(group);
                     return (
                       // The group link is stretched over the row, so clicking anywhere opens it.
                       <tr
@@ -124,23 +123,20 @@ export function GroupsView({
                         <td className={`${table.td} ${table.num}`}>{group.sold}</td>
                         <td className={`${table.td} ${table.num}`}>{group.remaining}</td>
                         <td className={cn(table.td, "text-muted")}>{windowLabel(group)}</td>
-                        <td className={table.td}>
-                          <span
-                            className={cn(
-                              "px-2 py-0.5 text-[11px] font-medium",
-                              STATUS_STYLE[group.status],
-                            )}
-                          >
-                            {group.status}
-                          </span>
-                        </td>
                         <td className={cn(table.td, "relative z-10")}>
-                          <GroupSwitch
-                            groupId={group.id}
-                            name={group.name}
-                            isActive={group.isActive}
-                            action={actions.setActive}
-                          />
+                          <div className="flex items-center gap-2">
+                            <GroupSwitch
+                              groupId={group.id}
+                              name={group.name}
+                              isActive={group.isActive}
+                              action={actions.setActive}
+                            />
+                            {note ? (
+                              <span className="whitespace-nowrap bg-subtle px-2 py-0.5 text-[11px] font-medium text-muted">
+                                {note}
+                              </span>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     );

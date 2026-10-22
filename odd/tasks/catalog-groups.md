@@ -54,6 +54,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - [x] T5 — ERP UI: Grupos tab (table, switch, editor panel with per-size quantities, vigencia, bulk add, preview) + actions, tests.
 - [x] T6 — Seed: Pink event group from evento-pink.xlsx (`pnpm db:group`).
 - [x] T7 — Groups table rows clickable as a whole (stretched link like /inventario; switch stays clickable). User request.
+- [x] T8 — Estado column removed (redundant with the switch); a note next to the switch only when it is on but out of window ("Programado · desde <fecha>" / "Vencido"). User request.
 
 ## Acceptance criteria
 
@@ -95,6 +96,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - T6 GREEN: same command -> 9 passed (7 pure + 2 DB with rollback); `pnpm --filter @atika/db test` 32 files / 217 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings).
 - T6 run: `GROUP_NAME=Pink GROUP_FILE=~/Descargas/stock-ropas/evento-pink.xlsx pnpm db:group` -> matched 46, units 56, zero rows 1 (COSTA BLACK XS), unmatched 0; second run identical. Query: group Pink isActive=false, 46 allocations, sum allocated 56.
 - T7 RED: `pnpm exec vitest run src/components/groups-view.test.tsx` (apps/erp) -> 1 failed (row not relative/cursor-pointer). GREEN: 16 passed; biome clean; erp tsc ok.
+- T8 RED: `pnpm exec vitest run src/components/groups-view.test.tsx` (apps/erp) -> 2 failed (Estado header present, no off-window note). GREEN: 17 passed; biome clean; erp tsc ok.
 
 ## Next step
 
