@@ -272,8 +272,8 @@ const SHELF_COLUMNS: Record<number, string> = {
   2: "max-w-[920px] sm:grid-cols-2",
 };
 
-/** Home's first screen: Pink, then the catalog covers and "Ver todo". */
-export function CatalogShelf({ catalogs }: { catalogs: BookCatalog[] }) {
+/** Home's first screen: Pink (when the event has pieces), then the catalog covers and "Ver todo". */
+export function CatalogShelf({ catalogs, pink }: { catalogs: BookCatalog[]; pink: boolean }) {
   return (
     <section
       aria-labelledby="shelf-heading"
@@ -282,7 +282,7 @@ export function CatalogShelf({ catalogs }: { catalogs: BookCatalog[] }) {
       <div className="mb-6 flex justify-center lg:mb-8">
         <AtikaWordmark />
       </div>
-      <PinkBanner />
+      {pink ? <PinkBanner /> : null}
       <div className="mb-8 flex flex-col items-center gap-3 text-center lg:mb-12">
         <h1 id="shelf-heading" className="font-heading text-[34px] leading-tight lg:text-[44px]">
           Catálogos

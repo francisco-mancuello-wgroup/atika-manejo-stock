@@ -43,8 +43,8 @@ export interface LookbookRow extends ProductSource {
   catalog: CatalogValue | null;
   catalogOrder: number | null;
   catalogSection: string | null;
-  /** Marked in the ERP for the Pink selection. */
-  inPink: boolean;
+  /** Holds assigned stock in an active publication group: part of the Pink event. */
+  inGroup: boolean;
 }
 
 /** One product on a page: a dress, or the top of a set. Nothing about costs or stock counts. */
@@ -55,8 +55,8 @@ export interface LookbookPiece extends PriceFields {
   sizes: string[];
   color: PieceColor | null;
   description: string | null;
-  /** Marked in the ERP for the Pink selection. */
-  inPink: boolean;
+  /** In an active publication group: part of the Pink event. */
+  inGroup: boolean;
   /** Bank promotions that cover this product today, grouped for display; none when absent. */
   bankPromos?: PromoGroup[];
 }
@@ -112,7 +112,7 @@ function toPiece(
     sizes: availableSizes(row),
     color: resolveColor(row.color, row.name),
     description: row.description?.trim() || null,
-    inPink: row.inPink,
+    inGroup: row.inGroup,
     bankPromos: row.bankPromos ?? [],
   };
 }
@@ -174,9 +174,14 @@ export function pageAnchor(slug: string, page: number): string {
   return `${slug}-pagina-${page}`;
 }
 
-/** The pages with a piece marked for Pink in the ERP, numbered again from 1. */
+/** The pages with a piece in an active publication group (the Pink event), numbered again from 1. */
 export function pinkPages(pages: readonly LookbookPage[]): LookbookPage[] {
   return pages
-    .filter((page) => page.pieces.some((piece) => piece.inPink))
+    .filter((page) => page.pieces.some((piece) => piece.inGroup))
     .map((page, index) => ({ ...page, page: index + 1 }));
+}
+
+/** Whether any catalog has something for the Pink event: the home shows its banner only then. */
+export function hasPinkPieces(catalogPages: readonly (readonly LookbookPage[])[]): boolean {
+  return catalogPages.some((pages) => pinkPages(pages).length > 0);
 }

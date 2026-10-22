@@ -83,7 +83,7 @@ export function CatalogoWebView({
           className="flex flex-wrap items-center justify-between gap-3 border border-line bg-surface px-4 py-3 text-sm text-ink"
         >
           <p>
-            {`Hay un grupo activo (${activeGroupNames.join(", ")}): la web muestra solo sus prendas. La publicación manual vuelve a aplicar cuando no haya grupos activos.`}
+            {`Hay un grupo activo (${activeGroupNames.join(", ")}): sus prendas son la selección Pink de la portada, con el stock asignado.`}
           </p>
           <Link href="/catalogo-web?tab=grupos" className="font-medium underline">
             Ver grupos

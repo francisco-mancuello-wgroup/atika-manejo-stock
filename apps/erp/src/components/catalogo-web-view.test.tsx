@@ -18,7 +18,6 @@ const products: CatalogProduct[] = [
     catalogOrder: 4,
     catalogSection: "Vestidos",
     catalogName: "Vestido Lino Icona",
-    inPink: true,
     groupName: null,
   },
   {
@@ -34,7 +33,6 @@ const products: CatalogProduct[] = [
     catalogOrder: null,
     catalogSection: null,
     catalogName: null,
-    inPink: false,
     groupName: null,
   },
 ];
@@ -227,7 +225,7 @@ describe("CatalogoWebView", () => {
     const first = within(rows[0] as HTMLElement);
     expect(first.queryByLabelText("Catálogo")).not.toBeInTheDocument();
     expect(first.getByRole("button", { name: "Lookbook: Vestido Lino" })).toHaveTextContent(
-      "Casa Icona · p. 4 · Pink",
+      "Casa Icona · p. 4",
     );
     const second = within(rows[1] as HTMLElement);
     expect(second.getByRole("button", { name: "Lookbook: Top Seda" })).toHaveTextContent(
@@ -251,7 +249,7 @@ describe("CatalogoWebView", () => {
     expect(dialog.getByLabelText("Página")).toHaveValue("4");
     expect(dialog.getByLabelText("Sección")).toHaveValue("Vestidos");
     expect(dialog.getByLabelText("Nombre en el lookbook")).toHaveValue("Vestido Lino Icona");
-    expect(dialog.getByRole("checkbox", { name: /Incluir en Pink/ })).toBeChecked();
+    expect(dialog.queryByRole("checkbox", { name: /Pink/ })).not.toBeInTheDocument();
     expect(
       within(dialog.getByLabelText("Catálogo"))
         .getAllByRole("option")
@@ -348,7 +346,7 @@ describe("CatalogoWebView", () => {
     );
   });
 
-  it("tells the web shows only the active groups, with a link to the Grupos tab", () => {
+  it("tells the active groups are the Pink selection, with a link to the Grupos tab", () => {
     render(
       <CatalogoWebView
         products={products}
@@ -360,7 +358,7 @@ describe("CatalogoWebView", () => {
     );
     const notice = screen.getByRole("status");
     expect(notice).toHaveTextContent(
-      "Hay un grupo activo (Evento Pink, Verano): la web muestra solo sus prendas. La publicación manual vuelve a aplicar cuando no haya grupos activos.",
+      "Hay un grupo activo (Evento Pink, Verano): sus prendas son la selección Pink de la portada, con el stock asignado.",
     );
     expect(within(notice).getByRole("link", { name: "Ver grupos" })).toHaveAttribute(
       "href",

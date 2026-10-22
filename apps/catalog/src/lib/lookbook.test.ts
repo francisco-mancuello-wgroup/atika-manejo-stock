@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { CATALOGS, type LookbookRow, lookbookPages, pinkPages, withPieces } from "./lookbook";
+import {
+  CATALOGS,
+  hasPinkPieces,
+  type LookbookRow,
+  lookbookPages,
+  pinkPages,
+  withPieces,
+} from "./lookbook";
 
 const settings = { showPrices: true, showSoldOutSizes: false };
 
@@ -17,7 +24,7 @@ function row(id: number, overrides: Partial<LookbookRow> = {}): LookbookRow {
     catalog: "milonga",
     catalogOrder: id,
     catalogSection: "Vestidos",
-    inPink: false,
+    inGroup: false,
     variants: [
       { size: "M", stock: 1 },
       { size: "S", stock: 2 },
@@ -169,14 +176,14 @@ describe("lookbookPages", () => {
 });
 
 describe("pinkPages", () => {
-  it("keeps the pages with a piece marked for Pink in the ERP, numbered again from 1", () => {
+  it("keeps the pages with a piece held by an active group, numbered again from 1", () => {
     const pages = lookbookPages(
       [
         row(1, { color: "FUCSIA" }),
-        row(2, { color: "Negro", inPink: true }),
+        row(2, { color: "Negro", inGroup: true }),
         row(3, { color: "Blanco" }),
         row(4, { catalogOrder: 4, name: "Top", color: "Negro" }),
-        row(5, { catalogOrder: 4, name: "Falda", color: "Negro", inPink: true }),
+        row(5, { catalogOrder: 4, name: "Falda", color: "Negro", inGroup: true }),
       ],
       settings,
     );
@@ -187,7 +194,19 @@ describe("pinkPages", () => {
     ]);
   });
 
-  it("is empty when no piece is marked, whatever its color", () => {
+  it("is empty when no piece is in a group, whatever its color", () => {
     expect(pinkPages(lookbookPages([row(1, { color: "Rosa" })], settings))).toEqual([]);
+  });
+});
+
+describe("hasPinkPieces", () => {
+  const pagesOf = (...rows: LookbookRow[]) => lookbookPages(rows, settings);
+
+  it("is true when any catalog has a page with a piece in an active group", () => {
+    expect(hasPinkPieces([pagesOf(row(1)), pagesOf(row(2, { inGroup: true }))])).toBe(true);
+  });
+
+  it("is false when no piece is in a group", () => {
+    expect(hasPinkPieces([pagesOf(row(1)), []])).toBe(false);
   });
 });

@@ -52,6 +52,10 @@ describe("schema", () => {
     expect(Object.values(LotPricingMode)).toEqual(["global", "custom"]);
   });
 
+  it("has no manual Pink flag: the Pink event comes from the active publication group", () => {
+    expect(Object.values(Prisma.ProductScalarFieldEnum)).not.toContain("inPink");
+  });
+
   it("tracks units bought and current stock per size", () => {
     expect(Object.values(Prisma.ProductVariantScalarFieldEnum)).toEqual(
       expect.arrayContaining(["productId", "size", "unitsBought", "stock"]),
