@@ -101,12 +101,20 @@ export function GroupsView({
                   {groups.map((group) => {
                     const selected = group.id === selection.groupId;
                     return (
-                      <tr key={group.id} className={cn(table.row, selected && "bg-subtle")}>
+                      // The group link is stretched over the row, so clicking anywhere opens it.
+                      <tr
+                        key={group.id}
+                        className={cn(
+                          table.row,
+                          "relative cursor-pointer hover:bg-subtle",
+                          selected && "bg-subtle",
+                        )}
+                      >
                         <td className={cn(table.td, "font-medium")}>
                           <Link
                             href={groupsHref({ groupId: group.id })}
                             aria-current={selected ? "page" : undefined}
-                            className="underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                            className="underline-offset-4 after:absolute after:inset-0 hover:underline focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-ink"
                           >
                             {group.name}
                           </Link>
@@ -126,7 +134,7 @@ export function GroupsView({
                             {group.status}
                           </span>
                         </td>
-                        <td className={table.td}>
+                        <td className={cn(table.td, "relative z-10")}>
                           <GroupSwitch
                             groupId={group.id}
                             name={group.name}

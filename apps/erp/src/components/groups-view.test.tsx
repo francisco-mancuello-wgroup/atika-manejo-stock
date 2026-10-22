@@ -156,6 +156,17 @@ describe("GroupsView table", () => {
     );
   });
 
+  it("opens the group from anywhere on the row, keeping the switch clickable", () => {
+    renderView();
+    const row = screen.getAllByRole("row")[1] as HTMLElement;
+    expect(row).toHaveClass("relative", "cursor-pointer");
+    expect(within(row).getByRole("link", { name: "Verano" })).toHaveClass(
+      "after:absolute",
+      "after:inset-0",
+    );
+    expect(within(row).getByRole("switch").closest("td")).toHaveClass("relative", "z-10");
+  });
+
   it("explains the empty state and links to the new group editor", () => {
     renderView({ groups: [] });
     expect(screen.getByText(/Todavía no hay grupos/)).toBeInTheDocument();
