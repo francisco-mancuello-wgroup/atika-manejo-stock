@@ -59,6 +59,7 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 - T3 RED: `pnpm exec vitest run src/components/lot-pricing-panel.test.tsx src/components/lot-detail-view.test.tsx src/lib/lots/pricing-mode.test.ts src/lib/view-models.test.ts` (apps/erp) -> modules `./lot-pricing-panel` and `./pricing-mode` unresolved; view-model `pricingMode` undefined; lot detail missing `Guardar y recalcular` for a custom lot.
 - T3 GREEN: `pnpm --filter @atika/erp test` -> 82 files / 554 tests passed; typecheck and lint ok.
 - Decision: `saveLotShipping` keeps its behavior (no reprice) and message.
+- Parent spot check: `pnpm --filter @atika/erp test` -> 82 files / 554 passed. Native risk assess (base main, committed-only): medium; RDD off, so no review ran. Branch total ~1000 authored lines (over the ~400 budget); no PR planned, user decides delivery.
 
 ## Next step
 
