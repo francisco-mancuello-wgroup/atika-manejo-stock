@@ -8,8 +8,8 @@ const UNKNOWN_LOTS = "Alguno de los lotes elegidos no existe.";
 
 /**
  * Validates the form, stores the singleton settings row (percentages become fractions) and, in
- * the same transaction, writes the saved sale factor and IVA into the targeted lots and reprices
- * their products. Each lot keeps its own exchange rate, cost share and shipping.
+ * the same transaction, writes the saved exchange rate, sale factor, IVA and cost share into the
+ * targeted lots and reprices their products. Only the shipping comes from each lot (purchase data).
  */
 export async function saveAndApplySettings(
   db: TransactionRunner,
@@ -47,10 +47,10 @@ export async function saveAndApplySettings(
     for (const id of targets) {
       const lot = await tx.lot.findUniqueOrThrow({ where: { id } });
       const result = await recalculateLot(tx, id, {
-        exchangeRate: lot.exchangeRate.toNumber(),
+        exchangeRate: settings.exchangeRate,
         saleFactor: settings.saleFactor,
         vatRate: settings.vatRate,
-        costRate: lot.costRate.toNumber(),
+        costRate: settings.costRate,
         totalShippingUsd: lot.totalShippingUsd.toNumber(),
       });
       if (result.ok) products += result.updatedProducts;

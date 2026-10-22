@@ -163,8 +163,8 @@ export function SettingsForm({
           ))}
         </ol>
         <p className="text-xs text-muted">
-          Al aplicar, cada lote conserva su tipo de cambio, su costo y su envío; solo cambian el
-          factor de venta y el IVA.
+          Al aplicar, cada lote elegido toma de acá el TC, el factor, el IVA y el % de costo, y
+          conserva su propio envío.
         </p>
       </section>
     </div>

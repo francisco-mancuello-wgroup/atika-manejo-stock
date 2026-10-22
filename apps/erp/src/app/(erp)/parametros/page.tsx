@@ -12,7 +12,7 @@ export default async function ParametrosPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Parámetros"
-        description="Tipo de cambio del día y valores por defecto, y a qué lotes aplicarlos."
+        description="Único lugar donde se definen los precios: TC, factor, IVA y % de costo, y a qué lotes aplicarlos."
       />
       <SettingsForm settings={settings} lots={lots} action={saveSettingsAction} />
     </div>

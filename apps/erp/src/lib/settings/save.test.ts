@@ -38,7 +38,7 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
     });
   });
 
-  it("applies factor and IVA to the selected lots only, keeping their own rates", async () => {
+  it("applies every pricing parameter to the selected lots only, keeping their shipping", async () => {
     await withRollback(async (tx) => {
       const a = await createFixtureLot(tx, [
         { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
@@ -58,12 +58,12 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
       const stored = await tx.lot.findUniqueOrThrow({ where: { id: a.lot.id } });
       expect(stored.saleFactor.toNumber()).toBe(3);
       expect(stored.vatRate.toNumber()).toBe(0.05);
-      // Exchange rate, cost rate and shipping stay as the lot had them.
-      expect(stored.exchangeRate.toNumber()).toBe(7000);
-      expect(stored.costRate.toNumber()).toBe(0.5);
+      expect(stored.exchangeRate.toNumber()).toBe(7450);
+      expect(stored.costRate.toNumber()).toBe(0.6);
+      // Shipping is purchase data: the lot keeps its own.
       expect(stored.totalShippingUsd.toNumber()).toBe(20);
       const [expected] = priceLot(
-        { exchangeRate: 7000, saleFactor: 3, vatRate: 0.05, costRate: 0.5, totalShippingUsd: 20 },
+        { exchangeRate: 7450, saleFactor: 3, vatRate: 0.05, costRate: 0.6, totalShippingUsd: 20 },
         [{ id: "x", originalValueUsd: 100, units: 3 }],
       );
       const product = await tx.product.findUniqueOrThrow({ where: { id: a.products[0]?.id } });
@@ -72,6 +72,8 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
       const untouched = await tx.lot.findUniqueOrThrow({ where: { id: b.lot.id } });
       expect(untouched.saleFactor.toNumber()).toBe(2.5);
       expect(untouched.vatRate.toNumber()).toBe(0.1);
+      expect(untouched.exchangeRate.toNumber()).toBe(7000);
+      expect(untouched.costRate.toNumber()).toBe(0.5);
       const untouchedProduct = await tx.product.findUniqueOrThrow({
         where: { id: b.products[0]?.id },
       });
@@ -79,7 +81,7 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
     });
   });
 
-  it("applies factor and IVA to every lot when the scope is all", async () => {
+  it("applies every pricing parameter to every lot when the scope is all", async () => {
     await withRollback(async (tx) => {
       const a = await createFixtureLot(tx, [
         { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
@@ -99,6 +101,9 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
         const stored = await tx.lot.findUniqueOrThrow({ where: { id: lot.id } });
         expect(stored.saleFactor.toNumber()).toBe(3);
         expect(stored.vatRate.toNumber()).toBe(0.05);
+        expect(stored.exchangeRate.toNumber()).toBe(7450);
+        expect(stored.costRate.toNumber()).toBe(0.6);
+        expect(stored.totalShippingUsd.toNumber()).toBe(20);
       }
     });
   });

@@ -39,6 +39,8 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 
 ## Progress
 
+- 2026-10-22: T5 — `saveAndApplySettings` passes saved TC, factor, IVA and % costo to `recalculateLot`; only shipping comes from the lot. Copy updated (page description, formula note). RED: save.test 2 failed (+ new copy test); GREEN: settings, settings-forms, app 44/44.
+
 - 2026-10-22: T4 — singular/plural copy ("Se recalcula 1 lote · 12 productos", "Se actualizó 1 lote y se recalcularon 12 precios.", "1 producto" in the checklist) via `countOf` in lib/format. RED: 4 failed (format, save, settings-forms x2); GREEN: erp 372/372, lint ok (pre-existing warning), tsc ok.
 
 - 2026-10-22: T3 — formula block redesigned as numbered steps (label, formula, rounding note) after user feedback ("más limpio y profesional"). RED: `vitest run src/components/settings-forms` 1 failed (no list named "Cómo se calcula el precio"); GREEN 6/6; tsc ok.
@@ -51,7 +53,7 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 
 - [x] T4 — Singular/plural copy in summary, checklist and success message.
 
-- [ ] T5 — Apply scope writes all four pricing params (TC, factor, IVA, % costo) to targeted lots; each lot keeps only its shipping. Update copy (page description, formula note, summary/success texts if needed).
+- [x] T5 (commit: `feat(erp): apply every pricing parameter from Parámetros`) — Apply scope writes all four pricing params (TC, factor, IVA, % costo) to targeted lots; each lot keeps only its shipping. Update copy (page description, formula note, summary/success texts if needed).
 - [ ] T6 — Compras lot detail: remove the pricing form ("Parámetros del lote" / "Guardar y recalcular"). Show the lot's pricing values read-only with a link to Parámetros, plus one editable "Envío total (US$)" that saves only the lot's shipping (no repricing) and says prices update when applied from Parámetros.
 
 ## Verification evidence

@@ -16,6 +16,15 @@ function renderForm(action: Action = idle) {
 }
 
 describe("SettingsForm", () => {
+  it("explains that applying takes every value from here except the lot shipping", () => {
+    renderForm();
+    expect(
+      screen.getByText(
+        "Al aplicar, cada lote elegido toma de acá el TC, el factor, el IVA y el % de costo, y conserva su propio envío.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("shows the saved settings with percentages and only saves by default", () => {
     renderForm();
     expect(screen.getByLabelText("TC del día (₲ / US$)")).toHaveValue(7400);
