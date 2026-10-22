@@ -62,6 +62,10 @@ describe("schema", () => {
     );
   });
 
+  it("gives every size its own unique barcode", () => {
+    expect(Object.values(Prisma.ProductVariantScalarFieldEnum)).toContain("barcode");
+  });
+
   it("keeps the recalculated price and catalog visibility on the product", () => {
     expect(Object.values(Prisma.ProductScalarFieldEnum)).toEqual(
       expect.arrayContaining(["lotId", "originalValueUsd", "priceGs", "isPublished"]),

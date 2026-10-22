@@ -18,6 +18,8 @@ export async function getInventory(filters: InventoryFilters): Promise<Inventory
               { code: { contains: query, mode: "insensitive" } },
               { color: { contains: query, mode: "insensitive" } },
               { brand: { contains: query, mode: "insensitive" } },
+              // A scanner types the whole code: only an exact match, never a partial one.
+              { variants: { some: { barcode: { equals: query, mode: "insensitive" } } } },
             ],
           }
         : {}),

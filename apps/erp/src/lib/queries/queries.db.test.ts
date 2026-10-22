@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { disconnectTestDb, hasDatabase } from "../../test/db";
+import { disconnectTestDb, hasDatabase, testDb } from "../../test/db";
 import { getDb } from "../db";
 import { getInventory, getLotOptions } from "./inventory";
 import { getLotDetail, getLotSummaries, getLotsForPricingPreview } from "./lots";
@@ -66,6 +66,19 @@ describe.skipIf(!hasDatabase)("read queries (database)", () => {
     expect(byText.map((p) => p.id)).toContain(first?.id);
     expect(await getInventory({ query: "zzz-no-such-product" })).toEqual([]);
     expect(await getInventory({ lotId: "not-a-uuid" })).toHaveLength(all.length);
+  });
+
+  it("finds a product by the exact barcode of one of its sizes, trimmed and case-insensitive", async () => {
+    const variant = await testDb().productVariant.findFirstOrThrow({
+      select: { barcode: true, productId: true },
+    });
+    for (const query of [variant.barcode, ` ${variant.barcode.toLowerCase()} `]) {
+      const found = await getInventory({ query });
+      expect(found.map((p) => p.id)).toEqual([variant.productId]);
+    }
+    // Only the whole code matches: a prefix must not surface unrelated products.
+    const prefix = await getInventory({ query: variant.barcode.slice(0, -1) });
+    expect(prefix.map((p) => p.id)).not.toContain(variant.productId);
   });
 
   it("offers only products with sizes in stock for the sale form", async () => {

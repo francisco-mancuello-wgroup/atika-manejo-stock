@@ -52,13 +52,13 @@ export function InventarioView({
               </Select>
             </Field>
           </div>
-          <div className="w-72">
+          <div className="w-80">
             <Field label="Buscar" htmlFor="q">
               <Input
                 id="q"
                 name="q"
                 type="search"
-                placeholder="Nombre, código o color"
+                placeholder="Nombre, código, color o código de barras"
                 defaultValue={filters.query ?? ""}
               />
             </Field>

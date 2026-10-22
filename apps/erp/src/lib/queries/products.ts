@@ -55,7 +55,7 @@ export interface ProductEdit {
   category: string | null;
   description: string | null;
   originalValueUsd: number;
-  sizes: { size: string; unitsBought: number; stock: number }[];
+  sizes: { size: string; unitsBought: number; stock: number; barcode: string }[];
   photos: { id: string; url: string }[];
   lot: LotPricingContext;
 }
@@ -84,7 +84,12 @@ export async function getProductForEdit(id: string): Promise<ProductEdit | null>
     category: product.category,
     description: product.description,
     originalValueUsd: product.originalValueUsd.toNumber(),
-    sizes: product.variants.map(({ size, unitsBought, stock }) => ({ size, unitsBought, stock })),
+    sizes: product.variants.map(({ size, unitsBought, stock, barcode }) => ({
+      size,
+      unitsBought,
+      stock,
+      barcode,
+    })),
     photos: product.images,
     lot: toContext(product.lot, (lotUnits._sum.unitsBought ?? 0) - own),
   };
@@ -105,4 +110,25 @@ export async function getLotPricingContexts(): Promise<LotPricingContext[]> {
       ),
     ),
   );
+}
+
+export interface ProductLabelData {
+  name: string;
+  catalogName: string | null;
+  priceGs: number;
+  variants: { size: string; barcode: string; stock: number }[];
+}
+
+/** What the label PDF needs: the product's names, price and each size's barcode. */
+export async function getProductLabelData(id: string): Promise<ProductLabelData | null> {
+  const product = await getDb().product.findUnique({
+    where: { id },
+    select: {
+      name: true,
+      catalogName: true,
+      priceGs: true,
+      variants: { select: { size: true, barcode: true, stock: true } },
+    },
+  });
+  return product;
 }
