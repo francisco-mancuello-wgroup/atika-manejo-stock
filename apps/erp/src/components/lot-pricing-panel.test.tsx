@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { vi } from "vitest";
 import type { FormState } from "../lib/action-state";
 import { LotPricingPanel } from "./lot-pricing-panel";
@@ -43,27 +43,23 @@ describe("LotPricingPanel", () => {
       );
     });
 
-    it("labels Global as the mode in use", () => {
+    it("badges Global as active and Propio as inactive", () => {
       renderPanel();
-      const region = screen.getByRole("region", { name: "Precios del lote" });
-      expect(within(region).getByText("Activo: Global")).toBeInTheDocument();
-      expect(within(region).queryByText("Activo: Propio")).not.toBeInTheDocument();
+      const list = screen.getByRole("list", { name: "Modo de precios" });
+      const [global, custom] = within(list).getAllByRole("listitem");
+      expect(global).toHaveTextContent("Global");
+      expect(global).toHaveTextContent("Activo");
+      expect(custom).toHaveTextContent("Propio");
+      expect(custom).toHaveTextContent("Inactivo");
     });
 
-    it("marks Global as the active mode", () => {
+    it("offers only the button to use Propio", () => {
       renderPanel();
-      const group = screen.getByRole("group", { name: "Modo de precios" });
-      expect(within(group).getByRole("button", { name: "Global" })).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
-      expect(within(group).getByRole("button", { name: "Propio" })).toHaveAttribute(
-        "aria-pressed",
-        "false",
-      );
+      expect(screen.getByRole("button", { name: "Usar propio" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Usar global" })).not.toBeInTheDocument();
     });
 
-    it("asks the server to switch to Propio", async () => {
+    it("asks the server to switch to Propio without showing a notice", async () => {
       const modeAction = vi.fn(
         async (_p: FormState, _d: FormData): Promise<FormState> => ({
           status: "success",
@@ -71,17 +67,38 @@ describe("LotPricingPanel", () => {
         }),
       );
       renderPanel({ modeAction });
-      fireEvent.click(screen.getByRole("button", { name: "Propio" }));
-      expect(await screen.findByRole("status")).toHaveTextContent("El lote ahora usa parámetros");
+      fireEvent.click(screen.getByRole("button", { name: "Usar propio" }));
+      await waitFor(() => expect(modeAction).toHaveBeenCalled());
       expect(sentForm(modeAction).get("mode")).toBe("custom");
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    it("shows the error when switching fails", async () => {
+      const modeAction = vi.fn(
+        async (_p: FormState, _d: FormData): Promise<FormState> => ({
+          status: "error",
+          message: "No se pudo guardar.",
+        }),
+      );
+      renderPanel({ modeAction });
+      fireEvent.click(screen.getByRole("button", { name: "Usar propio" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo guardar.");
     });
   });
 
   describe("custom mode", () => {
-    it("labels Propio as the mode in use", () => {
-      renderPanel({ mode: "custom" });
-      const region = screen.getByRole("region", { name: "Precios del lote" });
-      expect(within(region).getByText("Activo: Propio")).toBeInTheDocument();
+    it("badges Propio as active and offers the button to use Global", async () => {
+      const modeAction = vi.fn(idle);
+      renderPanel({ mode: "custom", modeAction });
+      const [global, custom] = within(
+        screen.getByRole("list", { name: "Modo de precios" }),
+      ).getAllByRole("listitem");
+      expect(global).toHaveTextContent("Inactivo");
+      expect(custom).toHaveTextContent("Activo");
+      expect(screen.queryByRole("button", { name: "Usar propio" })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Usar global" }));
+      await waitFor(() => expect(modeAction).toHaveBeenCalled());
+      expect(sentForm(modeAction).get("mode")).toBe("global");
     });
 
     it("shows an editable form with the lot's values and no link to Parámetros", () => {
@@ -92,10 +109,6 @@ describe("LotPricingPanel", () => {
       expect(screen.getByLabelText("Costo sobre valor original (%)")).toHaveValue(55);
       expect(screen.getByRole("button", { name: "Guardar y recalcular" })).toBeInTheDocument();
       expect(screen.queryByRole("link", { name: "Editar en Parámetros" })).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Propio" })).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
     });
 
     it("flags only the values that differ from the global ones", () => {
@@ -156,19 +169,6 @@ describe("LotPricingPanel", () => {
       );
       expect(await screen.findByText("El IVA no puede superar 100.")).toBeInTheDocument();
       expect(screen.getByLabelText("IVA (%)")).toHaveAttribute("aria-invalid", "true");
-    });
-
-    it("asks the server to switch back to Global", async () => {
-      const modeAction = vi.fn(
-        async (_p: FormState, _d: FormData): Promise<FormState> => ({
-          status: "success",
-          message: "El lote vuelve a seguir los Parámetros globales. Se recalcularon 4 precios.",
-        }),
-      );
-      renderPanel({ mode: "custom", modeAction });
-      fireEvent.click(screen.getByRole("button", { name: "Global" }));
-      expect(await screen.findByRole("status")).toHaveTextContent("vuelve a seguir");
-      expect(sentForm(modeAction).get("mode")).toBe("global");
     });
   });
 });

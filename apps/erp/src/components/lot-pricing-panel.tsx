@@ -34,9 +34,9 @@ const FIELDS = [
 }[];
 
 const MODES = [
-  ["global", "Global"],
-  ["custom", "Propio"],
-] as const satisfies readonly (readonly [LotPricingMode, string])[];
+  ["global", "Global", "Usar global"],
+  ["custom", "Propio", "Usar propio"],
+] as const satisfies readonly (readonly [LotPricingMode, string, string])[];
 
 /** A typed value differs from the global one when it parses and is not equal (decimal comma ok). */
 function differs(typed: string | undefined, global: number): boolean {
@@ -69,41 +69,49 @@ export function LotPricingPanel({
       aria-labelledby="lot-pricing-title"
       className="flex flex-col gap-4 border border-line bg-surface p-5"
     >
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="lot-pricing-title" className="font-display text-2xl text-ink">
-          Precios del lote
-        </h2>
-        <span className="bg-subtle px-2.5 py-1 text-xs font-medium text-ok">
-          Activo: {mode === "global" ? "Global" : "Propio"}
-        </span>
-      </div>
+      <h2 id="lot-pricing-title" className="font-display text-2xl text-ink">
+        Precios del lote
+      </h2>
 
       <form action={modeFormAction} className="flex flex-col gap-2">
-        <fieldset
+        <ul
           aria-label="Modo de precios"
-          className="m-0 grid min-w-0 grid-cols-2 border border-line p-0"
+          className="m-0 flex list-none flex-col border border-line p-0"
         >
-          {MODES.map(([value, label]) => {
+          {MODES.map(([value, label, useLabel]) => {
             const on = mode === value;
             return (
-              <button
+              <li
                 key={value}
-                type="submit"
-                name="mode"
-                value={value}
-                aria-pressed={on}
-                disabled={on || modePending}
-                className={cn(
-                  "h-10 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
-                  on ? "bg-ink text-surface" : "bg-surface text-ink hover:bg-subtle",
-                )}
+                className="flex min-h-12 items-center gap-3 border-b border-line px-3 py-2 last:border-b-0"
               >
-                {label}
-              </button>
+                <span className="text-sm font-medium text-ink">{label}</span>
+                <span
+                  className={cn(
+                    "px-2 py-0.5 text-xs font-medium",
+                    on ? "bg-subtle text-ok" : "bg-bg text-muted",
+                  )}
+                >
+                  {on ? "Activo" : "Inactivo"}
+                </span>
+                {on ? null : (
+                  <Button
+                    type="submit"
+                    name="mode"
+                    value={value}
+                    variant="secondary"
+                    size="sm"
+                    disabled={modePending}
+                    className="ml-auto"
+                  >
+                    {useLabel}
+                  </Button>
+                )}
+              </li>
             );
           })}
-        </fieldset>
-        <FormMessage state={modeState} />
+        </ul>
+        {modeState.status === "error" ? <FormMessage state={modeState} /> : null}
       </form>
 
       {mode === "global" ? (
