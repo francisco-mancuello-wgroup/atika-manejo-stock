@@ -11,7 +11,7 @@ The scope selector (new / selected / all) adds a decision the owner does not wan
 ## Scope
 
 - Remove the "Aplicar a" radio group, the lot checklist and the scope/lotIds handling (schema, save, action, tests). Saving always upserts the settings and reprices ALL lots in one transaction (each lot keeps only its own total shipping).
-- One button "Guardar y aplicar a todos los lotes" (pending "Aplicando…"). Summary line under it: "Se recalculan N lotes · M productos" (countOf singular/plural). Success: "Parámetros guardados. Se actualizaron N lotes y se recalcularon M precios." (singular aware).
+- One button "Aplicar" (pending "Aplicando…"). Summary line under it: "Se recalculan N lotes · M productos" (countOf singular/plural). Success: "Parámetros guardados. Se actualizaron N lotes y se recalcularon M precios." (singular aware).
 - New panel "Ver cálculo por lote": a lot select, then a table for that lot with one row per product: Producto, Unidades compradas, Valor original (US$), Envío por unidad (US$), Costo unitario (US$), Precio actual, Precio nuevo, Diferencia. Computed client-side with `@atika/pricing` (priceLot) from the values currently in the form (live, unsaved) and the lot's shipping. Invalid/empty inputs -> the panel shows "Completá los parámetros para ver el cálculo." Prices respect the Gs | US$ display currency like the other views (stored price is ₲; US$ uses TC del día, same formatter as the rest).
 - Formula block stays (numbered steps); its note says applying updates every lot.
 
@@ -30,6 +30,8 @@ The scope selector (new / selected / all) adds a decision the owner does not wan
 - [x] T2 — Per-lot calculation preview panel (query for lot products with units and current price, client component using @atika/pricing), tests. Commit 042d9cd.
 
 ## Progress
+
+- 2026-10-22: Button label shortened to "Aplicar" (user request). RED 3 failed, GREEN settings-forms 14/14, tsc ok.
 
 - 2026-10-22: Document created.
 - 2026-10-22: T2 done (commit 042d9cd).

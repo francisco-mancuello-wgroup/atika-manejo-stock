@@ -80,7 +80,7 @@ export function SettingsForm({
             {`${lots.length === 1 ? "Se recalcula" : "Se recalculan"} ${countOf(lots.length, "lote", "lotes")} · ${countOf(products, "producto", "productos")}`}
           </p>
           <Button type="submit" disabled={pending}>
-            {pending ? "Aplicando…" : "Guardar y aplicar a todos los lotes"}
+            {pending ? "Aplicando…" : "Aplicar"}
           </Button>
           <FormMessage state={state} />
         </form>

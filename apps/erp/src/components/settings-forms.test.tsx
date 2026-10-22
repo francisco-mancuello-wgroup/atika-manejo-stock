@@ -60,9 +60,7 @@ describe("SettingsForm", () => {
     expect(screen.queryByRole("radio")).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.getByText("Se recalculan 2 lotes · 6 productos")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Guardar y aplicar a todos los lotes" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Aplicar" })).toBeInTheDocument();
   });
 
   it("uses the singular in the summary for one lot with one product", () => {
@@ -82,9 +80,7 @@ describe("SettingsForm", () => {
     renderForm(action);
     fireEvent.change(screen.getByLabelText("IVA (%)"), { target: { value: "5" } });
     fireEvent.submit(
-      screen
-        .getByRole("button", { name: "Guardar y aplicar a todos los lotes" })
-        .closest("form") as HTMLFormElement,
+      screen.getByRole("button", { name: "Aplicar" }).closest("form") as HTMLFormElement,
     );
     expect(await screen.findByRole("status")).toHaveTextContent("Se actualizaron 2 lotes");
     const data = action.mock.calls[0]?.[1] as FormData;
@@ -102,9 +98,7 @@ describe("SettingsForm", () => {
     });
     renderForm(action);
     fireEvent.submit(
-      screen
-        .getByRole("button", { name: "Guardar y aplicar a todos los lotes" })
-        .closest("form") as HTMLFormElement,
+      screen.getByRole("button", { name: "Aplicar" }).closest("form") as HTMLFormElement,
     );
     expect(await screen.findByText("El IVA no puede superar 100.")).toBeInTheDocument();
     expect(screen.getByLabelText("IVA (%)")).toHaveAttribute("aria-invalid", "true");
