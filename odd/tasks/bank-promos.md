@@ -63,6 +63,7 @@ Let the owner publish bank card promotions (installments, refunds, discounts) fr
 - T2 RED: new tests for logo storage, schema, save (DB), queries (DB), BanksView, `prepareUpload` custom side and the actions guard -> 7 files failed (missing modules) + 2 assertion failures. GREEN: erp 438 tests passed. Note: Vitest's content-hash cache kept a stale `import.meta.glob` result for `actions-guard.test.ts` after the RED run; `rm -rf node_modules/.vitest-cache` fixes it (not a code issue).
 - T3 RED: tests for schema, format, save (DB), queries (DB), BankPromosView and BankPromoForm -> 6 files failed (missing modules). GREEN: erp 497 tests passed (78 files).
 - T4 RED: pricing (7 failed: value/sortPromosForDisplay/mergePromoGroups), catalog (3 new files failing on missing modules + 9 failing tests: sheet, add-to-cart, 5 DB). GREEN: pricing 55, catalog 246 passed after updating the sheet-detail key whitelist test (`bankPromos` is an intentional public field).
+- T4 commit: 6b1610c `feat(catalog): show bank promos on products`.
 - T3 commit: 2e89f2d `feat(erp): bank promos list and form`.
 - T2 commit: a65a47d `feat(erp): manage banks`.
 - T1 commit: 39b2d38 `feat(db): bank promos schema and rules`.
