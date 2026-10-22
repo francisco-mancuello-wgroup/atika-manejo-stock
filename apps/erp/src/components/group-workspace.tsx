@@ -13,9 +13,10 @@ import {
   rowRemaining,
   savedDraft,
 } from "../lib/catalog-groups/matrix";
-import type { GroupDetail } from "../lib/queries/catalog-groups";
+import type { GroupDetail, GroupOptions } from "../lib/queries/catalog-groups";
 import { FormMessage } from "./form-controls";
 import type { GroupActions } from "./group-actions";
+import { GroupAddModal } from "./group-add-modal";
 import { GroupKpis } from "./group-kpis";
 import { GroupMatrix } from "./group-matrix";
 import { GroupSaveBar } from "./group-save-bar";
@@ -28,13 +29,12 @@ import { GroupToolbar } from "./group-toolbar";
  */
 export function GroupWorkspace({
   detail,
+  options,
   actions,
-  onAdd,
 }: {
   detail: GroupDetail;
+  options: GroupOptions;
   actions: GroupActions;
-  /** Opens the add products dialog. */
-  onAdd?: () => void;
 }) {
   const nextSaved = savedDraft(detail.products);
   const signature = JSON.stringify(nextSaved);
@@ -51,6 +51,7 @@ export function GroupWorkspace({
   const [filter, setFilter] = useState<RowFilter>("todas");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const changes = draftChanges(detail.products, saved, draft);
@@ -97,7 +98,7 @@ export function GroupWorkspace({
         total={detail.products.length}
         soldOut={soldOut}
         onAssignAll={() => setDraft(assignAllFree(detail.products))}
-        onAdd={onAdd}
+        onAdd={() => setAdding(true)}
       />
       {removeError ? <FormMessage state={{ status: "error", message: removeError }} /> : null}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -135,6 +136,16 @@ export function GroupWorkspace({
           <GroupDangerCard detail={detail} action={actions.deleteGroup} />
         </div>
       </div>
+      {adding ? (
+        <GroupAddModal
+          groupId={detail.id}
+          groupName={detail.name}
+          options={options}
+          listCandidates={actions.listCandidates}
+          addProducts={actions.addProducts}
+          onClose={() => setAdding(false)}
+        />
+      ) : null}
       <GroupSaveBar
         changes={changes}
         pending={pending}

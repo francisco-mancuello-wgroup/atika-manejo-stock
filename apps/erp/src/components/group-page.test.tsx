@@ -11,6 +11,8 @@ const ok = async (): Promise<FormState> => ({ status: "success", message: "ok" }
 const actions = {
   saveGroup: vi.fn(async (_id: string | null, _p: FormState, _d: FormData) => ok()),
   saveAllocations: vi.fn(ok),
+  addProducts: vi.fn(ok),
+  listCandidates: vi.fn(async () => []),
   removeProduct: vi.fn(ok),
   deleteGroup: vi.fn(ok),
   setActive: vi.fn(ok),
@@ -27,7 +29,7 @@ const detail: GroupDetail = {
 };
 
 function renderPage(group: GroupDetail | null) {
-  render(<GroupPage detail={group} actions={actions} />);
+  render(<GroupPage detail={group} options={{ lots: [], brands: [] }} actions={actions} />);
 }
 
 describe("GroupPage", () => {

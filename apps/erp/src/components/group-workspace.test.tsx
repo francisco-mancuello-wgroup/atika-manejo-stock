@@ -58,6 +58,8 @@ function actions(overrides: Partial<GroupActions> = {}): GroupActions {
   return {
     saveGroup: vi.fn(async (_id: string | null, _p: FormState, _d: FormData) => ok()),
     saveAllocations: vi.fn(ok),
+    addProducts: vi.fn(ok),
+    listCandidates: vi.fn(async () => []),
     removeProduct: vi.fn(ok),
     deleteGroup: vi.fn(ok),
     setActive: vi.fn(ok),
@@ -67,7 +69,7 @@ function actions(overrides: Partial<GroupActions> = {}): GroupActions {
 
 function renderWorkspace(overrides: Partial<GroupActions> = {}, group: GroupDetail = detail) {
   const a = actions(overrides);
-  render(<GroupWorkspace detail={group} actions={a} />);
+  render(<GroupWorkspace detail={group} options={{ lots: [], brands: [] }} actions={a} />);
   return a;
 }
 
@@ -217,6 +219,14 @@ describe("GroupWorkspace", () => {
     expect(input("Remera Ñandú", "XS")).toHaveValue(3);
     expect(input("Remera Ñandú", "XL")).toHaveValue(2);
     expect(screen.getByText(/2 cambios sin guardar/)).toBeInTheDocument();
+  });
+
+  it("opens the add products dialog and closes it", () => {
+    renderWorkspace();
+    fireEvent.click(screen.getByRole("button", { name: "Agregar prendas" }));
+    expect(screen.getByRole("dialog", { name: "Agregar prendas a Pink" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("removes a product from the group", async () => {

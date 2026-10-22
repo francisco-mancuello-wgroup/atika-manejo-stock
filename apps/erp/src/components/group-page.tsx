@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { windowLabel } from "../lib/catalog-groups/format";
 import { GROUPS_LIST_HREF } from "../lib/catalog-groups/workspace";
-import type { GroupDetail } from "../lib/queries/catalog-groups";
+import type { GroupDetail, GroupOptions } from "../lib/queries/catalog-groups";
 import type { GroupActions } from "./group-actions";
 import { GroupDataCard } from "./group-side-cards";
 import { GroupStatusPill } from "./group-status-pill";
@@ -36,9 +36,11 @@ function Breadcrumb({ current }: { current: string }) {
 /** A publication group on its own page: the group to edit, or none to create one. */
 export function GroupPage({
   detail,
+  options,
   actions,
 }: {
   detail: GroupDetail | null;
+  options: GroupOptions;
   actions: GroupActions;
 }) {
   if (!detail) {
@@ -78,7 +80,7 @@ export function GroupPage({
           />
         </div>
       </header>
-      <GroupWorkspace key={detail.id} detail={detail} actions={actions} />
+      <GroupWorkspace key={detail.id} detail={detail} options={options} actions={actions} />
     </div>
   );
 }
