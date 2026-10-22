@@ -15,11 +15,21 @@ import {
 const noFilters = { talle: null, q: null, orden: "recientes" as const, p: null };
 const open = { showPrices: true, showSoldOutSizes: false, hideOutOfStock: true };
 
+/**
+ * Like `withRollback`, but with every existing publication group switched off inside the
+ * transaction: a group active in the local database would otherwise flip the web to groups mode.
+ */
+const isolated: typeof withRollback = (fn) =>
+  withRollback(async (tx) => {
+    await tx.publicationGroup.updateMany({ data: { isActive: false } });
+    return fn(tx);
+  });
+
 describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   afterAll(disconnectTestDb);
 
   it("lists only published products, newest first", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       await tx.product.updateMany({ data: { isPublished: false } });
       await createProducts(tx, [
         { name: "Old", variants: [["M", 1]] },
@@ -32,7 +42,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   });
 
   it("honors hideOutOfStock", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       await tx.product.updateMany({ data: { isPublished: false } });
       await createProducts(tx, [
         { name: "In", variants: [["M", 1]] },
@@ -45,7 +55,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   });
 
   it("filters by category", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       await tx.product.updateMany({ data: { isPublished: false } });
       await createProducts(tx, [
         { name: "Dress", category: "vestidos", variants: [["M", 1]] },
@@ -57,7 +67,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   });
 
   it("returns catalog-safe products and hides unpublished ones from the product page", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const [visible, hidden] = await createProducts(tx, [
         { name: "Seen", variants: [["S", 2]] },
         { name: "Unseen", isPublished: false, variants: [["S", 2]] },
@@ -84,7 +94,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   });
 
   it("exposes the cover photo URL only", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const [id] = await createProducts(tx, [{ name: "Photo", variants: [["S", 1]] }]);
       await tx.productImage.createMany({
         data: [
@@ -99,7 +109,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   });
 
   it("hides a sold-out product page when hideOutOfStock is on", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const [out] = await createProducts(tx, [{ name: "Out", variants: [["S", 0]] }]);
       expect(await getProduct(tx, open, out ?? "")).toBeNull();
       expect((await getProduct(tx, { ...open, hideOutOfStock: false }, out ?? ""))?.name).toBe(
@@ -109,7 +119,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   });
 
   it("reads the catalog settings", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const settings = await getCatalogSettings(tx);
       expect(settings.whatsappNumber.length).toBeGreaterThan(0);
       expect(settings.messageTemplate).toContain("{producto}");
@@ -118,7 +128,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
 
   describe("filters", () => {
     it("filters by size: only products with stock in that size", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         await createProducts(tx, [
           {
@@ -147,7 +157,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
     });
 
     it("searches the name, case-insensitively", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         await createProducts(tx, [
           { name: "Aros dorados", variants: [["U", 1]] },
@@ -160,7 +170,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
     });
 
     it("searches the brand (the lot's supplier name as fallback)", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         const [id] = await createProducts(tx, [{ name: "Plain", variants: [["M", 1]] }]);
         await tx.product.update({ where: { id: id ?? "" }, data: { brand: "Zarita" } });
@@ -170,7 +180,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
     });
 
     it("sorts by price, ties broken by newest", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         await createProducts(tx, [
           { name: "Mid", priceGs: 200_000, variants: [["M", 1]] },
@@ -185,7 +195,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
     });
 
     it("ignores the price sort when prices are hidden", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         await createProducts(tx, [
           { name: "Old cheap", priceGs: 100_000, variants: [["M", 1]] },
@@ -200,7 +210,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
 
   describe("category counts", () => {
     it("counts published products per category plus the total, honoring size and stock", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         await createProducts(tx, [
           { name: "D1", category: "vestidos", variants: [["S", 1]] },
@@ -236,7 +246,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
 
   describe("product detail", () => {
     it("returns ordered photos, sizes, color and description for a published product", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         const [id] = await createProducts(tx, [
           {
             name: "Detail",
@@ -271,7 +281,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
     });
 
     it("is null for unpublished, unknown or malformed ids", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         const [hidden] = await createProducts(tx, [
           { name: "Unseen", isPublished: false, variants: [["S", 1]] },
         ]);
@@ -286,7 +296,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
     const unique = () => `Colección ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
     it("groups visible products by supplier, with count and cover of the first photo", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         const name = unique();
         await createProducts(
@@ -309,7 +319,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
     });
 
     it("presents the pieces of one collection in import order with every photo", async () => {
-      await withRollback(async (tx) => {
+      await isolated(async (tx) => {
         await tx.product.updateMany({ data: { isPublished: false } });
         const name = unique();
         await createProducts(
@@ -348,7 +358,7 @@ describe.skipIf(!hasDatabase)("catalog discounts (database)", () => {
   };
 
   it("applies the highest active discount to listProducts, getProduct and getProductDetail", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       await tx.discount.deleteMany();
       await tx.product.updateMany({ data: { isPublished: false } });
       const [a, b, c] = await createProducts(tx, [
@@ -401,7 +411,7 @@ describe.skipIf(!hasDatabase)("catalog discounts (database)", () => {
   });
 
   it("keeps products undiscounted without discounts and hides it with the prices", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       await tx.discount.deleteMany();
       const [id] = await createProducts(tx, [
         { name: "Solo", priceGs: 200_000, variants: [["M", 1]] },
@@ -421,7 +431,7 @@ describe.skipIf(!hasDatabase)("catalog discounts (database)", () => {
   });
 
   it("applies discounts to the presentation pieces and the lookbook pieces", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       await tx.discount.deleteMany();
       await tx.product.updateMany({ data: { isPublished: false } });
       const supplier = `Descuento ${Date.now()}`;
@@ -477,7 +487,7 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
   }
 
   it("attaches the grouped promos that cover each product to its detail", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const { a, b, c, lotAB, itau, conti } = await setup(tx);
       const banks = (...ids: string[]) => ({ create: ids.map((bankId) => ({ bankId })) });
       await tx.bankPromo.create({
@@ -524,7 +534,7 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
   });
 
   it("leaves out promos that are inactive, expired, scheduled or not valid on the weekday", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const { a, itau } = await setup(tx);
       const base = { kind: "installments" as const, scope: "all" as const };
       const banks = { create: [{ bankId: itau.id }] };
@@ -543,7 +553,7 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
   });
 
   it("shows no promos while prices are hidden, and none when there are none", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const { a, itau } = await setup(tx);
       expect((await getProductDetail(tx, open, a, now))?.bankPromos).toEqual([]);
       await tx.bankPromo.create({
@@ -560,7 +570,7 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
   });
 
   it("attaches the promos to the lookbook pieces", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const { a, itau } = await setup(tx);
       await tx.product.update({
         where: { id: a },
@@ -582,7 +592,7 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
   });
 
   it("lists the live promos for the terms page, without lot or product ids", async () => {
-    await withRollback(async (tx) => {
+    await isolated(async (tx) => {
       const { a, itau, conti } = await setup(tx);
       await tx.bankPromo.create({
         data: {
@@ -635,6 +645,214 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
         ["appliesTo", "banks", "endsAt", "headline", "id", "kind", "startsAt", "terms"].sort(),
       );
       expect(await listPublicBankPromos(tx, { ...open, showPrices: false }, now)).toEqual([]);
+    });
+  });
+});
+
+describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
+  afterAll(disconnectTestDb);
+
+  const now = new Date("2030-06-15T12:00:00.000Z");
+  const day = 86_400_000;
+
+  /** Puts `[size, allocated, sold]` of a product into a new group. */
+  async function group(
+    tx: Parameters<Parameters<typeof withRollback>[0]>[0],
+    productId: string,
+    allocations: [string, number, number?][],
+    data: { isActive?: boolean; startsAt?: Date; endsAt?: Date } = {},
+  ) {
+    const variants = await tx.productVariant.findMany({ where: { productId } });
+    await tx.publicationGroup.create({
+      data: {
+        name: "Test group",
+        isActive: data.isActive ?? true,
+        startsAt: data.startsAt ?? null,
+        endsAt: data.endsAt ?? null,
+        allocations: {
+          create: allocations.map(([size, allocated, sold]) => ({
+            variantId: variants.find((variant) => variant.size === size)?.id ?? "",
+            allocated,
+            sold: sold ?? 0,
+          })),
+        },
+      },
+    });
+  }
+
+  const sizesOf = async (products: { sizes: { size: string }[] }[]) =>
+    products.map((product) => product.sizes.map((size) => size.size));
+
+  it("with no active group shows published products with their full physical stock", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [pub, hidden] = await createProducts(tx, [
+        {
+          name: "Published",
+          variants: [
+            ["S", 5],
+            ["M", 2],
+          ],
+        },
+        { name: "Hidden", isPublished: false, variants: [["M", 4]] },
+      ]);
+      // Switched off, scheduled and expired groups don't count as active.
+      await group(tx, pub ?? "", [["S", 1]], { isActive: false });
+      await group(tx, pub ?? "", [["S", 1]], { startsAt: new Date(now.getTime() + day) });
+      await group(tx, hidden ?? "", [["M", 1]], { endsAt: new Date(now.getTime() - day) });
+      const products = await listProducts(tx, open, null, noFilters, now);
+      expect(products.map((p) => p.name)).toEqual(["Published"]);
+      expect(await sizesOf(products)).toEqual([["S", "M"]]);
+      expect((await getProduct(tx, open, pub ?? "", now))?.name).toBe("Published");
+      expect(await getProduct(tx, open, hidden ?? "", now)).toBeNull();
+      expect(await getProductDetail(tx, open, hidden ?? "", now)).toBeNull();
+      expect((await countProductsByCategory(tx, open, noFilters, now)).novedades).toBe(1);
+    });
+  });
+
+  it("with an active group shows only its products and grouped sizes, ignoring isPublished", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [grouped, published, plain] = await createProducts(tx, [
+        {
+          name: "Grouped",
+          isPublished: false,
+          category: "vestidos",
+          variants: [
+            ["S", 5],
+            ["M", 5],
+          ],
+        },
+        { name: "Published", category: "vestidos", variants: [["M", 5]] },
+        { name: "Plain", isPublished: false, variants: [["M", 5]] },
+      ]);
+      await group(tx, grouped ?? "", [["S", 3]]);
+      const shown = { ...open, showSoldOutSizes: true };
+      const products = await listProducts(tx, shown, null, noFilters, now);
+      expect(products.map((p) => p.name)).toEqual(["Grouped"]);
+      // The ungrouped size M reads sold out instead of showing its free stock.
+      expect(products[0]?.sizes).toEqual([
+        { size: "S", available: true },
+        { size: "M", available: false },
+      ]);
+      expect(await sizesOf(await listProducts(tx, open, null, noFilters, now))).toEqual([["S"]]);
+      expect((await getProduct(tx, open, grouped ?? "", now))?.name).toBe("Grouped");
+      expect((await getProductDetail(tx, open, grouped ?? "", now))?.name).toBe("Grouped");
+      // Published but outside the group, and unpublished without group: both are not found.
+      for (const id of [published, plain]) {
+        expect(await getProduct(tx, open, id ?? "", now)).toBeNull();
+        expect(await getProductDetail(tx, open, id ?? "", now)).toBeNull();
+      }
+      const counts = await countProductsByCategory(tx, open, noFilters, now);
+      expect(counts.novedades).toBe(1);
+      expect(counts.vestidos).toBe(1);
+    });
+  });
+
+  it("unions the products of several active groups", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [a, b, c] = await createProducts(tx, [
+        { name: "A", variants: [["M", 5]] },
+        { name: "B", isPublished: false, variants: [["M", 5]] },
+        { name: "C", variants: [["M", 5]] },
+      ]);
+      await group(tx, a ?? "", [["M", 2]]);
+      await group(tx, b ?? "", [["M", 2]]);
+      const names = (await listProducts(tx, open, null, noFilters, now)).map((p) => p.name).sort();
+      expect(names).toEqual(["A", "B"]);
+      expect(await getProduct(tx, open, c ?? "", now)).toBeNull();
+    });
+  });
+
+  it("a group sold out on every size follows hideOutOfStock", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id, other] = await createProducts(tx, [
+        { name: "Gone", isPublished: false, variants: [["M", 5]] },
+        { name: "Other", variants: [["M", 5]] },
+      ]);
+      await group(tx, id ?? "", [["M", 3, 3]]);
+      const showAll = { ...open, hideOutOfStock: false };
+      expect(await listProducts(tx, open, null, noFilters, now)).toEqual([]);
+      expect(await getProduct(tx, open, id ?? "", now)).toBeNull();
+      expect((await countProductsByCategory(tx, open, noFilters, now)).novedades).toBe(0);
+      // Shown sold out when out-of-stock products stay; the published one is still hidden.
+      const products = await listProducts(tx, showAll, null, noFilters, now);
+      expect(products.map((p) => p.name)).toEqual(["Gone"]);
+      expect((await getProduct(tx, showAll, id ?? "", now))?.name).toBe("Gone");
+      expect(await getProduct(tx, showAll, other ?? "", now)).toBeNull();
+      expect((await listCollections(tx, showAll, now)).length).toBe(1);
+    });
+  });
+
+  it("applies the size filter and the counts on group stock", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id] = await createProducts(tx, [
+        {
+          name: "Sized",
+          category: "vestidos",
+          isPublished: false,
+          variants: [
+            ["S", 5],
+            ["M", 5],
+          ],
+        },
+      ]);
+      await group(tx, id ?? "", [["S", 3]]);
+      const withS = { ...noFilters, talle: "S" };
+      const withM = { ...noFilters, talle: "M" };
+      expect((await listProducts(tx, open, null, withS, now)).length).toBe(1);
+      expect(await listProducts(tx, open, null, withM, now)).toEqual([]);
+      expect((await countProductsByCategory(tx, open, withS, now)).vestidos).toBe(1);
+      expect((await countProductsByCategory(tx, open, withM, now)).vestidos).toBe(0);
+    });
+  });
+
+  it("limits collections, presentation and lookbook to the active group", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [id] = await createProducts(
+        tx,
+        [
+          {
+            name: "Piece",
+            isPublished: false,
+            photos: ["/a.jpg"],
+            variants: [
+              ["S", 5],
+              ["M", 5],
+            ],
+          },
+        ],
+        "Group collection",
+      );
+      const [outside] = await createProducts(
+        tx,
+        [{ name: "Outside", photos: ["/b.jpg"], variants: [["M", 5]] }],
+        "Outside collection",
+      );
+      for (const [pid, order] of [
+        [id, 1],
+        [outside, 2],
+      ] as const) {
+        await tx.product.update({
+          where: { id: pid ?? "" },
+          data: { catalog: "milonga", catalogOrder: order },
+        });
+      }
+      await group(tx, id ?? "", [["S", 2]]);
+      expect(await listCollections(tx, open, now)).toMatchObject([
+        { name: "Group collection", count: 1 },
+      ]);
+      const collection = await getCollectionPresentation(tx, open, "group-collection", now);
+      expect(collection?.pieces.map((piece) => piece.sizes.map((s) => s.size))).toEqual([["S"]]);
+      expect(await getCollectionPresentation(tx, open, "outside-collection", now)).toBeNull();
+      const lookbook = await listLookbook(tx, open, now);
+      expect(lookbook.milonga.flatMap((page) => page.pieces.map((piece) => piece.sizes))).toEqual([
+        ["S"],
+      ]);
     });
   });
 });

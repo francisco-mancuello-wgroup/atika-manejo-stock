@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATALOGS, type LookbookRow, lookbookPages, pinkPages } from "./lookbook";
+import { CATALOGS, type LookbookRow, lookbookPages, pinkPages, withPieces } from "./lookbook";
 
 const settings = { showPrices: true, showSoldOutSizes: false };
 
@@ -33,6 +33,17 @@ function row(id: number, overrides: Partial<LookbookRow> = {}): LookbookRow {
 describe("CATALOGS", () => {
   it("shows Casa Icona, Milonga and Sordo, in that order", () => {
     expect(CATALOGS.map((catalog) => catalog.slug)).toEqual(["casa-icona", "milonga", "sordo"]);
+  });
+});
+
+describe("withPieces", () => {
+  it("leaves out the catalogs with 0 pieces, keeping the order", () => {
+    const catalogs = [
+      { slug: "casa-icona", pages: [{ id: 1 }] },
+      { slug: "milonga", pages: [] },
+      { slug: "sordo", pages: [{ id: 2 }, { id: 3 }] },
+    ];
+    expect(withPieces(catalogs).map((catalog) => catalog.slug)).toEqual(["casa-icona", "sordo"]);
   });
 });
 

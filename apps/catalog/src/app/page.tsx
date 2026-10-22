@@ -3,7 +3,7 @@ import { CatalogShelf, LookbookBook } from "../components/lookbook/book";
 import { CartProvider } from "../components/lookbook/cart";
 import { CATALOG_COVERS } from "../lib/catalog-covers";
 import { getDb } from "../lib/db";
-import { CATALOGS } from "../lib/lookbook";
+import { CATALOGS, withPieces } from "../lib/lookbook";
 import { getCatalogSettings, listLookbook } from "../lib/queries";
 import { requestOrigin } from "../lib/whatsapp";
 
@@ -19,11 +19,13 @@ export default async function HomePage() {
   const settings = await getCatalogSettings(db);
   const pages = await listLookbook(db, settings);
   const requestHeaders = await headers();
-  const catalogs = CATALOGS.map((catalog) => ({
-    ...catalog,
-    cover: CATALOG_COVERS[catalog.slug],
-    pages: pages[catalog.slug],
-  }));
+  const catalogs = withPieces(
+    CATALOGS.map((catalog) => ({
+      ...catalog,
+      cover: CATALOG_COVERS[catalog.slug],
+      pages: pages[catalog.slug],
+    })),
+  );
   return (
     <CartProvider whatsappNumber={settings.whatsappNumber}>
       <LookbookBook

@@ -1,12 +1,18 @@
+import { redirect } from "next/navigation";
 import { CatalogoWebView } from "../../../components/catalogo-web-view";
+import { GroupsView } from "../../../components/groups-view";
 import { parseCatalogFilters } from "../../../lib/catalog/filters";
+import { legacyGroupRedirect, parseCatalogTab } from "../../../lib/catalog-groups/workspace";
+import { getDb } from "../../../lib/db";
 import { getCurrencyDisplay } from "../../../lib/display-currency";
 import { getCatalogProducts, getCatalogSettings } from "../../../lib/queries/catalog";
+import { getActiveGroupNames, getGroupList } from "../../../lib/queries/catalog-groups";
 import {
   publishAllAction,
   saveCatalogSettingsAction,
   saveLookbookAction,
   setCategoryAction,
+  setGroupActiveAction,
   setVisibilityAction,
   setVisibilityManyAction,
 } from "./actions";
@@ -18,11 +24,16 @@ export default async function CatalogoWebPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const filters = parseCatalogFilters(await searchParams);
-  const [products, settings, display] = await Promise.all([
+  const params = await searchParams;
+  const legacy = legacyGroupRedirect(params);
+  if (legacy) redirect(legacy);
+  if (parseCatalogTab(params) === "grupos") return <GroupsTab />;
+  const filters = parseCatalogFilters(params);
+  const [products, settings, display, activeGroupNames] = await Promise.all([
     getCatalogProducts(filters),
     getCatalogSettings(),
     getCurrencyDisplay(),
+    getActiveGroupNames(getDb()),
   ]);
   return (
     <CatalogoWebView
@@ -30,6 +41,7 @@ export default async function CatalogoWebPage({
       settings={settings}
       filters={filters}
       display={display}
+      activeGroupNames={activeGroupNames}
       actions={{
         setVisibility: setVisibilityAction,
         setCategory: setCategoryAction,
@@ -40,4 +52,9 @@ export default async function CatalogoWebPage({
       }}
     />
   );
+}
+
+async function GroupsTab() {
+  const groups = await getGroupList(getDb(), new Date());
+  return <GroupsView groups={groups} actions={{ setActive: setGroupActiveAction }} />;
 }

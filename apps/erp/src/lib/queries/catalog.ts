@@ -4,6 +4,7 @@ import type { CatalogFilters } from "../catalog/filters";
 import { coverUrl } from "../cover";
 import { getDb } from "../db";
 import { sortSizes } from "../sizes";
+import { getProductGroupNames } from "./catalog-groups";
 
 export interface CatalogProduct {
   id: string;
@@ -23,6 +24,8 @@ export interface CatalogProduct {
   catalogName: string | null;
   /** In the Pink selection on the store's home. */
   inPink: boolean;
+  /** Name of the active publication group the product sits in, or null. */
+  groupName: string | null;
 }
 
 export interface CatalogSettingsView {
@@ -66,8 +69,12 @@ function whereFor(filters: CatalogFilters): Prisma.ProductWhereInput {
   };
 }
 
-export async function getCatalogProducts(filters: CatalogFilters): Promise<CatalogProduct[]> {
-  const products = await getDb().product.findMany({
+export async function getCatalogProducts(
+  filters: CatalogFilters,
+  db: Pick<Prisma.TransactionClient, "product" | "groupAllocation"> = getDb(),
+  now: Date = new Date(),
+): Promise<CatalogProduct[]> {
+  const products = await db.product.findMany({
     where: whereFor(filters),
     orderBy:
       filters.catalog && filters.catalog !== "ninguno"
@@ -79,6 +86,11 @@ export async function getCatalogProducts(filters: CatalogFilters): Promise<Catal
       images: { select: { url: true, position: true }, orderBy: { position: "asc" }, take: 1 },
     },
   });
+  const groupNames = await getProductGroupNames(
+    db,
+    products.map((product) => product.id),
+    now,
+  );
   return products.map((product) => ({
     id: product.id,
     name: product.name,
@@ -93,6 +105,7 @@ export async function getCatalogProducts(filters: CatalogFilters): Promise<Catal
     catalogSection: product.catalogSection,
     catalogName: product.catalogName,
     inPink: product.inPink,
+    groupName: groupNames.get(product.id) ?? null,
   }));
 }
 

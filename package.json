@@ -18,6 +18,7 @@
     "db:export-images": "pnpm --filter @atika/db db:export-images",
     "db:export-images-pdf": "pnpm --filter @atika/db db:export-images-pdf",
     "db:user": "pnpm --filter @atika/db db:user",
+    "db:group": "pnpm --filter @atika/db db:group",
     "db:banks": "pnpm --filter @atika/db db:banks"
   },
   "devDependencies": {

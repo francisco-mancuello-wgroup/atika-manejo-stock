@@ -5,7 +5,14 @@ import { LookbookBook } from "../../../components/lookbook/book";
 import { CartProvider } from "../../../components/lookbook/cart";
 import { CATALOG_COVERS } from "../../../lib/catalog-covers";
 import { getDb } from "../../../lib/db";
-import { ALL_CATALOGS, CATALOGS, findCatalog, PINK_EVENT, pinkPages } from "../../../lib/lookbook";
+import {
+  ALL_CATALOGS,
+  CATALOGS,
+  findCatalog,
+  PINK_EVENT,
+  pinkPages,
+  withPieces,
+} from "../../../lib/lookbook";
 import { getCatalogSettings, listLookbook } from "../../../lib/queries";
 import { requestOrigin } from "../../../lib/whatsapp";
 
@@ -37,18 +44,17 @@ export default async function CatalogPage({ params }: { params: Params }) {
   const settings = await getCatalogSettings(db);
   const pages = await listLookbook(db, settings);
   const requestHeaders = await headers();
+  const catalogs = shown.map((catalog) => ({
+    ...catalog,
+    cover: CATALOG_COVERS[catalog.slug],
+    pages: pink ? pinkPages(pages[catalog.slug]) : pages[catalog.slug],
+  }));
   return (
     <CartProvider whatsappNumber={settings.whatsappNumber}>
       <LookbookBook
         title={pink ? "Pink" : all ? "Átika" : first.name}
-        catalogs={shown
-          .map((catalog) => ({
-            ...catalog,
-            cover: CATALOG_COVERS[catalog.slug],
-            pages: pink ? pinkPages(pages[catalog.slug]) : pages[catalog.slug],
-          }))
-          // Pink skips the catalogs without pink pieces
-          .filter((catalog) => !pink || catalog.pages.length > 0)}
+        // Pink and "todos" skip the catalogs without pieces to show
+        catalogs={all ? withPieces(catalogs) : catalogs}
         origin={requestOrigin((name) => requestHeaders.get(name))}
         pagePath={`/catalogos/${slug}`}
       />

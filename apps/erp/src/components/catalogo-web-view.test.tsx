@@ -19,6 +19,7 @@ const products: CatalogProduct[] = [
     catalogSection: "Vestidos",
     catalogName: "Vestido Lino Icona",
     inPink: true,
+    groupName: null,
   },
   {
     id: "p2",
@@ -34,6 +35,7 @@ const products: CatalogProduct[] = [
     catalogSection: null,
     catalogName: null,
     inPink: false,
+    groupName: null,
   },
 ];
 
@@ -324,5 +326,77 @@ describe("CatalogoWebView", () => {
       "href",
       "/catalogo-web?estado=visibles&catalogo=sordo",
     );
+  });
+
+  it("links the Prendas and Grupos tabs with Prendas current", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+      />,
+    );
+    const nav = screen.getByRole("navigation", { name: "Secciones del catálogo" });
+    expect(within(nav).getByRole("link", { name: "Prendas" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(nav).getByRole("link", { name: "Grupos" })).toHaveAttribute(
+      "href",
+      "/catalogo-web?tab=grupos",
+    );
+  });
+
+  it("tells the web shows only the active groups, with a link to the Grupos tab", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+        activeGroupNames={["Evento Pink", "Verano"]}
+      />,
+    );
+    const notice = screen.getByRole("status");
+    expect(notice).toHaveTextContent(
+      "Hay un grupo activo (Evento Pink, Verano): la web muestra solo sus prendas. La publicación manual vuelve a aplicar cuando no haya grupos activos.",
+    );
+    expect(within(notice).getByRole("link", { name: "Ver grupos" })).toHaveAttribute(
+      "href",
+      "/catalogo-web?tab=grupos",
+    );
+    // The switches keep working.
+    expect(screen.getAllByRole("switch").length).toBeGreaterThan(0);
+  });
+
+  it("shows no notice when no group is active", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+        activeGroupNames={[]}
+      />,
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("badges the products that sit in an active group", () => {
+    render(
+      <CatalogoWebView
+        products={[
+          { ...(products[0] as CatalogProduct), groupName: "Verano" },
+          products[1] as CatalogProduct,
+        ]}
+        settings={settings}
+        filters={{ status: "todos" }}
+        actions={actions}
+      />,
+    );
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(within(rows[0] as HTMLElement).getByText("Grupo: Verano")).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).queryByText(/Grupo:/)).not.toBeInTheDocument();
   });
 });

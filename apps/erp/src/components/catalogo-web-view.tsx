@@ -12,6 +12,7 @@ import { moneyFormatter } from "../lib/format";
 import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog";
 import { BulkVisibilitySwitch } from "./bulk-visibility-switch";
 import { CatalogSettingsForm } from "./catalog-settings-form";
+import { CatalogTabs } from "./catalog-tabs";
 import { Field } from "./form-controls";
 import { LookbookButton } from "./lookbook-form";
 import { PageHeader } from "./page-header";
@@ -57,12 +58,15 @@ export function CatalogoWebView({
   filters,
   actions,
   display = { currency: "gs" },
+  activeGroupNames = [],
 }: {
   products: CatalogProduct[];
   settings: CatalogSettingsView;
   filters: CatalogFilters;
   actions: CatalogActions;
   display?: CurrencyDisplay;
+  /** Names of the groups active now: while any is, the web ignores the manual publication. */
+  activeGroupNames?: string[];
 }) {
   const money = moneyFormatter(display.currency, display.exchangeRate);
   return (
@@ -72,6 +76,20 @@ export function CatalogoWebView({
         description="Elegí qué prendas se ven en el catálogo público, en qué lookbook y página. Los cambios se aplican al instante."
         actions={<PublishAllForm action={actions.publishAll} />}
       />
+      <CatalogTabs active="prendas" />
+      {activeGroupNames.length > 0 ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 border border-line bg-surface px-4 py-3 text-sm text-ink"
+        >
+          <p>
+            {`Hay un grupo activo (${activeGroupNames.join(", ")}): la web muestra solo sus prendas. La publicación manual vuelve a aplicar cuando no haya grupos activos.`}
+          </p>
+          <Link href="/catalogo-web?tab=grupos" className="font-medium underline">
+            Ver grupos
+          </Link>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <nav aria-label="Filtro por estado" className="flex gap-1">
@@ -165,7 +183,14 @@ export function CatalogoWebView({
                   <td className={cn(table.td, "font-medium")}>
                     <div className="flex items-center gap-3">
                       <ProductThumb src={product.imageUrl} name={product.name} />
-                      {product.name}
+                      <div className="flex flex-col items-start gap-1">
+                        {product.name}
+                        {product.groupName ? (
+                          <span className="bg-subtle px-2 py-0.5 text-[11px] font-medium text-ink">
+                            {`Grupo: ${product.groupName}`}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   </td>
                   <td className={cn(table.td, "text-muted")}>{product.lotName}</td>

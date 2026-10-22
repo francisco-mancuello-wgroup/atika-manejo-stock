@@ -32,6 +32,11 @@ export function findCatalog(slug: string) {
   return CATALOGS.find((catalog) => catalog.slug === slug) ?? null;
 }
 
+/** Catalogs with at least one piece to show: an empty one isn't offered on the web. */
+export function withPieces<T extends { pages: readonly unknown[] }>(catalogs: readonly T[]): T[] {
+  return catalogs.filter((catalog) => catalog.pages.length > 0);
+}
+
 /** What the lookbook reads of a product (the public columns plus its placement). */
 export interface LookbookRow extends ProductSource {
   catalogName: string | null;
