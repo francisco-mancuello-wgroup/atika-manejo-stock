@@ -26,8 +26,11 @@ export function detectImageType(bytes: Uint8Array): ImageType | null {
 
 export type PreparedPhoto = { ok: true; bytes: Uint8Array } | { ok: false; error: string };
 
-/** Validates MIME + size + magic bytes, then optimizes to WebP (max 1600 px, quality 82). */
-export async function prepareUpload(upload: PhotoUpload): Promise<PreparedPhoto> {
+/** Validates MIME + size + magic bytes, then optimizes to WebP (longest side `maxSide`, quality 82). */
+export async function prepareUpload(
+  upload: PhotoUpload,
+  maxSide: number = MAX_SIDE,
+): Promise<PreparedPhoto> {
   if (
     !(ALLOWED as readonly string[]).includes(upload.type) ||
     detectImageType(upload.bytes) === null
@@ -40,7 +43,7 @@ export async function prepareUpload(upload: PhotoUpload): Promise<PreparedPhoto>
   try {
     const out = await sharp(upload.bytes)
       .rotate()
-      .resize({ width: MAX_SIDE, height: MAX_SIDE, fit: "inside", withoutEnlargement: true })
+      .resize({ width: maxSide, height: maxSide, fit: "inside", withoutEnlargement: true })
       .webp({ quality: WEBP_QUALITY })
       .toBuffer();
     return { ok: true, bytes: new Uint8Array(out) };

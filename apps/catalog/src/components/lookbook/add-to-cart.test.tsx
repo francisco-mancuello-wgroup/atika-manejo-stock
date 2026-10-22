@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { LookbookItem, LookbookPiece } from "../../lib/lookbook";
 import { AddToCart } from "./add-to-cart";
 import { CartProvider, useCart } from "./cart";
@@ -80,5 +80,72 @@ describe("AddToCart", () => {
     fireEvent.click(screen.getByRole("button", { name: "Talle S de T Bsc M" }));
     const button = screen.getByRole("button", { name: "Elegí tus talles" }) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
+  });
+});
+
+describe("AddToCart bank promos", () => {
+  const twelve = {
+    headline: "Hasta 12 cuotas sin intereses",
+    kind: "installments" as const,
+    value: 12,
+    banks: [{ id: "b1", name: "Itaú", logoUrl: null }],
+  };
+  const refund = {
+    headline: "20 % de reintegro",
+    kind: "refund" as const,
+    value: 20,
+    banks: [{ id: "b2", name: "Continental", logoUrl: null }],
+  };
+  const promos = () => screen.queryByRole("region", { name: "Nuestras promociones bancarias" });
+
+  it("shows the promos of the chosen color and switches them with it", () => {
+    const marfil = { ...piece("p1", "Falda", "Marfil", ["S"], 761_000), bankPromos: [twelve] };
+    const negro = { ...piece("p3", "Falda", "Negro", ["S", "M"], 790_000), bankPromos: [refund] };
+    render(
+      <CartProvider whatsappNumber="+595 992 442692">
+        <AddToCart
+          items={[{ name: "Falda", options: [marfil, negro] }]}
+          set={false}
+          description={null}
+          link={null}
+        />
+      </CartProvider>,
+    );
+    expect(promos()).toHaveTextContent("Hasta 12 cuotas sin intereses");
+    expect(promos()).not.toHaveTextContent("reintegro");
+    fireEvent.click(screen.getByRole("radio", { name: "Negro" }));
+    expect(promos()).toHaveTextContent("20 % de reintegro");
+    expect(promos()).not.toHaveTextContent("12 cuotas");
+  });
+
+  it("merges the promos of every garment of a set, once each", () => {
+    const skirt = { ...piece("p1", "Falda", "Marfil", ["S"], 761_000), bankPromos: [twelve] };
+    const shirt = {
+      ...piece("p2", "T Bsc M", "Negro", ["S"], 664_000),
+      bankPromos: [twelve, refund],
+    };
+    render(
+      <CartProvider whatsappNumber="+595 992 442692">
+        <AddToCart
+          items={[
+            { name: "Falda", options: [skirt] },
+            { name: "T Bsc M", options: [shirt] },
+          ]}
+          set
+          description={null}
+          link={null}
+        />
+      </CartProvider>,
+    );
+    const items = within(promos() as HTMLElement).getAllByRole("listitem");
+    expect(items.map((item) => item.textContent)).toEqual([
+      expect.stringContaining("Hasta 12 cuotas sin intereses"),
+      expect.stringContaining("20 % de reintegro"),
+    ]);
+  });
+
+  it("shows no block when the garments have no promos", () => {
+    renderSet();
+    expect(promos()).not.toBeInTheDocument();
   });
 });

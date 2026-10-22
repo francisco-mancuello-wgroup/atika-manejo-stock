@@ -175,6 +175,7 @@ describe("toCatalogProduct", () => {
     };
     const detail = toCatalogProductDetail(wide, open);
     expect(Object.keys(detail).sort()).toEqual([
+      "bankPromos",
       "brand",
       "category",
       "color",

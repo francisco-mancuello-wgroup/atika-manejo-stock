@@ -1,6 +1,16 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@atika/db";
-import { type DiscountRule, effectiveDiscount } from "@atika/pricing";
+import {
+  type BankPromoRule,
+  type DiscountRule,
+  effectiveDiscount,
+  groupPromosForDisplay,
+  isPromoLive,
+  type PromoGroup,
+  promosForProduct,
+  sortPromosForDisplay,
+} from "@atika/pricing";
+import { type PublicBankPromo, toPublicPromo } from "./bank-promos";
 import type { CatalogFilters } from "./catalog-filters";
 import {
   type CatalogProduct,
@@ -19,13 +29,18 @@ import {
 } from "./presentation";
 
 /** The slice of the Prisma client the catalog reads (a rolled back transaction works too). */
-export type CatalogDb = Pick<PrismaClient, "product" | "catalogSettings" | "discount">;
+export type CatalogDb = Pick<
+  PrismaClient,
+  "product" | "catalogSettings" | "discount" | "bankPromo"
+>;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Only these columns are ever selected: nothing sensitive is even read from the database. */
 const productSelect = {
   id: true,
+  /** Only to match lot-scoped bank promos; it never reaches a view model. */
+  lotId: true,
   name: true,
   brand: true,
   lot: { select: { supplier: { select: { name: true } } } },
@@ -95,6 +110,87 @@ function withDiscounts<T extends { id: string }>(
   now: Date,
 ): (T & { discountPercent: number | null })[] {
   return rows.map((row) => ({ ...row, discountPercent: effectiveDiscount(rules, row.id, now) }));
+}
+
+type LiveBankPromo = BankPromoRule & { id: string };
+
+/**
+ * Active bank promos as pricing rules (the window and weekday are judged by `isPromoLive`).
+ * Nothing is read when prices are hidden: the promos talk about paying for the price.
+ */
+async function loadBankPromoRules(
+  db: CatalogDb,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+): Promise<LiveBankPromo[]> {
+  if (!settings.showPrices) return [];
+  const rows = await db.bankPromo.findMany({
+    where: { isActive: true },
+    select: {
+      id: true,
+      kind: true,
+      value: true,
+      days: true,
+      capGs: true,
+      startsAt: true,
+      endsAt: true,
+      terms: true,
+      isActive: true,
+      scope: true,
+      banks: { select: { bank: { select: { id: true, name: true, logoUrl: true } } } },
+      lots: { select: { lotId: true } },
+      products: { select: { productId: true } },
+    },
+  });
+  return rows.map((row) => ({
+    id: row.id,
+    kind: row.kind,
+    value: row.value,
+    days: row.days,
+    capGs: row.capGs,
+    startsAt: row.startsAt,
+    endsAt: row.endsAt,
+    terms: row.terms,
+    isActive: row.isActive,
+    scope: row.scope,
+    lotIds: row.lots.map((lot) => lot.lotId),
+    productIds: row.products.map((product) => product.productId),
+    banks: row.banks.map(({ bank }) => bank),
+  }));
+}
+
+/**
+ * Attaches the grouped promos that cover each product today. Products covered by the same promos
+ * share one groups array, so the page payload does not repeat it per product.
+ */
+function withBankPromos<T extends { id: string; lotId: string }>(
+  rows: readonly T[],
+  rules: readonly LiveBankPromo[],
+  now: Date,
+): (T & { bankPromos: PromoGroup[] })[] {
+  const shared = new Map<string, PromoGroup[]>();
+  return rows.map((row) => {
+    const covering = promosForProduct(rules, { productId: row.id, lotId: row.lotId }, now);
+    const key = covering
+      .map((promo) => promo.id)
+      .sort()
+      .join(",");
+    let groups = shared.get(key);
+    if (!groups) {
+      groups = groupPromosForDisplay(covering);
+      shared.set(key, groups);
+    }
+    return { ...row, bankPromos: groups };
+  });
+}
+
+/** Every live bank promo, for the "bases y condiciones" page; nothing while prices are hidden. */
+export async function listPublicBankPromos(
+  db: CatalogDb,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+  now: Date = new Date(),
+): Promise<PublicBankPromo[]> {
+  const rules = await loadBankPromoRules(db, settings);
+  return sortPromosForDisplay(rules.filter((rule) => isPromoLive(rule, now))).map(toPublicPromo);
 }
 
 export async function getCatalogSettings(db: CatalogDb): Promise<CatalogSettingsView> {
@@ -212,7 +308,9 @@ export async function getProductDetail(
   });
   if (!row) return null;
   const [discounted] = withDiscounts([row], await loadDiscountRules(db, settings), now);
-  return discounted ? toCatalogProductDetail(discounted, settings) : null;
+  if (!discounted) return null;
+  const [withPromos] = withBankPromos([discounted], await loadBankPromoRules(db, settings), now);
+  return withPromos ? toCatalogProductDetail(withPromos, settings) : null;
 }
 
 /**
@@ -292,7 +390,11 @@ export async function listLookbook(
     orderBy: [{ catalogOrder: "asc" }, { id: "asc" }],
     select: lookbookSelect,
   });
-  const discounted = withDiscounts(rows, await loadDiscountRules(db, settings), now);
+  const discounted = withBankPromos(
+    withDiscounts(rows, await loadDiscountRules(db, settings), now),
+    await loadBankPromoRules(db, settings),
+    now,
+  );
   const byCatalog = Object.fromEntries(
     CATALOGS.map(({ slug, value }) => [
       slug,

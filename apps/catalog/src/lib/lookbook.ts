@@ -1,3 +1,4 @@
+import type { PromoGroup } from "@atika/pricing";
 import type { CatalogSettingsView, ProductSource } from "./catalog-view";
 import { type PieceColor, resolveColor } from "./colors";
 import { type PriceFields, priceFields } from "./price";
@@ -44,6 +45,8 @@ export interface LookbookPiece extends PriceFields {
   sizes: string[];
   color: PieceColor | null;
   description: string | null;
+  /** Bank promotions that cover this product today, grouped for display; none when absent. */
+  bankPromos?: PromoGroup[];
 }
 
 /**
@@ -97,6 +100,7 @@ function toPiece(
     sizes: availableSizes(row),
     color: resolveColor(row.color, row.name),
     description: row.description?.trim() || null,
+    bankPromos: row.bankPromos ?? [],
   };
 }
 

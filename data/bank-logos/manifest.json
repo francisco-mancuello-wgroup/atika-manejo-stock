@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Itaú",
+    "slug": "itau",
+    "file": "itau.webp",
+    "sourceUrl": "https://www.itau.com.py/images/logo_itau.png",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Continental",
+    "slug": "continental",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "ueno",
+    "slug": "ueno",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "BNF",
+    "slug": "bnf",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Sudameris",
+    "slug": "sudameris",
+    "file": "sudameris.webp",
+    "sourceUrl": "https://www.sudameris.com.py/themes/sudameris/assets/images/logo-sudameris-color.svg",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Visión",
+    "slug": "vision",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Basa",
+    "slug": "basa",
+    "file": "basa.webp",
+    "sourceUrl": "https://www.bancobasa.com.py/themes/default/assets/images/logo-basa.svg",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Familiar",
+    "slug": "familiar",
+    "file": "familiar.webp",
+    "sourceUrl": "https://cdn.prod.website-files.com/67dc13c0080579f362360a31/67dec80c5bd12b62877afc69_LOGO%20BANCO%20FAMILIAR%20-%20FULL%20COLOR%201.webp",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "GNB",
+    "slug": "gnb",
+    "file": "gnb.webp",
+    "sourceUrl": "https://www.bancognb.com.py/img/fusion/logo-gnb.svg",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Atlas",
+    "slug": "atlas",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Interfisa",
+    "slug": "interfisa",
+    "file": "interfisa.webp",
+    "sourceUrl": "https://www.interfisa.com.py/storage/app/media/logo.png",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Bancop",
+    "slug": "bancop",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Solar",
+    "slug": "solar",
+    "file": "solar.webp",
+    "sourceUrl": "https://www.solar.com.py/_next/static/media/solar_logo.590cac10.svg",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "FIC",
+    "slug": "fic",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Medalla Milagrosa",
+    "slug": "medalla-milagrosa",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  },
+  {
+    "name": "Paraguayo Japonesa",
+    "slug": "paraguayo-japonesa",
+    "file": null,
+    "sourceUrl": "",
+    "fetchedAt": "2026-10-22"
+  }
+]

@@ -1,26 +1,7 @@
 import { z } from "zod";
-import { fieldErrors, numberField } from "../form";
+import { checkbox, fieldErrors, numberField, optionalDate } from "../form";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const checkbox = z.preprocess((value) => value === "on" || value === "true", z.boolean());
-
-function isRealDate(value: string): boolean {
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
-
-/** Blank or missing means "no limit" (null). */
-function optionalDate(message: string) {
-  return z.preprocess(
-    (value) => (typeof value === "string" && value.trim() !== "" ? value.trim() : null),
-    z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, { error: message })
-      .refine(isRealDate, { error: message })
-      .nullable(),
-  );
-}
 
 export const DISCOUNT_SCOPES = ["all", "selected"] as const;
 

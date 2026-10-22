@@ -215,3 +215,16 @@ Product photos uploaded in the ERP (`/inventario/[id]`, `/inventario/nuevo`) are
 **does not preserve uploaded photos or edits made in the ERP products form** (the files stay on disk but nothing points
 to them). Storage sits behind the `PhotoStorage` interface (`saveProductPhoto`, `deleteProductPhoto`) in
 `apps/erp/src/lib/products/photo-storage.ts` so it can move to cloud storage later.
+
+## Banks
+
+`pnpm db:banks` (also run at the end of `pnpm db:seed`) creates the Paraguayan banks listed in
+`data/bank-logos/manifest.json` and points each one at its logo, `/media/banks/seed/<slug>.webp`.
+The `.webp` files (max 400px, transparent) are copied into `apps/{erp,catalog}/public/media/banks/seed/`
+(gitignored).
+- Banks match by name ignoring case; existing banks are never deleted and promos are never touched.
+- A logo uploaded from the ERP (`/media/banks/uploads/...`) is never replaced.
+- A manifest entry with `"file": null` is seeded without a logo; add the `.webp` to `data/bank-logos/`,
+  set `file`, and re-run to link it (or upload it from Promos → Bancos).
+- Logos came from each bank's official site (`sourceUrl` in the manifest); only those that were
+  readable on a light background are included.

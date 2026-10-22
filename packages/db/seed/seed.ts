@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
 import { createPrismaClient } from "../src/index";
 import { upsertAdmin } from "./admin";
+import { seedBanks } from "./banks/seed-banks";
 import { buildReport, type CategoryReport, formatReport, planChoices } from "./categories/choices";
 import {
   EMPTY_LOOKBOOK_PLAN,
@@ -135,6 +136,7 @@ async function main(): Promise<void> {
           `(${fromPdf} from brand PDFs, ${files.length - fromPdf} from workbooks)`,
       );
     }
+    console.log(await seedBanks(prisma));
     console.log(formatReport(report));
     console.log(formatLookbookReport(lookbook));
     console.table(

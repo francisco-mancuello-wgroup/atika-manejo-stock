@@ -36,6 +36,17 @@ describe("prepareUpload", () => {
     expect(small.ok).toBe(true);
   });
 
+  it("fits within a custom longest side (bank logos use a smaller one)", async () => {
+    const result = await prepareUpload(
+      { type: "image/png", bytes: await image("png", 1000, 500) },
+      400,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(await sharp(result.bytes).metadata()).toMatchObject({ width: 400, height: 200 });
+    }
+  });
+
   it("rejects a file whose declared type is not allowed", async () => {
     const result = await prepareUpload({ type: "image/gif", bytes: await image("png") });
     expect(result).toMatchObject({ ok: false, error: expect.stringContaining("JPG, PNG o WebP") });
