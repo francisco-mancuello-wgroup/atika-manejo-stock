@@ -1,4 +1,5 @@
 import type { FormState } from "../action-state";
+import { countOf } from "../format";
 import { recalculateLot } from "../lots/recalculate";
 import type { TransactionRunner } from "../lots/save";
 import { parseAppSettings } from "./schema";
@@ -68,6 +69,6 @@ export async function saveAndApplySettings(
   if (scope === "new") return { status: "success", message: "Parámetros guardados." };
   return {
     status: "success",
-    message: `Parámetros guardados. Se actualizaron ${outcome.lots} lotes y se recalcularon ${outcome.products} precios.`,
+    message: `Parámetros guardados. ${outcome.lots === 1 ? "Se actualizó" : "Se actualizaron"} ${countOf(outcome.lots, "lote", "lotes")} y ${outcome.products === 1 ? "se recalculó" : "se recalcularon"} ${countOf(outcome.products, "precio", "precios")}.`,
   };
 }

@@ -1,4 +1,12 @@
-import { formatDate, formatGs, formatInteger, formatUsd } from "./format";
+import { countOf, formatDate, formatGs, formatInteger, formatUsd } from "./format";
+
+describe("countOf", () => {
+  it("uses the singular only for exactly one", () => {
+    expect(countOf(1, "lote", "lotes")).toBe("1 lote");
+    expect(countOf(0, "lote", "lotes")).toBe("0 lotes");
+    expect(countOf(12, "precio", "precios")).toBe("12 precios");
+  });
+});
 
 describe("formatGs", () => {
   it("prefixes the guaraní sign and groups thousands with dots", () => {

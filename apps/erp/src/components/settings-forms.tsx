@@ -3,6 +3,7 @@
 import { Button, Input } from "@atika/ui";
 import { useActionState, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
+import { countOf } from "../lib/format";
 import type { SettingsLot } from "../lib/queries/lots";
 import type { AppSettingsView } from "../lib/queries/settings";
 import type { SettingsScope } from "../lib/settings/schema";
@@ -119,7 +120,9 @@ export function SettingsForm({
                   onChange={() => toggle(lot.id)}
                 />
                 <span>{lot.name}</span>
-                <span className="text-xs text-muted">{lot.productCount} productos</span>
+                <span className="text-xs text-muted">
+                  {countOf(lot.productCount, "producto", "productos")}
+                </span>
               </label>
             ))}
             {errors.lotIds ? (
@@ -133,7 +136,7 @@ export function SettingsForm({
         <p className="text-sm text-muted">
           {scope === "new"
             ? "Solo se guardan los valores por defecto."
-            : `Se recalculan ${targets.length} lotes · ${products} productos`}
+            : `${targets.length === 1 ? "Se recalcula" : "Se recalculan"} ${countOf(targets.length, "lote", "lotes")} · ${countOf(products, "producto", "productos")}`}
         </p>
         <Button type="submit" disabled={pending}>
           {pending ? "Guardando…" : scope === "new" ? "Guardar" : "Guardar y aplicar"}

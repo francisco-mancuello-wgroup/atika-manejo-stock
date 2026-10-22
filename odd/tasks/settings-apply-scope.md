@@ -37,6 +37,8 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 
 ## Progress
 
+- 2026-10-22: T4 — singular/plural copy ("Se recalcula 1 lote · 12 productos", "Se actualizó 1 lote y se recalcularon 12 precios.", "1 producto" in the checklist) via `countOf` in lib/format. RED: 4 failed (format, save, settings-forms x2); GREEN: erp 372/372, lint ok (pre-existing warning), tsc ok.
+
 - 2026-10-22: T3 — formula block redesigned as numbered steps (label, formula, rounding note) after user feedback ("más limpio y profesional"). RED: `vitest run src/components/settings-forms` 1 failed (no list named "Cómo se calcula el precio"); GREEN 6/6; tsc ok.
 
 - 2026-10-22: Document created.
@@ -44,6 +46,8 @@ Today the page has two independent forms ("Guardar parámetros" and "Aplicar a t
 - 2026-10-22: T2 done. `SettingsForm` (single form), `getLotsForSettings` query, page wired. Actions guard test unchanged (still enumerates the same modules; the removed action is simply gone).
 
 - [x] T3 — Cleaner formula block (numbered steps). See commit after 819d8a1.
+
+- [x] T4 — Singular/plural copy in summary, checklist and success message.
 
 ## Verification evidence
 

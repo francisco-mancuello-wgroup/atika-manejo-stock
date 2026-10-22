@@ -37,6 +37,7 @@ describe("SettingsForm", () => {
     expect(screen.getByRole("button", { name: "Guardar y aplicar" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("checkbox", { name: /Lote A/ }));
+    expect(screen.getByText("Se recalcula 1 lote · 12 productos")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: /Lote B/ }));
     expect(screen.getByText("Se recalculan 2 lotes · 17 productos")).toBeInTheDocument();
   });
@@ -53,7 +54,7 @@ describe("SettingsForm", () => {
     const action = vi.fn(
       async (_p: FormState, _d: FormData): Promise<FormState> => ({
         status: "success",
-        message: "Parámetros guardados. Se actualizaron 1 lotes y se recalcularon 12 precios.",
+        message: "Parámetros guardados. Se actualizó 1 lote y se recalcularon 12 precios.",
       }),
     );
     renderForm(action);
@@ -63,7 +64,7 @@ describe("SettingsForm", () => {
     fireEvent.submit(
       screen.getByRole("button", { name: "Guardar y aplicar" }).closest("form") as HTMLFormElement,
     );
-    expect(await screen.findByRole("status")).toHaveTextContent("1 lotes");
+    expect(await screen.findByRole("status")).toHaveTextContent("Se actualizó 1 lote");
     const data = action.mock.calls[0]?.[1] as FormData;
     expect(data.get("vatPercent")).toBe("5");
     expect(data.get("scope")).toBe("selected");

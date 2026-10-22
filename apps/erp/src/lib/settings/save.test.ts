@@ -52,7 +52,7 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
       ]);
       expect(state).toEqual({
         status: "success",
-        message: "Parámetros guardados. Se actualizaron 1 lotes y se recalcularon 1 precios.",
+        message: "Parámetros guardados. Se actualizó 1 lote y se recalculó 1 precio.",
       });
 
       const stored = await tx.lot.findUniqueOrThrow({ where: { id: a.lot.id } });
