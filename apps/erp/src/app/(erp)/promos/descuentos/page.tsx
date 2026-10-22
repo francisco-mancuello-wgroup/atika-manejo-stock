@@ -1,6 +1,6 @@
-import { DiscountsView } from "../../../components/discounts-view";
-import { getDb } from "../../../lib/db";
-import { getDiscountList } from "../../../lib/queries/discounts";
+import { DiscountsView } from "../../../../components/discounts-view";
+import { getDb } from "../../../../lib/db";
+import { getDiscountList } from "../../../../lib/queries/discounts";
 import { deleteDiscountAction, setDiscountActiveAction } from "./actions";
 
 export const dynamic = "force-dynamic";

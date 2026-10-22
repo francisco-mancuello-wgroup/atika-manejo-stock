@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { type FormState, formValues } from "../../../lib/action-state";
-import { requireSession } from "../../../lib/auth/session";
-import { getDb } from "../../../lib/db";
-import { deleteDiscount, saveDiscount, setDiscountActive } from "../../../lib/discounts/save";
+import { type FormState, formValues } from "../../../../lib/action-state";
+import { requireSession } from "../../../../lib/auth/session";
+import { getDb } from "../../../../lib/db";
+import { deleteDiscount, saveDiscount, setDiscountActive } from "../../../../lib/discounts/save";
 
 const FAILED = {
   status: "error",
@@ -18,7 +18,7 @@ function productIdsOf(formData: FormData): string[] {
 
 /** Prices change everywhere: the ERP list, the sale form and the public catalog read them. */
 function revalidateDiscounts() {
-  revalidatePath("/descuentos");
+  revalidatePath("/promos/descuentos");
   revalidatePath("/ventas");
 }
 
@@ -55,7 +55,7 @@ export async function createDiscountAction(
     console.error("createDiscountAction failed", error);
     return { ...FAILED, values };
   }
-  redirect("/descuentos");
+  redirect("/promos/descuentos");
 }
 
 export async function setDiscountActiveAction(

@@ -6,16 +6,52 @@ import { usePathname } from "next/navigation";
 import { logoutAction } from "../app/login/actions";
 import { formatInteger } from "../lib/format";
 
-const NAV_ITEMS = [
+type NavLink = { href: string; label: string };
+type NavGroup = { label: string; items: readonly NavLink[] };
+
+const NAV_ITEMS: readonly (NavLink | NavGroup)[] = [
   { href: "/", label: "Resumen" },
   { href: "/inventario", label: "Inventario" },
   { href: "/compras", label: "Compras" },
   { href: "/ventas", label: "Ventas" },
   { href: "/catalogo-web", label: "Catálogo web" },
-  { href: "/descuentos", label: "Descuentos" },
+  {
+    label: "Promos",
+    items: [
+      { href: "/promos/descuentos", label: "Descuentos" },
+      { href: "/promos/bancos", label: "Bancos" },
+    ],
+  },
   { href: "/parametros", label: "Parámetros" },
   { href: "/seguridad", label: "Seguridad" },
-] as const;
+];
+
+function NavItem({
+  item,
+  currentPath,
+  nested = false,
+}: {
+  item: NavLink;
+  currentPath: string;
+  nested?: boolean;
+}) {
+  const active = isActive(item.href, currentPath);
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "border-l-2 py-2 text-sm transition-colors",
+        nested ? "pr-3 pl-6" : "px-3",
+        active
+          ? "border-ink bg-subtle font-medium text-ink"
+          : "border-transparent text-muted hover:bg-subtle hover:text-ink",
+      )}
+    >
+      {item.label}
+    </Link>
+  );
+}
 
 function isActive(href: string, currentPath: string): boolean {
   return href === "/"
@@ -45,24 +81,20 @@ export function Sidebar({
         </span>
       </div>
       <nav aria-label="Principal" className="flex flex-1 flex-col gap-1">
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.href, currentPath);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "border-l-2 px-3 py-2 text-sm transition-colors",
-                active
-                  ? "border-ink bg-subtle font-medium text-ink"
-                  : "border-transparent text-muted hover:bg-subtle hover:text-ink",
-              )}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        {NAV_ITEMS.map((item) =>
+          "items" in item ? (
+            <fieldset key={item.label} className="m-0 flex flex-col gap-1 border-0 p-0">
+              <legend className="mb-1 px-3 pt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
+                {item.label}
+              </legend>
+              {item.items.map((child) => (
+                <NavItem key={child.href} item={child} currentPath={currentPath} nested />
+              ))}
+            </fieldset>
+          ) : (
+            <NavItem key={item.href} item={item} currentPath={currentPath} />
+          ),
+        )}
       </nav>
       <div className="flex flex-col gap-1 border-t border-line px-3 pt-4">
         <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted">

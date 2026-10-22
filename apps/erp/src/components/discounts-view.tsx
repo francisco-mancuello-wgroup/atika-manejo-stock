@@ -25,7 +25,7 @@ export function DiscountsView({
         title="Descuentos"
         description="Porcentajes que se descuentan del precio en el catálogo y en las ventas. Si dos descuentos coinciden, se aplica el mayor."
         actions={
-          <Link href="/descuentos/nuevo" className={buttonVariants()}>
+          <Link href="/promos/descuentos/nuevo" className={buttonVariants()}>
             Nuevo descuento
           </Link>
         }
@@ -68,7 +68,7 @@ export function DiscountsView({
                   <td className={table.td}>
                     <div className="flex items-center justify-end gap-4">
                       <Link
-                        href={`/descuentos/${discount.id}`}
+                        href={`/promos/descuentos/${discount.id}`}
                         aria-label={`Editar: ${discount.name}`}
                         className="text-sm font-medium text-ink underline-offset-4 hover:underline"
                       >

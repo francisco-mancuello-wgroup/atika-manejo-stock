@@ -58,11 +58,11 @@ describe("DiscountsView", () => {
     render(<DiscountsView discounts={discounts} actions={actions()} />);
     expect(screen.getByRole("link", { name: "Nuevo descuento" })).toHaveAttribute(
       "href",
-      "/descuentos/nuevo",
+      "/promos/descuentos/nuevo",
     );
     expect(screen.getByRole("link", { name: "Editar: Vestidos" })).toHaveAttribute(
       "href",
-      "/descuentos/d2",
+      "/promos/descuentos/d2",
     );
   });
 

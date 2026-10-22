@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // Product photos are uploaded through Server Actions (up to 10 MB each, several per save).
   experimental: { serverActions: { bodySizeLimit: "50mb" } },
+  // Discounts moved under Promos; old links keep working.
+  async redirects() {
+    return [
+      { source: "/descuentos/:path*", destination: "/promos/descuentos/:path*", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

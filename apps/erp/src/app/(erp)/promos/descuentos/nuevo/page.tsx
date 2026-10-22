@@ -1,7 +1,7 @@
-import { DiscountForm } from "../../../../components/discount-form";
-import { PageHeader } from "../../../../components/page-header";
-import { getDb } from "../../../../lib/db";
-import { getPickerProducts } from "../../../../lib/queries/discounts";
+import { DiscountForm } from "../../../../../components/discount-form";
+import { PageHeader } from "../../../../../components/page-header";
+import { getDb } from "../../../../../lib/db";
+import { getPickerProducts } from "../../../../../lib/queries/discounts";
 import { createDiscountAction } from "../actions";
 
 export const dynamic = "force-dynamic";

@@ -136,7 +136,10 @@ export function DiscountForm({
         <Button type="submit" disabled={pending}>
           {pending ? "Guardando…" : "Guardar"}
         </Button>
-        <Link href="/descuentos" className="text-sm text-muted underline-offset-4 hover:underline">
+        <Link
+          href="/promos/descuentos"
+          className="text-sm text-muted underline-offset-4 hover:underline"
+        >
           Cancelar
         </Link>
       </div>
