@@ -64,6 +64,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - [x] T11 — Group editor redesign (Pencil board G, option A + modal C): breadcrumb, header with status pill and switch, KPI strip, toolbar (search, chips, "Asignar todo el libre", "Agregar prendas"), quantity matrix with dirty tracking and sticky save bar, side cards (datos, cómo se cuenta, zona de riesgo), add-products modal with candidate checklist and proposals ("Todo el libre", "1 por talle", "0"). User request.
 - [x] T12 — Agregar prendas modal starts with nothing selected (preselecting everything made deselecting tedious); "Seleccionar las N" selects all. User request.
 - [x] T13 — "Si se activa un grupo pisa todo": public catalog switches to groups mode while any group is active (only grouped products and sizes, `isPublished` ignored) and back to manual publication otherwise; ERP Prendas tab shows a notice with the active group names and a link to Grupos. User decision.
+- [x] T14 — Catalogs with 0 visible pieces are not offered on the web (home shelf and /catalogos/todos; `withPieces`); shelf centers when 1–2 catalogs remain. User request.
 
 ## Acceptance criteria
 
@@ -118,6 +119,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - T13 RED: `pnpm exec vitest run src/lib/web-stock.test.ts src/lib/queries.db.test.ts` (apps/catalog) -> 5 pure tests failed (`webModeFor`/`webVisibilityWhere` missing, new `webStock` signature), 4 DB tests failed (active group still showed published/ungrouped products); `pnpm exec vitest run src/lib/queries/catalog-groups.db.test.ts src/components/catalogo-web-view.test.tsx` (apps/erp) -> 2 failed (`getActiveGroupNames` missing, no notice).
 - T13 GREEN: same files pass (catalog 261 tests, erp notice + query 25).
 - Final (T13): `pnpm --filter @atika/catalog test` 32 files / 261 passed; `pnpm --filter @atika/erp test` 98 files / 723 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings). Visual: `curl localhost:3000/` returned 200 with 68 "Casa Icona" matches and no "Pink"; no "N piezas" text found to compare.
+- T14 RED: `pnpm exec vitest run src/lib/lookbook.test.ts` (apps/catalog) -> 1 failed (`withPieces` not a function). GREEN: catalog suite 32 files / 262 passed; tsc ok; biome ok. Parent screenshot of localhost:3000 with Evento Pink active: only Casa Icona (18 piezas), centered.
 
 ## Next step
 

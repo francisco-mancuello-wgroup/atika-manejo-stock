@@ -1,3 +1,4 @@
+import { cn } from "@atika/ui";
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -218,6 +219,12 @@ export function LookbookBook({
 }
 
 /** Home's first screen: the three catalog covers, upright like the PDFs, and "Ver todo". */
+/** Fewer catalogs (the empty ones are hidden) stay centered at the width of three columns. */
+const SHELF_COLUMNS: Record<number, string> = {
+  1: "max-w-[440px]",
+  2: "max-w-[920px] sm:grid-cols-2",
+};
+
 export function CatalogShelf({ catalogs }: { catalogs: BookCatalog[] }) {
   return (
     <section
@@ -240,7 +247,12 @@ export function CatalogShelf({ catalogs }: { catalogs: BookCatalog[] }) {
           Ver todo
         </a>
       </div>
-      <ul className="grid gap-8 sm:grid-cols-3 sm:gap-4 lg:gap-8">
+      <ul
+        className={cn(
+          "mx-auto grid gap-8 sm:gap-4 lg:gap-8",
+          SHELF_COLUMNS[catalogs.length] ?? "sm:grid-cols-3",
+        )}
+      >
         {catalogs.map((catalog) => (
           <li key={catalog.slug}>
             <a href={`#${catalog.slug}`} className="group flex flex-col gap-4">
