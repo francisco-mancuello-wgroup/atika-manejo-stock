@@ -135,6 +135,27 @@ describe("SettingsForm", () => {
       expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
     });
 
+    it("expands when the hint under the title is clicked too", () => {
+      renderForm();
+      fireEvent.click(screen.getByText(/Compará, prenda por prenda/));
+      expect(toggle()).toHaveAttribute("aria-expanded", "true");
+      expect(table()).toBeInTheDocument();
+    });
+
+    it("filters the products of the lot by name, ignoring case and accents", () => {
+      renderForm();
+      fireEvent.click(toggle());
+      const search = screen.getByRole("searchbox", { name: "Buscar prenda" });
+      fireEvent.change(search, { target: { value: "REMÉRA" } });
+      const rows = within(table()).getAllByRole("row");
+      expect(rows).toHaveLength(2);
+      expect(rows[1]).toHaveTextContent("Remera");
+
+      fireEvent.change(search, { target: { value: "zzz" } });
+      expect(screen.getByText("Ninguna prenda coincide con la búsqueda.")).toBeInTheDocument();
+      expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
+    });
+
     it("lists a select with every lot, defaulting to the first one", () => {
       renderForm();
       fireEvent.click(toggle());
