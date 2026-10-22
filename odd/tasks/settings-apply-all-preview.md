@@ -31,6 +31,8 @@ The scope selector (new / selected / all) adds a decision the owner does not wan
 
 ## Progress
 
+- 2026-10-22: "Ver cálculo por lote" collapsed by default (heading button with aria-expanded/aria-controls, chevron, one-line hint when closed) per user feedback. RED 7 failed; GREEN settings-forms 15/15; erp 397/397, lint ok, tsc ok.
+
 - 2026-10-22: Button label shortened to "Aplicar" (user request). RED 3 failed, GREEN settings-forms 14/14, tsc ok.
 
 - 2026-10-22: Document created.
