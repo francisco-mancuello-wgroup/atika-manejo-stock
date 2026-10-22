@@ -19,7 +19,8 @@
     "db:export-images": "tsx seed/images/export-images.ts",
     "db:export-images-pdf": "tsx seed/images-pdf/export-images-pdf.ts",
     "db:export-looks": "tsx seed/categories/export-looks.ts",
-    "db:user": "tsx seed/user.ts"
+    "db:user": "tsx seed/user.ts",
+    "db:banks": "tsx seed/banks/seed-banks.ts"
   },
   "dependencies": {
     "@atika/pricing": "workspace:*",

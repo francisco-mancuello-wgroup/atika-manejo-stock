@@ -17,7 +17,8 @@
     "db:seed": "pnpm --filter @atika/db db:seed",
     "db:export-images": "pnpm --filter @atika/db db:export-images",
     "db:export-images-pdf": "pnpm --filter @atika/db db:export-images-pdf",
-    "db:user": "pnpm --filter @atika/db db:user"
+    "db:user": "pnpm --filter @atika/db db:user",
+    "db:banks": "pnpm --filter @atika/db db:banks"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.2",

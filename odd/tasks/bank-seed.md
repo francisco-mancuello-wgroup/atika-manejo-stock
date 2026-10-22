@@ -18,12 +18,20 @@ Seed the Paraguayan banks shown in the bank-promos reference (Nissei) with their
 
 ## Tasks
 
-- [ ] T1 — Logo collection (download + normalize + manifest) and the seed step + `db:banks` command with tests.
+- [x] T1 — Logo collection (7 of 16 logos; rest `file: null`, owner uploads them from the ERP) and the seed step + `db:banks` command with tests. Commit: COMMIT
 
 ## Progress
 
 - 2026-10-22: Document created.
+- 2026-10-22: T1 done.
+
+## Verification evidence
+
+- RED: `pnpm test seed/banks` failed (module `./seed-banks` / `./normalize-logo` not found) before implementation.
+- GREEN: seed-banks + normalize-logo tests pass (DB tests with rollback).
+- Scope change (user): logo collection stopped; fetch script dropped. Logos: Itaú, Sudameris, Basa, Familiar, GNB, Interfisa, Solar. Missing: Continental, ueno, BNF, Visión, Atlas (white-only logo), Bancop, FIC, Medalla Milagrosa and Paraguayo Japonesa (white-only logos).
+- `pnpm db:banks`: 16 created, 7 logos copied.
 
 ## Next step
 
-T1.
+None; owner uploads missing logos from the ERP.
