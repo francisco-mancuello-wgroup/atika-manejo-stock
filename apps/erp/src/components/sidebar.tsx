@@ -3,6 +3,7 @@
 import { cn, Wordmark } from "@atika/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useId, useState } from "react";
 import { logoutAction } from "../app/login/actions";
 import { formatInteger } from "../lib/format";
 
@@ -53,6 +54,42 @@ function NavItem({
   );
 }
 
+/** Collapsible group; it starts open when one of its pages is the current one. */
+function NavDropdown({ group, currentPath }: { group: NavGroup; currentPath: string }) {
+  const containsCurrent = group.items.some((item) => isActive(item.href, currentPath));
+  const [open, setOpen] = useState(containsCurrent);
+  const listId = useId();
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={() => setOpen((current) => !current)}
+        className={cn(
+          "flex items-center justify-between border-l-2 border-transparent px-3 py-2 text-left text-sm transition-colors hover:bg-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
+          containsCurrent ? "font-medium text-ink" : "text-muted",
+        )}
+      >
+        {group.label}
+        <span
+          aria-hidden="true"
+          className={cn("text-xs transition-transform", open && "rotate-180")}
+        >
+          ▾
+        </span>
+      </button>
+      {open ? (
+        <div id={listId} className="flex flex-col gap-1">
+          {group.items.map((child) => (
+            <NavItem key={child.href} item={child} currentPath={currentPath} nested />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function isActive(href: string, currentPath: string): boolean {
   return href === "/"
     ? currentPath === "/"
@@ -83,14 +120,7 @@ export function Sidebar({
       <nav aria-label="Principal" className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) =>
           "items" in item ? (
-            <fieldset key={item.label} className="m-0 flex flex-col gap-1 border-0 p-0">
-              <legend className="mb-1 px-3 pt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
-                {item.label}
-              </legend>
-              {item.items.map((child) => (
-                <NavItem key={child.href} item={child} currentPath={currentPath} nested />
-              ))}
-            </fieldset>
+            <NavDropdown key={item.label} group={item} currentPath={currentPath} />
           ) : (
             <NavItem key={item.href} item={item} currentPath={currentPath} />
           ),
