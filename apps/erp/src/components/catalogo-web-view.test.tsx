@@ -18,6 +18,7 @@ const products: CatalogProduct[] = [
     catalogOrder: 4,
     catalogSection: "Vestidos",
     catalogName: "Vestido Lino Icona",
+    inPink: true,
   },
   {
     id: "p2",
@@ -32,6 +33,7 @@ const products: CatalogProduct[] = [
     catalogOrder: null,
     catalogSection: null,
     catalogName: null,
+    inPink: false,
   },
 ];
 
@@ -223,7 +225,7 @@ describe("CatalogoWebView", () => {
     const first = within(rows[0] as HTMLElement);
     expect(first.queryByLabelText("Catálogo")).not.toBeInTheDocument();
     expect(first.getByRole("button", { name: "Lookbook: Vestido Lino" })).toHaveTextContent(
-      "Casa Icona · p. 4",
+      "Casa Icona · p. 4 · Pink",
     );
     const second = within(rows[1] as HTMLElement);
     expect(second.getByRole("button", { name: "Lookbook: Top Seda" })).toHaveTextContent(
@@ -247,6 +249,7 @@ describe("CatalogoWebView", () => {
     expect(dialog.getByLabelText("Página")).toHaveValue("4");
     expect(dialog.getByLabelText("Sección")).toHaveValue("Vestidos");
     expect(dialog.getByLabelText("Nombre en el lookbook")).toHaveValue("Vestido Lino Icona");
+    expect(dialog.getByRole("checkbox", { name: /Incluir en Pink/ })).toBeChecked();
     expect(
       within(dialog.getByLabelText("Catálogo"))
         .getAllByRole("option")

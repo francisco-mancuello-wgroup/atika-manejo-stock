@@ -70,6 +70,8 @@ model Product {
   catalogSection   String?
   /// Name shown in the lookbook; the workbook name is kept for the ERP and re-seeds.
   catalogName      String?
+  /// Part of the Pink selection on the store's home (checked in the ERP lookbook form).
+  inPink           Boolean            @default(false)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   variants         ProductVariant[]

@@ -171,6 +171,7 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
       catalogOrder: 3,
       catalogSection: "Aros",
       catalogName: "Cubagua",
+      inPink: true,
     };
     await withRollback(async (tx) => {
       await importLot(tx, lot, images, {
@@ -191,6 +192,7 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
         catalogOrder: 3,
         catalogSection: "Aros",
         catalogName: "Cubagua",
+        inPink: true,
       });
       expect(first?.priceGs).toBeGreaterThan(0);
       expect((first?.priceGs ?? 1) % 1000).toBe(0);

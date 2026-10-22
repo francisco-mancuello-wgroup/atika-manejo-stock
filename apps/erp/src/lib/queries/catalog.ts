@@ -21,6 +21,8 @@ export interface CatalogProduct {
   catalogOrder: number | null;
   catalogSection: string | null;
   catalogName: string | null;
+  /** In the Pink selection on the store's home. */
+  inPink: boolean;
 }
 
 export interface CatalogSettingsView {
@@ -90,6 +92,7 @@ export async function getCatalogProducts(filters: CatalogFilters): Promise<Catal
     catalogOrder: product.catalogOrder,
     catalogSection: product.catalogSection,
     catalogName: product.catalogName,
+    inPink: product.inPink,
   }));
 }
 

@@ -161,6 +161,7 @@ export function planLookbook(lots: readonly ParsedLot[], data: LookbookData): Lo
           catalogOrder: placement.order,
           catalogSection: placement.section,
           catalogName: placement.catalogName,
+          inPink: false,
         },
         cover: placement.cover,
       },

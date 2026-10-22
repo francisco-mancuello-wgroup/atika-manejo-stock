@@ -251,8 +251,8 @@ function PinkBanner() {
           Pink
         </h2>
         <p className="max-w-[440px] text-[15px] leading-relaxed text-foreground/80 lg:text-[17px]">
-          Las piezas en rosa de Casa Icona, Milonga y Sordo, juntas en un solo lugar. Elegí la tuya
-          y pagá por WhatsApp.
+          Casa Icona, Milonga y Sordo, juntas en un solo lugar. Elegí tus piezas favoritas y pagá
+          por WhatsApp.
         </p>
         <a
           href={`/catalogos/${PINK_EVENT}`}

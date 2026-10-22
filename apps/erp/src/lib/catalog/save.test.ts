@@ -151,6 +151,7 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
         catalogOrder: "3",
         catalogSection: "Aros",
         catalogName: "Cubagua",
+        inPink: "on",
       });
       expect(state).toMatchObject({ status: "success", message: "Guardado." });
       const stored = await tx.product.findUniqueOrThrow({ where: { id } });
@@ -159,9 +160,24 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
         catalogOrder: 3,
         catalogSection: "Aros",
         catalogName: "Cubagua",
+        inPink: true,
         name: "A",
         priceGs: 12_000,
       });
+    });
+  });
+
+  it("unchecking Pink takes the product out of the selection", async () => {
+    await withRollback(async (tx) => {
+      const { products } = await createFixtureLot(tx, [
+        { name: "A", originalValueUsd: 10, priceGs: 12_000, variants: [["M", 1, 1]] },
+      ]);
+      const id = products[0]?.id ?? "";
+      await tx.product.update({ where: { id }, data: { inPink: true } });
+      // An unchecked checkbox is not sent at all
+      await saveProductLookbook(dbOver(tx), { productId: id, catalog: "sordo" });
+      const stored = await tx.product.findUniqueOrThrow({ where: { id } });
+      expect(stored.inPink).toBe(false);
     });
   });
 

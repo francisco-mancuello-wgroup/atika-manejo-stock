@@ -104,6 +104,8 @@ export const lookbookSchema = z.object({
   ),
   catalogSection: optionalText("La sección", 60),
   catalogName: optionalText("El nombre", 120),
+  // A checkbox: sent as "on" when checked, missing when not
+  inPink: z.preprocess((value) => value === "on" || value === "true", z.boolean()),
 });
 
 export type LookbookInput = z.output<typeof lookbookSchema>;

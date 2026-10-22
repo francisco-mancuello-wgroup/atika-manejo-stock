@@ -10,6 +10,8 @@ export interface Lookbook {
   catalogOrder: number | null;
   catalogSection: string | null;
   catalogName: string | null;
+  /** In the Pink selection on the store's home. */
+  inPink: boolean;
 }
 
 export const NO_LOOKBOOK: Lookbook = {
@@ -17,6 +19,7 @@ export const NO_LOOKBOOK: Lookbook = {
   catalogOrder: null,
   catalogSection: null,
   catalogName: null,
+  inPink: false,
 };
 
 /** What a re-seed must keep of a product the admin may have edited. */
@@ -84,7 +87,10 @@ export function planChoices(
         const keptLookbook = kept?.lookbook ?? NO_LOOKBOOK;
         const fromData = keptLookbook.catalog ? null : placements?.get(lot.lotName, index);
         const isPublished = fromData ? true : (kept?.isPublished ?? false);
-        const lookbook: Lookbook = fromData ? fromData.lookbook : keptLookbook;
+        // The Pink checkbox is set in the ERP only, so it survives a data placement too
+        const lookbook: Lookbook = fromData
+          ? { ...fromData.lookbook, inPink: keptLookbook.inPink }
+          : keptLookbook;
         if (kept?.category) {
           return {
             isPublished,

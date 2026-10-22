@@ -17,6 +17,7 @@ export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<s
       catalogOrder: true,
       catalogSection: true,
       catalogName: true,
+      inPink: true,
       lot: { select: { name: true } },
     },
   });
@@ -36,6 +37,7 @@ export async function readPreserved(tx: Prisma.TransactionClient): Promise<Map<s
           catalogOrder: row.catalogOrder,
           catalogSection: row.catalogSection,
           catalogName: row.catalogName,
+          inPink: row.inPink,
         },
       });
     }

@@ -373,6 +373,7 @@ const lookbookSelect = {
   catalogOrder: true,
   catalogSection: true,
   catalogName: true,
+  inPink: true,
 } satisfies Prisma.ProductSelect;
 
 /**

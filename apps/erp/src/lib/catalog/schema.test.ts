@@ -56,6 +56,7 @@ describe("parseLookbook", () => {
     catalogOrder: "12",
     catalogSection: " Vestidos ",
     catalogName: " Vestido Lino ",
+    inPink: "on",
   };
 
   it("parses the lookbook placement, trimming text", () => {
@@ -66,6 +67,7 @@ describe("parseLookbook", () => {
         catalogOrder: 12,
         catalogSection: "Vestidos",
         catalogName: "Vestido Lino",
+        inPink: true,
       },
     });
   });
@@ -84,6 +86,7 @@ describe("parseLookbook", () => {
         catalogOrder: null,
         catalogSection: null,
         catalogName: null,
+        inPink: false,
       },
     };
     expect(parseLookbook(empty)).toEqual(expected);

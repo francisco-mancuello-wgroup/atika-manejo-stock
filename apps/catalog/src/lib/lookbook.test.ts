@@ -17,6 +17,7 @@ function row(id: number, overrides: Partial<LookbookRow> = {}): LookbookRow {
     catalog: "milonga",
     catalogOrder: id,
     catalogSection: "Vestidos",
+    inPink: false,
     variants: [
       { size: "M", stock: 1 },
       { size: "S", stock: 2 },
@@ -157,14 +158,14 @@ describe("lookbookPages", () => {
 });
 
 describe("pinkPages", () => {
-  it("keeps the pages with a fuchsia or pink piece, numbered again from 1", () => {
+  it("keeps the pages with a piece marked for Pink in the ERP, numbered again from 1", () => {
     const pages = lookbookPages(
       [
-        row(1, { color: "Negro" }),
-        row(2, { color: "FUCSIA" }),
+        row(1, { color: "FUCSIA" }),
+        row(2, { color: "Negro", inPink: true }),
         row(3, { color: "Blanco" }),
         row(4, { catalogOrder: 4, name: "Top", color: "Negro" }),
-        row(5, { catalogOrder: 4, name: "Falda", color: "Rosa" }),
+        row(5, { catalogOrder: 4, name: "Falda", color: "Negro", inPink: true }),
       ],
       settings,
     );
@@ -175,7 +176,7 @@ describe("pinkPages", () => {
     ]);
   });
 
-  it("is empty when no piece is pink", () => {
-    expect(pinkPages(lookbookPages([row(1, { color: "Negro" })], settings))).toEqual([]);
+  it("is empty when no piece is marked, whatever its color", () => {
+    expect(pinkPages(lookbookPages([row(1, { color: "Rosa" })], settings))).toEqual([]);
   });
 });

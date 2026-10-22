@@ -61,6 +61,15 @@ export function LookbookForm({
           <Input className="h-8" placeholder="Vestidos, Aros…" {...field("catalogSection")} />
         </Field>
       </div>
+      <label className="flex items-center gap-2 text-sm text-ink">
+        <input
+          type="checkbox"
+          name="inPink"
+          defaultChecked={state.status === "error" ? values.inPink === "on" : product.inPink}
+          className="size-4"
+        />
+        Incluir en Pink (la selección de la portada)
+      </label>
       <div className="grid grid-cols-[1fr_auto] items-end gap-2">
         <Field label="Nombre en el lookbook" htmlFor={id("catalogName")} error={errors.catalogName}>
           <Input className="h-8" placeholder={product.name} {...field("catalogName")} />
@@ -83,9 +92,9 @@ export function LookbookForm({
 function placementSummary(product: CatalogProduct): string {
   const catalog = CATALOG_OPTIONS.find((option) => option.value === product.catalog);
   if (!catalog) return "Sin lookbook";
-  return product.catalogOrder != null
-    ? `${catalog.label} · p. ${product.catalogOrder}`
-    : catalog.label;
+  const placement =
+    product.catalogOrder != null ? `${catalog.label} · p. ${product.catalogOrder}` : catalog.label;
+  return product.inPink ? `${placement} · Pink` : placement;
 }
 
 /** Compact button showing the placement; opens the lookbook form in a modal. */

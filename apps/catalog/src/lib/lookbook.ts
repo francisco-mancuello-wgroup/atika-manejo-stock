@@ -38,6 +38,8 @@ export interface LookbookRow extends ProductSource {
   catalog: CatalogValue | null;
   catalogOrder: number | null;
   catalogSection: string | null;
+  /** Marked in the ERP for the Pink selection. */
+  inPink: boolean;
 }
 
 /** One product on a page: a dress, or the top of a set. Nothing about costs or stock counts. */
@@ -48,6 +50,8 @@ export interface LookbookPiece extends PriceFields {
   sizes: string[];
   color: PieceColor | null;
   description: string | null;
+  /** Marked in the ERP for the Pink selection. */
+  inPink: boolean;
   /** Bank promotions that cover this product today, grouped for display; none when absent. */
   bankPromos?: PromoGroup[];
 }
@@ -103,6 +107,7 @@ function toPiece(
     sizes: availableSizes(row),
     color: resolveColor(row.color, row.name),
     description: row.description?.trim() || null,
+    inPink: row.inPink,
     bankPromos: row.bankPromos ?? [],
   };
 }
@@ -164,12 +169,9 @@ export function pageAnchor(slug: string, page: number): string {
   return `${slug}-pagina-${page}`;
 }
 
-/** Colors that enter the Pink selection. */
-const PINK_COLORS = new Set(["Fucsia", "Rosa"]);
-
-/** The pages with a fuchsia or pink piece, numbered again from 1 for the Pink selection. */
+/** The pages with a piece marked for Pink in the ERP, numbered again from 1. */
 export function pinkPages(pages: readonly LookbookPage[]): LookbookPage[] {
   return pages
-    .filter((page) => page.pieces.some((piece) => PINK_COLORS.has(piece.color?.label ?? "")))
+    .filter((page) => page.pieces.some((piece) => piece.inPink))
     .map((page, index) => ({ ...page, page: index + 1 }));
 }
