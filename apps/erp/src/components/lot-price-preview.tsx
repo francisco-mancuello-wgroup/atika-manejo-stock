@@ -18,6 +18,7 @@ export function LotPricePreview({
   values: Record<string, string>;
   display?: CurrencyDisplay;
 }) {
+  const [open, setOpen] = useState(false);
   const [lotId, setLotId] = useState<string | undefined>(lots[0]?.id);
   const lot = lots.find((candidate) => candidate.id === lotId) ?? lots[0];
   const money = moneyFormatter(display.currency, display.exchangeRate);
@@ -25,11 +26,33 @@ export function LotPricePreview({
 
   return (
     <section className="flex flex-col gap-4 border border-line bg-surface p-5">
-      <h2 className="font-display text-2xl text-ink">Ver cálculo por lote</h2>
-      {lot === undefined ? (
-        <p className="text-sm text-muted">Todavía no hay lotes.</p>
+      <h2 className="font-display text-2xl text-ink">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="lot-price-preview"
+          onClick={() => setOpen((current) => !current)}
+          className="flex w-full items-center justify-between gap-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        >
+          Ver cálculo por lote
+          <span
+            aria-hidden="true"
+            className={cn("text-base text-muted transition-transform", open && "rotate-180")}
+          >
+            ▾
+          </span>
+        </button>
+      </h2>
+      {!open ? (
+        <p className="-mt-2 text-sm text-muted">
+          Compará, prenda por prenda, el precio actual con el que resulta de los valores tipeados.
+        </p>
+      ) : lot === undefined ? (
+        <p id="lot-price-preview" className="text-sm text-muted">
+          Todavía no hay lotes.
+        </p>
       ) : (
-        <>
+        <div id="lot-price-preview" className="flex flex-col gap-4">
           <div className="w-full max-w-xs">
             <Field label="Lote" htmlFor="preview-lot">
               <Select
@@ -96,7 +119,7 @@ export function LotPricePreview({
               </table>
             </div>
           ) : null}
-        </>
+        </div>
       )}
     </section>
   );

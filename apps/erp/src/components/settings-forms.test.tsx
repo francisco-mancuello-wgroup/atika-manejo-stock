@@ -119,9 +119,25 @@ describe("SettingsForm", () => {
 
   describe("Ver cálculo por lote", () => {
     const table = () => screen.getByRole("table", { name: "Cálculo por lote" });
+    const toggle = () => screen.getByRole("button", { name: "Ver cálculo por lote" });
+
+    it("starts collapsed and expands on demand", () => {
+      renderForm();
+      expect(toggle()).toHaveAttribute("aria-expanded", "false");
+      expect(screen.queryByLabelText("Lote")).not.toBeInTheDocument();
+      expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
+
+      fireEvent.click(toggle());
+      expect(toggle()).toHaveAttribute("aria-expanded", "true");
+      expect(table()).toBeInTheDocument();
+
+      fireEvent.click(toggle());
+      expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
+    });
 
     it("lists a select with every lot, defaulting to the first one", () => {
       renderForm();
+      fireEvent.click(toggle());
       expect(screen.getByRole("heading", { name: "Ver cálculo por lote" })).toBeInTheDocument();
       const select = screen.getByLabelText("Lote");
       expect(select).toHaveValue("lot-a");
@@ -134,6 +150,7 @@ describe("SettingsForm", () => {
 
     it("shows each product of the lot with the current form values", () => {
       renderForm();
+      fireEvent.click(toggle());
       const headers = within(table())
         .getAllByRole("columnheader")
         .map((h) => h.textContent);
@@ -171,6 +188,7 @@ describe("SettingsForm", () => {
 
     it("recomputes live from unsaved form values", () => {
       renderForm();
+      fireEvent.click(toggle());
       fireEvent.change(screen.getByLabelText("IVA (%)"), { target: { value: "0" } });
       const [, remera] = within(table()).getAllByRole("row");
       // 104 * 2.5 * 1 * 7400 = 1.924.000
@@ -179,6 +197,7 @@ describe("SettingsForm", () => {
 
     it("switches the lot with the select", () => {
       renderForm();
+      fireEvent.click(toggle());
       fireEvent.change(screen.getByLabelText("Lote"), { target: { value: "lot-b" } });
       expect(within(table()).getByText("Producto p3")).toBeInTheDocument();
       expect(within(table()).queryByText("Remera")).not.toBeInTheDocument();
@@ -186,6 +205,7 @@ describe("SettingsForm", () => {
 
     it("asks to complete the parameters while an input is invalid", () => {
       renderForm();
+      fireEvent.click(toggle());
       fireEvent.change(screen.getByLabelText("TC del día (₲ / US$)"), { target: { value: "" } });
       expect(screen.getByText("Completá los parámetros para ver el cálculo.")).toBeInTheDocument();
       expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
@@ -193,6 +213,7 @@ describe("SettingsForm", () => {
 
     it("shows prices in dollars with the exchange rate of the day", () => {
       renderForm(idle, lots, { currency: "usd", exchangeRate: 7400 });
+      fireEvent.click(toggle());
       const [, remera] = within(table()).getAllByRole("row");
       expect(remera?.textContent).toContain(formatUsd(2_000_000 / 7400));
       expect(remera?.textContent).toContain(formatUsd(2_116_000 / 7400));
@@ -200,11 +221,13 @@ describe("SettingsForm", () => {
 
     it("explains a lot without bought units", () => {
       renderForm(idle, [{ id: "x", name: "Vacío", totalShippingUsd: 5, products: [] }]);
+      fireEvent.click(toggle());
       expect(screen.getByText("Este lote no tiene unidades compradas.")).toBeInTheDocument();
     });
 
     it("explains there are no lots yet", () => {
       renderForm(idle, []);
+      fireEvent.click(toggle());
       expect(screen.getByText("Todavía no hay lotes.")).toBeInTheDocument();
       expect(screen.queryByLabelText("Lote")).not.toBeInTheDocument();
     });
