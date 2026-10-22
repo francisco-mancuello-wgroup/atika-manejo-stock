@@ -1,3 +1,4 @@
+import type { LotPricingMode } from "@atika/db";
 import { shippingPerUnit, unitCostUsd } from "@atika/pricing";
 import { coverUrl } from "./cover";
 import { toIsoDate } from "./dates";
@@ -37,6 +38,7 @@ export interface LotRow {
   saleFactor: DecimalLike;
   vatRate: DecimalLike;
   costRate: DecimalLike;
+  pricingMode: LotPricingMode;
   totalShippingUsd: DecimalLike;
   products: ProductRow[];
 }
@@ -189,6 +191,7 @@ export interface LotDetail {
   name: string;
   supplier: string;
   purchasedAt: string;
+  pricingMode: LotPricingMode;
   params: LotParams;
   sizes: string[];
   rows: LotGridRow[];
@@ -211,6 +214,7 @@ export function toLotDetail(lot: LotRow): LotDetail {
     name: lot.name,
     supplier: lot.supplier.name,
     purchasedAt: toIsoDate(lot.purchasedAt),
+    pricingMode: lot.pricingMode,
     params: {
       exchangeRate: lot.exchangeRate.toNumber(),
       saleFactor: lot.saleFactor.toNumber(),

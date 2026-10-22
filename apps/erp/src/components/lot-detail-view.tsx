@@ -2,34 +2,38 @@ import Link from "next/link";
 import type { FormState } from "../lib/action-state";
 import type { CurrencyDisplay } from "../lib/currency";
 import { formatDate, formatInteger, moneyFormatter, moneyPair } from "../lib/format";
+import type { AppSettingsView } from "../lib/queries/settings";
 import type { LotDetail } from "../lib/view-models";
 import { KpiCard } from "./kpi-card";
 import { LotGrid } from "./lot-grid";
+import { LotPricingPanel } from "./lot-pricing-panel";
 import { LotShippingForm } from "./lot-shipping-form";
 import { PageHeader } from "./page-header";
-
-const NUMBER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 4 });
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
 export function LotDetailView({
   lot,
+  settings,
   action,
+  paramsAction,
+  modeAction,
   display = { currency: "gs" },
 }: {
   lot: LotDetail;
+  /** Global values from Parámetros, to flag what a lot with its own parameters changes. */
+  settings: AppSettingsView;
+  /** Saves the shipping. */
   action: Action;
+  /** Saves the lot's own pricing parameters and reprices it. */
+  paramsAction: Action;
+  /** Switches the lot between Global and Propio. */
+  modeAction: Action;
   display?: CurrencyDisplay;
 }) {
   const { summary, params } = lot;
   const money = moneyFormatter(display.currency, display.exchangeRate);
   const investment = moneyPair(display.currency, summary.investmentGs, summary.investmentUsd);
-  const pricing = [
-    ["Tipo de cambio (₲ / US$)", NUMBER.format(params.exchangeRate)],
-    ["Factor de venta", NUMBER.format(params.saleFactor)],
-    ["IVA (%)", NUMBER.format(params.vatPercent)],
-    ["Costo sobre valor original (%)", NUMBER.format(params.costPercent)],
-  ] as const;
   return (
     <div className="flex flex-col gap-6">
       <Link href="/compras" className="text-sm text-muted underline-offset-4 hover:underline">
@@ -63,25 +67,13 @@ export function LotDetailView({
           )}
         </section>
         <div className="flex flex-col gap-6">
-          <section
-            aria-labelledby="lot-pricing-title"
-            className="flex flex-col gap-4 border border-line bg-surface p-5"
-          >
-            <h2 id="lot-pricing-title" className="font-display text-2xl text-ink">
-              Precios del lote
-            </h2>
-            <dl className="flex flex-col gap-2 text-sm">
-              {pricing.map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-4">
-                  <dt className="text-muted">{label}</dt>
-                  <dd className="text-ink">{value}</dd>
-                </div>
-              ))}
-            </dl>
-            <Link href="/parametros" className="text-sm text-ink underline underline-offset-4">
-              Editar en Parámetros
-            </Link>
-          </section>
+          <LotPricingPanel
+            mode={lot.pricingMode}
+            params={params}
+            globalSettings={settings}
+            modeAction={modeAction}
+            paramsAction={paramsAction}
+          />
           <LotShippingForm totalShippingUsd={lot.params.totalShippingUsd} action={action} />
         </div>
       </div>

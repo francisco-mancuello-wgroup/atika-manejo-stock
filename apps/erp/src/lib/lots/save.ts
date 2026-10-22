@@ -1,5 +1,7 @@
 import type { Prisma } from "@atika/db";
 import type { FormState } from "../action-state";
+import { countOf } from "../format";
+import { recalculateLot } from "./recalculate";
 import { parseLotShipping } from "./schema";
 
 /** The slice of the Prisma client the save flow needs (lets tests reuse a rolled back tx). */
@@ -12,8 +14,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NOT_FOUND = "No se encontró el lote.";
 
 /**
- * Validates the form and saves the lot's total shipping (purchase data). It never reprices:
- * prices change only when Parámetros applies its values to the lot.
+ * Validates the form, saves the lot's total shipping (purchase data) and reprices the lot with
+ * the parameters it already has (global copy or its own), so shipping changes reach the catalog.
  */
 export async function saveLotShipping(
   db: TransactionRunner,
@@ -31,12 +33,24 @@ export async function saveLotShipping(
   }
   if (!UUID.test(lotId)) return { status: "error", message: NOT_FOUND, values: raw };
 
-  const updated = await db.$transaction((tx) =>
-    tx.lot.updateMany({ where: { id: lotId }, data: parsed.data }),
-  );
-  if (updated.count === 0) return { status: "error", message: NOT_FOUND, values: raw };
+  const updatedProducts = await db.$transaction(async (tx) => {
+    const lot = await tx.lot.findUnique({
+      where: { id: lotId },
+      select: { exchangeRate: true, saleFactor: true, vatRate: true, costRate: true },
+    });
+    if (!lot) return null;
+    const result = await recalculateLot(tx, lotId, {
+      exchangeRate: lot.exchangeRate.toNumber(),
+      saleFactor: lot.saleFactor.toNumber(),
+      vatRate: lot.vatRate.toNumber(),
+      costRate: lot.costRate.toNumber(),
+      totalShippingUsd: parsed.data.totalShippingUsd,
+    });
+    return result.ok ? result.updatedProducts : null;
+  });
+  if (updatedProducts === null) return { status: "error", message: NOT_FOUND, values: raw };
   return {
     status: "success",
-    message: "Envío guardado. Los precios se actualizan al aplicar desde Parámetros.",
+    message: `Envío guardado. ${updatedProducts === 1 ? "Se recalculó" : "Se recalcularon"} ${countOf(updatedProducts, "precio", "precios")}.`,
   };
 }

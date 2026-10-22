@@ -152,6 +152,7 @@ describe("views in US$", () => {
       name: "Lote Uno",
       supplier: "Proveedor",
       purchasedAt: "2026-05-01",
+      pricingMode: "global",
       params: {
         exchangeRate: 7000,
         saleFactor: 2.5,
@@ -173,7 +174,17 @@ describe("views in US$", () => {
       ],
       summary,
     };
-    render(<LotDetailView lot={lot} display={usd} action={async () => ({ status: "idle" })} />);
+    const idle = async () => ({ status: "idle" as const });
+    render(
+      <LotDetailView
+        lot={lot}
+        display={usd}
+        settings={{ exchangeRate: 7000, saleFactor: 2.5, vatPercent: 10, costPercent: 55 }}
+        action={idle}
+        paramsAction={idle}
+        modeAction={idle}
+      />,
+    );
     expect(screen.getByText("US$ 4.000,00")).toBeInTheDocument();
     expect(screen.getByText("US$ 123,00", { selector: "td" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Precio (US$)" })).toBeInTheDocument();

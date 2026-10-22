@@ -21,7 +21,7 @@ describe("LotShippingForm", () => {
     const action = vi.fn(
       async (_prev: FormState, _data: FormData): Promise<FormState> => ({
         status: "success",
-        message: "Envío guardado. Los precios se actualizan al aplicar desde Parámetros.",
+        message: "Envío guardado. Se recalcularon 3 precios.",
       }),
     );
     render(<LotShippingForm totalShippingUsd={320.5} action={action} />);

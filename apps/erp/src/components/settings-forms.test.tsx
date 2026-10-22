@@ -3,6 +3,7 @@ import { vi } from "vitest";
 import type { FormState } from "../lib/action-state";
 import type { CurrencyDisplay } from "../lib/currency";
 import { formatGs, formatUsd } from "../lib/format";
+import type { PreviewLot } from "../lib/settings/preview";
 import { SettingsForm } from "./settings-forms";
 
 const settings = { exchangeRate: 7400, saleFactor: 2.5, vatPercent: 10, costPercent: 100 };
@@ -13,10 +14,11 @@ const product = (id: string, units: number) => ({
   unitsBought: units,
   priceGs: 1_000_000,
 });
-const lots = [
+const lots: PreviewLot[] = [
   {
     id: "lot-a",
     name: "Lote A",
+    pricingMode: "global",
     totalShippingUsd: 20,
     products: [
       { id: "p1", name: "Remera", originalValueUsd: 100, unitsBought: 3, priceGs: 2_000_000 },
@@ -26,6 +28,7 @@ const lots = [
   {
     id: "lot-b",
     name: "Lote B",
+    pricingMode: "global",
     totalShippingUsd: 0,
     products: [product("p3", 1), product("p4", 1), product("p5", 1), product("p6", 1)],
   },
@@ -35,18 +38,18 @@ const idle: Action = async () => ({ status: "idle" });
 
 function renderForm(
   action: Action = idle,
-  formLots: typeof lots = lots,
+  formLots: PreviewLot[] = lots,
   display?: CurrencyDisplay,
 ) {
   render(<SettingsForm settings={settings} lots={formLots} action={action} display={display} />);
 }
 
 describe("SettingsForm", () => {
-  it("explains that applying updates every lot but keeps its shipping", () => {
+  it("explains that applying updates the global lots but keeps their shipping", () => {
     renderForm();
     expect(
       screen.getByText(
-        "Al guardar, todos los lotes toman de acá el TC, el factor, el IVA y el % de costo, y conservan su propio envío.",
+        "Al guardar, los lotes en modo Global toman de acá el TC, el factor, el IVA y el % de costo, y conservan su propio envío. Los lotes con parámetros propios no cambian.",
       ),
     ).toBeInTheDocument();
   });
@@ -65,9 +68,38 @@ describe("SettingsForm", () => {
 
   it("uses the singular in the summary for one lot with one product", () => {
     renderForm(idle, [
-      { id: "lot-a", name: "Lote A", totalShippingUsd: 0, products: [product("p1", 1)] },
+      {
+        id: "lot-a",
+        name: "Lote A",
+        pricingMode: "global",
+        totalShippingUsd: 0,
+        products: [product("p1", 1)],
+      },
     ]);
     expect(screen.getByText("Se recalcula 1 lote · 1 producto")).toBeInTheDocument();
+  });
+
+  it("applies only to lots that follow the global values and lists the others as untouched", () => {
+    renderForm(idle, [
+      ...lots,
+      {
+        id: "lot-c",
+        name: "Lote C",
+        pricingMode: "custom",
+        totalShippingUsd: 0,
+        products: [product("p7", 1)],
+      },
+    ]);
+    expect(screen.getByText("Se recalculan 2 de 3 lotes · 6 productos")).toBeInTheDocument();
+    expect(
+      screen.getByText("1 lote con parámetros propios no se modifica: Lote C."),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Ver cálculo por lote" }));
+    expect(
+      within(screen.getByLabelText("Lote"))
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["Lote A", "Lote B"]);
   });
 
   it("submits only the values", async () => {
@@ -241,7 +273,9 @@ describe("SettingsForm", () => {
     });
 
     it("explains a lot without bought units", () => {
-      renderForm(idle, [{ id: "x", name: "Vacío", totalShippingUsd: 5, products: [] }]);
+      renderForm(idle, [
+        { id: "x", name: "Vacío", pricingMode: "global", totalShippingUsd: 5, products: [] },
+      ]);
       fireEvent.click(toggle());
       expect(screen.getByText("Este lote no tiene unidades compradas.")).toBeInTheDocument();
     });
