@@ -3,6 +3,7 @@ import { bodoni, jost } from "@atika/ui/fonts";
 import type { Metadata } from "next";
 import { Quattrocento_Sans, Trirong } from "next/font/google";
 import type { ReactNode } from "react";
+import { LiveRefresh } from "../components/live-refresh";
 
 // Settings and products change from the ERP at any time.
 export const dynamic = "force-dynamic";
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       lang="es"
       className={`${jost.variable} ${bodoni.variable} ${trirong.variable} ${quattrocento.variable}`}
     >
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        <LiveRefresh />
+        {children}
+      </body>
     </html>
   );
 }

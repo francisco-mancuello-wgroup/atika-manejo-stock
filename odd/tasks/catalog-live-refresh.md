@@ -32,13 +32,14 @@ User decisions 2026-10-22:
 ## Tasks
 
 - [x] T1 — ERP: `notifyCatalogChanged` helper + tests; wire into catalog-affecting server actions.
-- [ ] T2 — Catalog: `LiveRefresh` subscriber (throttled `router.refresh()`) in root layout + tests; env example.
+- [x] T2 — Catalog: `LiveRefresh` subscriber (throttled `router.refresh()`) in root layout + tests; env example.
 
 ## Progress / evidence
 
 - Branch `feat/catalog-live-refresh` from main f89abca.
 - T1 done: RED (module missing) -> GREEN `apps/erp/src/lib/catalog-live.test.ts` 8/8; notify wired in catalogo-web, compras/[lotId], datos-bancarios, inventario, parametros, promos/bancos, promos/descuentos, ventas, ventas/pedidos (approve only). Skipped: moneda (ERP display cookie), seguridad/login (auth), reject order (stock untouched). ERP suite: only DB-backed tests (settings/lots/catalog save) fail, flaky and also failing on base. Commit: see git log `feat(erp): notify catalog of changes`.
+- T2 done: RED (module missing) -> GREEN `apps/catalog/src/components/live-refresh.test.tsx` 8/8; `LiveRefresh` mounted in root layout; `@supabase/supabase-js` 2.118.0 added to catalog; env names in `.env.example`. Catalog suite: only DB-backed tests fail (flaky, also failing on base). typecheck and lint clean (2 known warnings).
 
 ## Next step
 
-T2.
+User: set the two env vars in Vercel for both projects; check Realtime public access in Supabase.
