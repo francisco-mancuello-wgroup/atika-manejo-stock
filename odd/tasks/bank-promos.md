@@ -45,7 +45,7 @@ Let the owner publish bank card promotions (installments, refunds, discounts) fr
 ## Tasks
 
 - [x] T1 — Schema + migration + pure rules (live, scope, headline, grouping) with tests.
-- [ ] T2 — ERP banks management (CRUD + logo) with tests.
+- [x] T2 — ERP banks management (CRUD + logo) with tests.
 - [ ] T3 — ERP promos list + form (scope all/lots/products) with tests.
 - [ ] T4 — Catalog block on the product sheet + bases y condiciones page with tests.
 
@@ -53,11 +53,13 @@ Let the owner publish bank card promotions (installments, refunds, discounts) fr
 
 - 2026-10-22: Document created.
 - 2026-10-22 T1: `Bank`, `BankPromo` (+ bank/lot/product join tables) and migration `20261022030000_bank_promos`; days stored as `Int[]` (ISO 1=Monday..7=Sunday); logo stored as `Bank.logoUrl`; pure rules in `packages/pricing/src/bank-promo.ts` (exports `isPromoLive`, `promosForProduct`, `promoHeadline`, `groupPromosForDisplay`, `asuncionDay` shared with discounts). Deleting a bank in use is blocked at DB level (`ON DELETE RESTRICT`).
+- 2026-10-22 T2: /promos/bancos now shows `BanksView` (inline create/edit, logo upload, "Quitar logo", delete with confirmation). Logos reuse the product-photo pipeline (`prepareUpload` with a 400 px longest side, WebP) and are stored by `LogoStorage` under `/media/banks/uploads/<bankId>/<uuid>.webp` in both apps' `public/` (same approach as product photos). Name is unique case-insensitively; deleting a bank used by promos is refused with the count ("lo usan N promociones"). Generic `ConfirmDeleteButton` and `BankLogo` (logo or name chip) added for reuse by T3.
 
 ## Verification evidence
 
 - T1 RED: `pnpm --filter @atika/pricing test` -> 21 failed (rules not implemented). GREEN: 48 passed. Schema DB test (`apps/erp/src/lib/bank-promos/schema.db.test.ts`) written after the migration (declarative schema): 4 passed; no RED observed for it. `packages/db/src/schema.test.ts` model list updated.
-- T1 commit: (recorded in next commit)
+- T2 RED: new tests for logo storage, schema, save (DB), queries (DB), BanksView, `prepareUpload` custom side and the actions guard -> 7 files failed (missing modules) + 2 assertion failures. GREEN: erp 438 tests passed. Note: Vitest's content-hash cache kept a stale `import.meta.glob` result for `actions-guard.test.ts` after the RED run; `rm -rf node_modules/.vitest-cache` fixes it (not a code issue).
+- T1 commit: 39b2d38 `feat(db): bank promos schema and rules`.
 
 ## Next step
 
