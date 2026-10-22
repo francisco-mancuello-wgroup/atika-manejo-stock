@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { LabelPrinter } from "../../../../components/label-printer";
 import { PageHeader } from "../../../../components/page-header";
 import { ProductForm } from "../../../../components/product-form";
 import { getProductForEdit } from "../../../../lib/queries/products";
+import { sortSizes } from "../../../../lib/sizes";
 import { saveProductAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +37,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           })),
         }}
         action={saveProductAction.bind(null, product.id)}
+      />
+      <LabelPrinter
+        productId={product.id}
+        sizes={sortSizes(product.sizes.map((size) => size.size)).flatMap((size) =>
+          product.sizes.filter((candidate) => candidate.size === size),
+        )}
       />
     </div>
   );
