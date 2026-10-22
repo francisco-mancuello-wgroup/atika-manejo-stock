@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Prisma } from "./generated/prisma/client";
+import { LotPricingMode } from "./generated/prisma/enums";
 import { createPrismaClient } from "./index";
 
 describe("schema", () => {
@@ -41,6 +42,11 @@ describe("schema", () => {
         "totalShippingUsd",
       ]),
     );
+  });
+
+  it("lets each lot follow the global parameters or use its own", () => {
+    expect(Object.values(Prisma.LotScalarFieldEnum)).toContain("pricingMode");
+    expect(Object.values(LotPricingMode)).toEqual(["global", "custom"]);
   });
 
   it("tracks units bought and current stock per size", () => {

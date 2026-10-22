@@ -30,6 +30,8 @@ model Lot {
   vatRate          Decimal        @db.Decimal(5, 4)
   /// Share of the original value actually paid, fraction.
   costRate         Decimal        @db.Decimal(5, 4)
+  /// `global` lots follow AppSettings; `custom` lots keep the four values above as edited in Compras.
+  pricingMode      LotPricingMode @default(global)
   totalShippingUsd Decimal        @db.Decimal(12, 2)
   notes            String?
   createdAt        DateTime       @default(now())
@@ -39,6 +41,13 @@ model Lot {
 
   @@index([supplierId])
   @@map("lots")
+}
+
+enum LotPricingMode {
+  global
+  custom
+
+  @@map("lot_pricing_mode")
 }
 
 model Product {

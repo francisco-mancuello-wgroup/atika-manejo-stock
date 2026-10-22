@@ -28,7 +28,7 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 
 ## Tasks
 
-- [ ] T1 — DB: `pricingMode` enum + column + migration; schema test.
+- [x] T1 — DB: `pricingMode` enum + column + migration; schema test. (commit: see Verification evidence)
 - [ ] T2 — Parámetros applies only to `global` lots (save, preview, count copy) with tests.
 - [ ] T3 — Compras: mode switch, custom params form + save/reprice action, back-to-global action, "Difiere del global" flags, with tests.
 
@@ -46,9 +46,13 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 ## Progress
 
 - 2026-10-22: Document created (branch feat/lot-pricing-mode).
+- 2026-10-22: T1 done.
 
 ## Verification evidence
 
+- T1 RED: `pnpm --filter @atika/db test` -> 1 failed (`expected LotScalarFieldEnum to include 'pricingMode'`).
+- T1 GREEN: migration `20261022040000_lot_pricing_mode` applied to local DB (`pnpm db:migrate`), client regenerated; `pnpm --filter @atika/db test` -> 205 passed.
+
 ## Next step
 
-T1.
+T2.
