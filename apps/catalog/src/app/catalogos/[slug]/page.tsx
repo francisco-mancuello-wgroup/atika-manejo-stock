@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { LookbookBook } from "../../../components/lookbook/book";
+import { type BookCatalog, LookbookBook } from "../../../components/lookbook/book";
 import { CartProvider } from "../../../components/lookbook/cart";
-import { CATALOG_COVERS } from "../../../lib/catalog-covers";
+import { CATALOG_COVERS, OTHER_BRANDS_COVER } from "../../../lib/catalog-covers";
 import { getDb } from "../../../lib/db";
 import {
   ALL_CATALOGS,
   CATALOGS,
   findCatalog,
+  OTHER_BRANDS,
   PINK_EVENT,
   pinkPages,
   withPieces,
 } from "../../../lib/lookbook";
-import { getCatalogSettings, listLookbook } from "../../../lib/queries";
+import { getCatalogSettings, listLookbook, listPinkOnly } from "../../../lib/queries";
 import { requestOrigin } from "../../../lib/whatsapp";
 
 type Params = Promise<{ slug: string }>;
@@ -31,7 +32,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 /**
  * `/catalogos/<slug>`: one lookbook; `/catalogos/todos` chains the three, and
- * `/catalogos/pink` chains only their pink pieces (Pink).
+ * `/catalogos/pink` chains only their pink pieces (Pink), plus the Pink pieces placed in no
+ * catalog: after their brand's catalog, or under Otras marcas.
  */
 export default async function CatalogPage({ params }: { params: Params }) {
   const { slug } = await params;
@@ -42,13 +44,25 @@ export default async function CatalogPage({ params }: { params: Params }) {
   if (!first) notFound();
   const db = getDb();
   const settings = await getCatalogSettings(db);
-  const pages = await listLookbook(db, settings);
+  const [pages, pinkOnly] = await Promise.all([
+    listLookbook(db, settings),
+    pink ? listPinkOnly(db, settings) : null,
+  ]);
   const requestHeaders = await headers();
-  const catalogs = shown.map((catalog) => ({
+  const catalogs: BookCatalog[] = shown.map((catalog) => ({
     ...catalog,
     cover: CATALOG_COVERS[catalog.slug],
-    pages: pink ? pinkPages(pages[catalog.slug]) : pages[catalog.slug],
+    pages: pinkOnly
+      ? pinkPages([...pages[catalog.slug], ...pinkOnly[catalog.slug]])
+      : pages[catalog.slug],
   }));
+  if (pinkOnly) {
+    catalogs.push({
+      ...OTHER_BRANDS,
+      cover: OTHER_BRANDS_COVER,
+      pages: pinkPages(pinkOnly[OTHER_BRANDS.slug]),
+    });
+  }
   return (
     <CartProvider whatsappNumber={settings.whatsappNumber}>
       <LookbookBook

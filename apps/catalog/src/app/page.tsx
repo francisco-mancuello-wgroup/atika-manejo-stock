@@ -4,7 +4,7 @@ import { CartProvider } from "../components/lookbook/cart";
 import { CATALOG_COVERS } from "../lib/catalog-covers";
 import { getDb } from "../lib/db";
 import { CATALOGS, hasPinkPieces, withPieces } from "../lib/lookbook";
-import { getCatalogSettings, listLookbook } from "../lib/queries";
+import { getCatalogSettings, listLookbook, listPinkOnly } from "../lib/queries";
 import { requestOrigin } from "../lib/whatsapp";
 
 // Products, stock and settings change from the ERP at any time.
@@ -17,7 +17,10 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const db = getDb();
   const settings = await getCatalogSettings(db);
-  const pages = await listLookbook(db, settings);
+  const [pages, pinkOnly] = await Promise.all([
+    listLookbook(db, settings),
+    listPinkOnly(db, settings),
+  ]);
   const requestHeaders = await headers();
   const catalogs = withPieces(
     CATALOGS.map((catalog) => ({
@@ -33,7 +36,12 @@ export default async function HomePage() {
         catalogs={catalogs}
         origin={requestOrigin((name) => requestHeaders.get(name))}
         pagePath="/"
-        intro={<CatalogShelf catalogs={catalogs} pink={hasPinkPieces(Object.values(pages))} />}
+        intro={
+          <CatalogShelf
+            catalogs={catalogs}
+            pink={hasPinkPieces([...Object.values(pages), ...Object.values(pinkOnly)])}
+          />
+        }
       />
     </CartProvider>
   );

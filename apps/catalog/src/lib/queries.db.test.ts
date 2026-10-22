@@ -8,6 +8,7 @@ import {
   getProductDetail,
   listCollections,
   listLookbook,
+  listPinkOnly,
   listProducts,
   listPublicBankPromos,
 } from "./queries";
@@ -659,7 +660,7 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
   async function group(
     tx: Parameters<Parameters<typeof withRollback>[0]>[0],
     productId: string,
-    allocations: [string, number, number?][],
+    allocations: [string, number, number?, number?][],
     data: { isActive?: boolean; startsAt?: Date; endsAt?: Date } = {},
   ) {
     const variants = await tx.productVariant.findMany({ where: { productId } });
@@ -670,10 +671,11 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
         startsAt: data.startsAt ?? null,
         endsAt: data.endsAt ?? null,
         allocations: {
-          create: allocations.map(([size, allocated, sold]) => ({
+          create: allocations.map(([size, allocated, sold, priceGs]) => ({
             variantId: variants.find((variant) => variant.size === size)?.id ?? "",
             allocated,
             sold: sold ?? 0,
+            priceGs: priceGs ?? null,
           })),
         },
       },
@@ -848,6 +850,62 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
         ["Plain", false],
         ["Off", false],
       ]);
+    });
+  });
+
+  it("reads the event price of a group size and leaves the product price alone", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const [priced = "", plain = ""] = await createProducts(tx, [
+        { name: "Priced", priceGs: 1_584_000, photos: ["/a.jpg"], variants: [["S", 1]] },
+        { name: "Plain", priceGs: 500_000, photos: ["/b.jpg"], variants: [["S", 1]] },
+      ]);
+      await tx.product.updateMany({
+        where: { id: { in: [priced, plain] } },
+        data: { catalog: "milonga" },
+      });
+      await group(tx, priced, [["S", 1, 0, 1_553_000]]);
+      await group(tx, plain, [["S", 1]]);
+      const pieces = (await listLookbook(tx, open, now)).milonga.flatMap((page) => page.pieces);
+      expect(
+        pieces.map((piece) => [piece.name, piece.priceGs, piece.pinkPrice?.priceGs ?? null]),
+      ).toEqual([
+        ["Plain", 500_000, null],
+        ["Priced", 1_584_000, 1_553_000],
+      ]);
+    });
+  });
+
+  it("keeps group pieces without a catalog off the catalogs and files them for Pink", async () => {
+    await isolated(async (tx) => {
+      await tx.product.updateMany({ data: { isPublished: false } });
+      const ids = await createProducts(tx, [
+        { name: "Falda Atlas", photos: ["/a.jpg"], variants: [["S", 1]] },
+        { name: "Lia Dress", photos: ["/b.jpg"], variants: [["S", 1]] },
+        { name: "Published loose", isPublished: true, photos: ["/c.jpg"], variants: [["S", 1]] },
+        { name: "Off group", photos: ["/d.jpg"], variants: [["S", 1]] },
+      ]);
+      const [atlas = "", lia = "", , off = ""] = ids;
+      await tx.product.update({ where: { id: atlas }, data: { brand: "Milonga" } });
+      await tx.product.update({ where: { id: lia }, data: { brand: "Baobab" } });
+      await group(tx, atlas, [["S", 1]]);
+      await group(tx, lia, [["S", 1, 0, 1_553_000]]);
+      await group(tx, off, [["S", 1]], { isActive: false });
+
+      const lookbook = await listLookbook(tx, open, now);
+      const onCatalogs = Object.values(lookbook).flatMap((pages) =>
+        pages.flatMap((page) => page.pieces.map((piece) => piece.name)),
+      );
+      expect(onCatalogs).not.toEqual(expect.arrayContaining(["Falda Atlas"]));
+      expect(onCatalogs).not.toEqual(expect.arrayContaining(["Lia Dress"]));
+
+      const pinkOnly = await listPinkOnly(tx, open, now);
+      const names = (pages: { pieces: { name: string }[] }[]) =>
+        pages.flatMap((page) => page.pieces.map((piece) => piece.name));
+      expect(names(pinkOnly.milonga)).toEqual(["Falda Atlas"]);
+      expect(names(pinkOnly["otras-marcas"])).toEqual(["Lia Dress"]);
+      expect(names(pinkOnly["casa-icona"])).toEqual([]);
+      expect(pinkOnly["otras-marcas"][0]?.pieces[0]?.pinkPrice?.priceGs).toBe(1_553_000);
     });
   });
 });

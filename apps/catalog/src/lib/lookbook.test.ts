@@ -4,6 +4,8 @@ import {
   hasPinkPieces,
   type LookbookRow,
   lookbookPages,
+  OTHER_BRANDS,
+  pinkOnlySection,
   pinkPages,
   withPieces,
 } from "./lookbook";
@@ -196,6 +198,43 @@ describe("pinkPages", () => {
 
   it("is empty when no piece is in a group, whatever its color", () => {
     expect(pinkPages(lookbookPages([row(1, { color: "Rosa" })], settings))).toEqual([]);
+  });
+
+  it("charges the event price on Pink and keeps the product price on its catalog", () => {
+    const pages = lookbookPages(
+      [
+        row(1, { inGroup: true, pinkPriceGs: 1_553_000, discountPercent: 20 }),
+        row(2, { inGroup: true }),
+      ],
+      settings,
+    );
+    const [first, second] = pinkPages(pages);
+    expect(first?.pieces[0]).toMatchObject({
+      priceGs: 1_553_000,
+      discountPercent: null,
+      discountedPriceGs: null,
+    });
+    expect(first?.items[0]?.options[0]?.priceGs).toBe(1_553_000);
+    expect(second?.pieces[0]?.priceGs).toBe(1_500_000);
+    expect(pages[0]?.pieces[0]).toMatchObject({ priceGs: 1_500_000, discountPercent: 20 });
+  });
+
+  it("hides the event price too when the store hides prices", () => {
+    const hidden = { ...settings, showPrices: false };
+    const pages = lookbookPages([row(1, { inGroup: true, pinkPriceGs: 1_553_000 })], hidden);
+    expect(pinkPages(pages)[0]?.pieces[0]?.priceGs).toBeNull();
+  });
+});
+
+describe("pinkOnlySection", () => {
+  it("files a piece without a catalog under the catalog of its brand", () => {
+    expect(pinkOnlySection(row(1, { catalog: null, brand: "Milonga" }))).toBe("milonga");
+    expect(pinkOnlySection(row(1, { catalog: null, brand: " casa icona " }))).toBe("casa-icona");
+  });
+
+  it("files the other brands under Otras marcas", () => {
+    expect(pinkOnlySection(row(1, { catalog: null, brand: "Baobab" }))).toBe(OTHER_BRANDS.slug);
+    expect(pinkOnlySection(row(1, { catalog: null, brand: null }))).toBe(OTHER_BRANDS.slug);
   });
 });
 

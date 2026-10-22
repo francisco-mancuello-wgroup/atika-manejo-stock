@@ -21,7 +21,7 @@ export function VentasView({
         title="Ventas"
         description="Ventas registradas, de la más reciente a la más antigua."
       />
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <section className="flex flex-col gap-3">
           {sales.length === 0 ? (
             <p className="text-sm text-muted">Todavía no hay ventas registradas.</p>

@@ -140,8 +140,9 @@ export function BankPromosWorkspace({
     workspaceHref({ tab, id: nextIdAfterDelete(ids, id) });
 
   return (
-    <div className="flex min-h-[calc(100vh-9rem)] border border-line bg-bg">
-      <aside className="flex w-[400px] shrink-0 flex-col border-r border-line bg-surface">
+    <div className="flex min-h-[calc(100vh-9rem)] flex-col border border-line bg-bg lg:flex-row">
+      {/* List on top of the form on phones and tablets, beside it from lg up */}
+      <aside className="flex shrink-0 flex-col border-b border-line bg-surface lg:w-[320px] lg:border-r lg:border-b-0 xl:w-[400px]">
         <div className="flex flex-col gap-4 border-b border-line px-6 py-6">
           <div className="flex items-center justify-between gap-4">
             <h1 className="font-display text-3xl text-ink">Bancos</h1>
@@ -222,7 +223,7 @@ export function BankPromosWorkspace({
         )}
       </aside>
 
-      <section className="min-w-0 flex-1 px-10 py-8">
+      <section className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
         {onBanks ? (
           selection.isNew || selectedBank ? (
             <BankForm

@@ -138,6 +138,8 @@ model GroupAllocation {
   variant   ProductVariant   @relation(fields: [variantId], references: [id])
   allocated Int
   sold      Int              @default(0)
+  /// Event price for this size (the event workbook's price); null keeps the product's own price.
+  priceGs   Int?
 
   @@unique([groupId, variantId])
   @@index([variantId])

@@ -13,9 +13,9 @@ export default async function ErpLayout({ children }: { children: ReactNode }) {
   const session = await requireSession();
   const display = await getCurrencyDisplay();
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar email={session.email} exchangeRate={display.exchangeRate} />
-      <main className="flex min-w-0 flex-1 flex-col gap-6 p-8">
+      <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6 md:p-8">
         <div className="flex justify-end">
           <CurrencyToggle
             currency={display.currency}
