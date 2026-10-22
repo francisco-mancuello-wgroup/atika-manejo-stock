@@ -19,6 +19,7 @@
     "db:export-images-pdf": "pnpm --filter @atika/db db:export-images-pdf",
     "db:user": "pnpm --filter @atika/db db:user",
     "db:group": "pnpm --filter @atika/db db:group",
+    "db:group-list": "pnpm --filter @atika/db db:group-list",
     "db:banks": "pnpm --filter @atika/db db:banks"
   },
   "devDependencies": {
