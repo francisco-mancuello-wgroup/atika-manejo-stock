@@ -43,20 +43,15 @@ describe("LotPricingPanel", () => {
       );
     });
 
-    it("badges Global as active and Propio as inactive", () => {
+    it("shows Global and Propio as tabs, Global active", () => {
       renderPanel();
-      const list = screen.getByRole("list", { name: "Modo de precios" });
-      const [global, custom] = within(list).getAllByRole("listitem");
-      expect(global).toHaveTextContent("Global");
+      const group = screen.getByRole("group", { name: "Modo de precios" });
+      const global = within(group).getByRole("button", { name: "Global" });
+      const custom = within(group).getByRole("button", { name: "Propio" });
+      expect(global).toHaveAttribute("aria-pressed", "true");
       expect(global).toHaveTextContent("Activo");
-      expect(custom).toHaveTextContent("Propio");
+      expect(custom).toHaveAttribute("aria-pressed", "false");
       expect(custom).toHaveTextContent("Inactivo");
-    });
-
-    it("offers only the button to use Propio", () => {
-      renderPanel();
-      expect(screen.getByRole("button", { name: "Usar propio" })).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: "Usar global" })).not.toBeInTheDocument();
     });
 
     it("asks the server to switch to Propio without showing a notice", async () => {
@@ -67,7 +62,7 @@ describe("LotPricingPanel", () => {
         }),
       );
       renderPanel({ modeAction });
-      fireEvent.click(screen.getByRole("button", { name: "Usar propio" }));
+      fireEvent.click(screen.getByRole("button", { name: "Propio" }));
       await waitFor(() => expect(modeAction).toHaveBeenCalled());
       expect(sentForm(modeAction).get("mode")).toBe("custom");
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
@@ -81,24 +76,23 @@ describe("LotPricingPanel", () => {
         }),
       );
       renderPanel({ modeAction });
-      fireEvent.click(screen.getByRole("button", { name: "Usar propio" }));
+      fireEvent.click(screen.getByRole("button", { name: "Propio" }));
       expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo guardar.");
     });
   });
 
   describe("custom mode", () => {
-    it("badges Propio as active and offers the button to use Global", async () => {
+    it("shows Propio as the active tab and switches back to Global", async () => {
       const modeAction = vi.fn(idle);
       renderPanel({ mode: "custom", modeAction });
-      const [global, custom] = within(
-        screen.getByRole("list", { name: "Modo de precios" }),
-      ).getAllByRole("listitem");
+      const group = screen.getByRole("group", { name: "Modo de precios" });
+      const global = within(group).getByRole("button", { name: "Global" });
+      expect(within(group).getByRole("button", { name: "Propio" })).toHaveTextContent("Activo");
       expect(global).toHaveTextContent("Inactivo");
-      expect(custom).toHaveTextContent("Activo");
-      expect(screen.queryByRole("button", { name: "Usar propio" })).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole("button", { name: "Usar global" }));
+      fireEvent.click(global);
       await waitFor(() => expect(modeAction).toHaveBeenCalled());
       expect(sentForm(modeAction).get("mode")).toBe("global");
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
     it("shows an editable form with the lot's values and no link to Parámetros", () => {

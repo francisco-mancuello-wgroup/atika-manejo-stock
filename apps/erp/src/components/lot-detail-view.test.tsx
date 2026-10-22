@@ -64,7 +64,7 @@ describe("LotDetailView", () => {
   it("offers the editable pricing form when the lot has its own parameters", () => {
     renderView({ ...lot, pricingMode: "custom" });
     expect(screen.getByRole("button", { name: "Guardar y recalcular" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Usar global" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Propio" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("offers the shipping form", () => {

@@ -35,6 +35,7 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 - [x] T4 — Saving the lot shipping reprices the lot with its current parameters (user request after review: the old message pointed to Parámetros, misleading for Propio lots).
 - [x] T5 — "Activo: Global/Propio" tag next to the Precios del lote title (user request after trying the UI).
 - [x] T6 — Mode as two rows (Global / Propio) with Activo/Inactivo badge and a "Usar global"/"Usar propio" button on the inactive one; header tag and mode success notices removed (only errors shown). User request.
+- [x] T7 — Back to the Global/Propio tabs (user preferred them), each tab with an Activo/Inactivo badge; clicking the inactive tab switches; no mode notices (errors only).
 
 ## Acceptance criteria
 
@@ -70,6 +71,7 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 - T5 RED: lot-pricing-panel.test.tsx -> 2 failed (no "Activo: …" tag). GREEN: panel + lot detail tests 14 passed; biome clean; erp typecheck ok.
 - T6 RED: lot-pricing-panel.test.tsx -> 5 failed. GREEN: panel + lot detail 14 passed; erp suite then had 2 DB-state failures (local lot switched to Propio) fixed in the next commit; typecheck ok; lint ok (2 known warnings).
 - DB tests made independent of local lots in Propio; `pnpm --filter @atika/erp test` -> 82 files / 556 passed.
+- T7 RED: panel + lot detail tests -> 5 failed. GREEN: 13 passed; `pnpm --filter @atika/erp test` 82 files / 555 passed; typecheck ok; lint ok (2 known warnings).
 
 ## Next step
 
