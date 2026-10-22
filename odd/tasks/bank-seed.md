@@ -18,7 +18,7 @@ Seed the Paraguayan banks shown in the bank-promos reference (Nissei) with their
 
 ## Tasks
 
-- [x] T1 — Logo collection (7 of 16 logos; rest `file: null`, owner uploads them from the ERP) and the seed step + `db:banks` command with tests. Commit: COMMIT
+- [x] T1 — Logo collection (7 of 16 logos; rest `file: null`, owner uploads them from the ERP) and the seed step + `db:banks` command with tests. Commit: 615f6af
 
 ## Progress
 
