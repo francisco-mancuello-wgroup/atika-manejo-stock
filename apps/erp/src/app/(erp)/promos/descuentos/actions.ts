@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type FormState, formValues } from "../../../../lib/action-state";
 import { requireSession } from "../../../../lib/auth/session";
+import { notifyCatalogChanged } from "../../../../lib/catalog-live";
 import { getDb } from "../../../../lib/db";
 import { deleteDiscount, saveDiscount, setDiscountActive } from "../../../../lib/discounts/save";
 
@@ -20,6 +21,7 @@ function productIdsOf(formData: FormData): string[] {
 function revalidateDiscounts() {
   revalidatePath("/promos/descuentos");
   revalidatePath("/ventas");
+  notifyCatalogChanged();
 }
 
 /** "Guardar" on the edit page: bound to the discount id by the page. */

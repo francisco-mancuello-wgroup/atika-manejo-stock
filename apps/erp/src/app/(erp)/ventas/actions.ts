@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { type FormState, formValues } from "../../../lib/action-state";
 import { requireSession } from "../../../lib/auth/session";
+import { notifyCatalogChanged } from "../../../lib/catalog-live";
 import { getDb } from "../../../lib/db";
 import { registerSaleFromForm } from "../../../lib/sales/register";
 
@@ -20,6 +21,7 @@ export async function registerSaleAction(
       revalidatePath("/inventario");
       revalidatePath("/compras");
       if (lotId) revalidatePath(`/compras/${lotId}`);
+      notifyCatalogChanged();
     }
     return state;
   } catch (error) {

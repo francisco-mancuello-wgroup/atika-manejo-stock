@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type FormState, formValues } from "../../../lib/action-state";
 import { requireSession } from "../../../lib/auth/session";
+import { notifyCatalogChanged } from "../../../lib/catalog-live";
 import { getDb } from "../../../lib/db";
 import { readPhotoFields } from "../../../lib/products/form-data";
 import { createProduct, updateProduct } from "../../../lib/products/save";
@@ -26,6 +27,7 @@ function revalidateProduct(productId: string) {
     revalidatePath(path);
   }
   revalidatePath("/compras/[lotId]", "page");
+  notifyCatalogChanged();
 }
 
 /** "Guardar" on the edit page: bound to the product id by the page. */

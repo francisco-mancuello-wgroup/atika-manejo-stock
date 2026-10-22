@@ -16,7 +16,6 @@ function row(id: number, overrides: Partial<LookbookRow> = {}): LookbookRow {
   return {
     id: `p${id}`,
     name: `Pieza ${id}`,
-    catalogName: null,
     brand: "Milonga",
     lot: { supplier: { name: "Milonga" } },
     category: null,
@@ -100,10 +99,10 @@ describe("lookbookPages", () => {
     });
   });
 
-  it("shows the lookbook name instead of the workbook name", () => {
-    const [page] = lookbookPages([row(1, { name: "T Bsc M", catalogName: "Top Bruma" })], settings);
-    expect(page?.title).toBe("Top Bruma");
-    expect(page?.pieces[0]?.name).toBe("Top Bruma");
+  it("shows the product name edited in the ERP", () => {
+    const [page] = lookbookPages([row(1, { name: "COSTA COCOO" })], settings);
+    expect(page?.title).toBe("COSTA COCOO");
+    expect(page?.pieces[0]?.name).toBe("COSTA COCOO");
   });
 
   it("drops pieces without stock or photos (si no hay, desaparece)", () => {
