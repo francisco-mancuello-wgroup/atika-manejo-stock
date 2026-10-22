@@ -1,9 +1,19 @@
 import { cn } from "@atika/ui";
-import { formatGs, formatUsd } from "../lib/format";
+import type { CurrencyDisplay } from "../lib/currency";
+import { formatUsd, moneyFormatter } from "../lib/format";
 import type { LotGridRow } from "../lib/view-models";
 import { table } from "./styles";
 
-export function LotGrid({ sizes, rows }: { sizes: string[]; rows: LotGridRow[] }) {
+export function LotGrid({
+  sizes,
+  rows,
+  display = { currency: "gs" },
+}: {
+  sizes: string[];
+  rows: LotGridRow[];
+  display?: CurrencyDisplay;
+}) {
+  const money = moneyFormatter(display.currency, display.exchangeRate);
   return (
     <div className={table.wrapper}>
       <table className={table.root}>
@@ -17,7 +27,9 @@ export function LotGrid({ sizes, rows }: { sizes: string[]; rows: LotGridRow[] }
             ))}
             <th className={cn(table.th, table.num)}>Valor original (US$)</th>
             <th className={cn(table.th, table.num)}>Costo unit. (US$)</th>
-            <th className={cn(table.th, table.num)}>Precio (₲)</th>
+            <th
+              className={cn(table.th, table.num)}
+            >{`Precio (${display.currency === "usd" ? "US$" : "₲"})`}</th>
           </tr>
         </thead>
         <tbody>
@@ -54,7 +66,7 @@ export function LotGrid({ sizes, rows }: { sizes: string[]; rows: LotGridRow[] }
               })}
               <td className={cn(table.td, table.num)}>{formatUsd(row.originalValueUsd)}</td>
               <td className={cn(table.td, table.num)}>{formatUsd(row.unitCostUsd)}</td>
-              <td className={cn(table.td, table.num)}>{formatGs(row.priceGs)}</td>
+              <td className={cn(table.td, table.num)}>{money(row.priceGs)}</td>
             </tr>
           ))}
         </tbody>

@@ -46,6 +46,20 @@ export function formatMoney(
   return formatGs(amountGs);
 }
 
+/**
+ * Amount held natively in both currencies (a lot's investment): the selected currency leads
+ * with its own stored value and the other one follows as detail, so nothing is re-converted.
+ */
+export function moneyPair(
+  currency: Currency,
+  amountGs: number,
+  amountUsd: number,
+): { value: string; detail: string } {
+  return currency === "usd"
+    ? { value: formatUsd(amountUsd), detail: formatGs(amountGs) }
+    : { value: formatGs(amountGs), detail: formatUsd(amountUsd) };
+}
+
 export function moneyFormatter(
   currency: Currency,
   exchangeRate: number | undefined,

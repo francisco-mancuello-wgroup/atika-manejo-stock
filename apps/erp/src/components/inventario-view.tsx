@@ -1,6 +1,7 @@
 import { Button, buttonVariants, cn, Input } from "@atika/ui";
 import Link from "next/link";
-import { formatGs } from "../lib/format";
+import type { CurrencyDisplay } from "../lib/currency";
+import { moneyFormatter } from "../lib/format";
 import type { InventoryFilters } from "../lib/inventory-filters";
 import type { InventoryProduct } from "../lib/view-models";
 import { Field, Select } from "./form-controls";
@@ -12,11 +13,14 @@ export function InventarioView({
   products,
   lots,
   filters,
+  display = { currency: "gs" },
 }: {
   products: InventoryProduct[];
   lots: { id: string; name: string }[];
   filters: InventoryFilters;
+  display?: CurrencyDisplay;
 }) {
+  const money = moneyFormatter(display.currency, display.exchangeRate);
   const filtered = Boolean(filters.lotId || filters.query);
   return (
     <div className="flex flex-col gap-6">
@@ -132,7 +136,7 @@ export function InventarioView({
                       ))}
                     </ul>
                   </td>
-                  <td className={`${table.td} ${table.num}`}>{formatGs(product.priceGs)}</td>
+                  <td className={`${table.td} ${table.num}`}>{money(product.priceGs)}</td>
                 </tr>
               ))}
             </tbody>

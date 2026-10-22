@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { FormState } from "../lib/action-state";
-import { formatDate, formatGs, formatInteger, formatUsd } from "../lib/format";
+import type { CurrencyDisplay } from "../lib/currency";
+import { formatDate, formatInteger, moneyFormatter, moneyPair } from "../lib/format";
 import type { LotDetail } from "../lib/view-models";
 import { KpiCard } from "./kpi-card";
 import { LotGrid } from "./lot-grid";
@@ -11,8 +12,18 @@ const NUMBER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 4 });
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
-export function LotDetailView({ lot, action }: { lot: LotDetail; action: Action }) {
+export function LotDetailView({
+  lot,
+  action,
+  display = { currency: "gs" },
+}: {
+  lot: LotDetail;
+  action: Action;
+  display?: CurrencyDisplay;
+}) {
   const { summary, params } = lot;
+  const money = moneyFormatter(display.currency, display.exchangeRate);
+  const investment = moneyPair(display.currency, summary.investmentGs, summary.investmentUsd);
   const pricing = [
     ["Tipo de cambio (₲ / US$)", NUMBER.format(params.exchangeRate)],
     ["Factor de venta", NUMBER.format(params.saleFactor)],
@@ -35,14 +46,10 @@ export function LotDetailView({ lot, action }: { lot: LotDetail; action: Action 
           detail={`de ${formatInteger(summary.unitsBought)} compradas`}
         />
         <KpiCard label="Vendidas" value={formatInteger(summary.unitsSold)} />
-        <KpiCard
-          label="Inversión"
-          value={formatGs(summary.investmentGs)}
-          detail={formatUsd(summary.investmentUsd)}
-        />
+        <KpiCard label="Inversión" value={investment.value} detail={investment.detail} />
         <KpiCard
           label="Stock valorizado"
-          value={formatGs(summary.stockValueGs)}
+          value={money(summary.stockValueGs)}
           detail="a precio de lista"
         />
       </div>
@@ -52,7 +59,7 @@ export function LotDetailView({ lot, action }: { lot: LotDetail; action: Action 
           {lot.rows.length === 0 ? (
             <p className="text-sm text-muted">Este lote no tiene productos.</p>
           ) : (
-            <LotGrid sizes={lot.sizes} rows={lot.rows} />
+            <LotGrid sizes={lot.sizes} rows={lot.rows} display={display} />
           )}
         </section>
         <div className="flex flex-col gap-6">

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { LotDetailView } from "../../../../components/lot-detail-view";
+import { getCurrencyDisplay } from "../../../../lib/display-currency";
 import { getLotDetail } from "../../../../lib/queries/lots";
 import { saveLotShippingAction } from "./actions";
 
@@ -11,5 +12,11 @@ export default async function LotPage({ params }: { params: Promise<{ lotId: str
   const { lotId } = await params;
   const lot = UUID.test(lotId) ? await getLotDetail(lotId) : null;
   if (!lot) notFound();
-  return <LotDetailView lot={lot} action={saveLotShippingAction.bind(null, lot.id)} />;
+  return (
+    <LotDetailView
+      lot={lot}
+      display={await getCurrencyDisplay()}
+      action={saveLotShippingAction.bind(null, lot.id)}
+    />
+  );
 }

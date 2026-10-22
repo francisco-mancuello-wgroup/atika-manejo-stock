@@ -1,13 +1,24 @@
 import Link from "next/link";
-import { formatDate, formatGs, formatInteger, formatUsd } from "../lib/format";
+import type { CurrencyDisplay } from "../lib/currency";
+import { formatDate, formatInteger, moneyFormatter, moneyPair } from "../lib/format";
 import type { ResumenData } from "../lib/queries/summary";
 import { KpiCard } from "./kpi-card";
 import { PageHeader } from "./page-header";
 import { ProgressBar } from "./progress-bar";
 import { table } from "./styles";
 
-export function ResumenView({ data }: { data: ResumenData }) {
+export function ResumenView({
+  data,
+  display = { currency: "gs" },
+}: {
+  data: ResumenData;
+  display?: CurrencyDisplay;
+}) {
   const { totals, lots, latestSales, monthSalesGs } = data;
+  const money = moneyFormatter(display.currency, display.exchangeRate);
+  const lotInvestment = (lot: { investmentGs: number; investmentUsd: number }) =>
+    moneyPair(display.currency, lot.investmentGs, lot.investmentUsd);
+  const investment = moneyPair(display.currency, totals.investmentGs, totals.investmentUsd);
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="Resumen" description="Estado del stock, la inversión y las ventas." />
@@ -19,17 +30,13 @@ export function ResumenView({ data }: { data: ResumenData }) {
           detail={`de ${formatInteger(totals.unitsBought)} compradas`}
         />
         <KpiCard label="Unidades vendidas" value={formatInteger(totals.unitsSold)} />
-        <KpiCard
-          label="Inversión"
-          value={formatGs(totals.investmentGs)}
-          detail={formatUsd(totals.investmentUsd)}
-        />
+        <KpiCard label="Inversión" value={investment.value} detail={investment.detail} />
         <KpiCard
           label="Stock valorizado"
-          value={formatGs(totals.stockValueGs)}
+          value={money(totals.stockValueGs)}
           detail="a precio de lista"
         />
-        <KpiCard label="Ventas del mes" value={formatGs(monthSalesGs)} />
+        <KpiCard label="Ventas del mes" value={money(monthSalesGs)} />
       </div>
 
       <section className="flex flex-col gap-3">
@@ -73,11 +80,11 @@ export function ResumenView({ data }: { data: ResumenData }) {
                   <td className={`${table.td} ${table.num}`}>{formatInteger(lot.stock)}</td>
                   <td className={`${table.td} ${table.num}`}>
                     <div className="flex flex-col">
-                      <span>{formatGs(lot.investmentGs)}</span>
-                      <span className="text-xs text-muted">{formatUsd(lot.investmentUsd)}</span>
+                      <span>{lotInvestment(lot).value}</span>
+                      <span className="text-xs text-muted">{lotInvestment(lot).detail}</span>
                     </div>
                   </td>
-                  <td className={`${table.td} ${table.num}`}>{formatGs(lot.stockValueGs)}</td>
+                  <td className={`${table.td} ${table.num}`}>{money(lot.stockValueGs)}</td>
                 </tr>
               ))}
             </tbody>
@@ -108,7 +115,7 @@ export function ResumenView({ data }: { data: ResumenData }) {
                     <td className={table.td}>{sale.productName}</td>
                     <td className={table.td}>{sale.size}</td>
                     <td className={`${table.td} ${table.num}`}>{sale.quantity}</td>
-                    <td className={`${table.td} ${table.num}`}>{formatGs(sale.totalGs)}</td>
+                    <td className={`${table.td} ${table.num}`}>{money(sale.totalGs)}</td>
                   </tr>
                 ))}
               </tbody>
