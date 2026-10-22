@@ -29,28 +29,38 @@ export interface BookCatalog {
   pages: LookbookPage[];
 }
 
+/**
+ * Fixed top bar. On a catalog page: "Catálogos" back to the home, the catalog name and search.
+ * On the home (`home`) only search: the home already shows the logo and the catalogs.
+ */
 function BookBar({
   title,
-  backHref,
+  home,
   catalogs,
 }: {
   title: string;
-  backHref: string;
+  home: boolean;
   catalogs: BookCatalog[];
 }) {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between gap-3 pr-16 pl-4 lg:pr-20 lg:pl-8">
-      <Link
-        href={backHref}
-        className="pointer-events-auto inline-flex min-h-11 items-center gap-2 rounded-full bg-background/85 px-4 text-xs tracking-[2px] uppercase backdrop-blur"
-      >
-        <ArrowIcon className="size-3.5 rotate-180" />
-        Catálogos
-      </Link>
+      {home ? (
+        <span />
+      ) : (
+        <Link
+          href="/"
+          className="pointer-events-auto inline-flex min-h-11 items-center gap-2 rounded-full bg-background/85 px-4 text-xs tracking-[2px] uppercase backdrop-blur"
+        >
+          <ArrowIcon className="size-3.5 rotate-180" />
+          Catálogos
+        </Link>
+      )}
       <div className="flex items-center gap-2">
-        <span className="pointer-events-auto hidden rounded-full bg-background/85 px-4 py-2 text-xs tracking-[2.4px] uppercase backdrop-blur sm:inline">
-          {title}
-        </span>
+        {!home && (
+          <span className="pointer-events-auto hidden rounded-full bg-background/85 px-4 py-2 text-xs tracking-[2.4px] uppercase backdrop-blur sm:inline">
+            {title}
+          </span>
+        )}
         <LookbookSearch
           entries={catalogs.flatMap((catalog) => searchEntriesOf(catalog, catalog.pages))}
         />
@@ -163,8 +173,7 @@ function EndPage() {
 
 /**
  * One catalog, or several chained one after the other (Casa Icona, then Milonga, then Sordo),
- * each opening with its cover. With an `intro` (the home's covers) "Catálogos" scrolls back up
- * to it instead of leaving the page.
+ * each opening with its cover. With an `intro` (the home's covers) the bar keeps only search.
  */
 export function LookbookBook({
   title,
@@ -183,7 +192,7 @@ export function LookbookBook({
 }) {
   return (
     <div data-lookbook>
-      <BookBar title={title} backHref={intro ? `#${INTRO_ID}` : "/"} catalogs={catalogs} />
+      <BookBar title={title} home={intro !== undefined} catalogs={catalogs} />
       {intro && (
         <div id={INTRO_ID} className="min-h-svh snap-start pt-14">
           {intro}

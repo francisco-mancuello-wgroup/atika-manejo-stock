@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { vi } from "vitest";
-import { type BookCatalog, CatalogShelf } from "./book";
+import { type BookCatalog, CatalogShelf, LookbookBook } from "./book";
 
 // Next's loader adds the blur preview to static imports; Vitest only sees a path
 vi.mock("../../../public/atika/pink.jpg", () => ({
@@ -34,5 +34,30 @@ describe("CatalogShelf", () => {
     expect(screen.getByRole("heading", { name: "Catálogos" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver todo" })).toHaveAttribute("href", "#casa-icona");
     expect(screen.getAllByText("Ver catálogo")).toHaveLength(2);
+  });
+});
+
+describe("LookbookBook bar", () => {
+  it("on the home (with the shelf) shows only search, without Catálogos nor the title", () => {
+    render(
+      <LookbookBook
+        title="Átika"
+        catalogs={catalogs}
+        origin=""
+        pagePath="/"
+        intro={<p>shelf</p>}
+      />,
+    );
+    expect(screen.queryByRole("link", { name: /Catálogos/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("Átika")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Buscar prendas" })).toBeInTheDocument();
+  });
+
+  it("on a catalog page keeps Catálogos to go back home and the catalog name", () => {
+    render(
+      <LookbookBook title="Milonga" catalogs={catalogs} origin="" pagePath="/catalogos/milonga" />,
+    );
+    expect(screen.getByRole("link", { name: /Catálogos/ })).toHaveAttribute("href", "/");
+    expect(screen.getByText("Milonga", { selector: "span" })).toBeInTheDocument();
   });
 });
