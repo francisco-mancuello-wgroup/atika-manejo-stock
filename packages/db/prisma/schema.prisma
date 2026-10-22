@@ -18,53 +18,55 @@ model Supplier {
 
 /// A purchase from one supplier. Pricing parameters live here and are applied to every product.
 model Lot {
-  id               String    @id @default(uuid(7)) @db.Uuid
-  supplierId       String    @db.Uuid
-  supplier         Supplier  @relation(fields: [supplierId], references: [id])
+  id               String         @id @default(uuid(7)) @db.Uuid
+  supplierId       String         @db.Uuid
+  supplier         Supplier       @relation(fields: [supplierId], references: [id])
   name             String
-  purchasedAt      DateTime  @db.Date
+  purchasedAt      DateTime       @db.Date
   /// Guaraníes per US dollar.
-  exchangeRate     Decimal   @db.Decimal(10, 2)
-  saleFactor       Decimal   @db.Decimal(6, 3)
+  exchangeRate     Decimal        @db.Decimal(10, 2)
+  saleFactor       Decimal        @db.Decimal(6, 3)
   /// Fraction, 0.1 = 10 %.
-  vatRate          Decimal   @db.Decimal(5, 4)
+  vatRate          Decimal        @db.Decimal(5, 4)
   /// Share of the original value actually paid, fraction.
-  costRate         Decimal   @db.Decimal(5, 4)
-  totalShippingUsd Decimal   @db.Decimal(12, 2)
+  costRate         Decimal        @db.Decimal(5, 4)
+  totalShippingUsd Decimal        @db.Decimal(12, 2)
   notes            String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
   products         Product[]
+  bankPromos       BankPromoLot[]
 
   @@index([supplierId])
   @@map("lots")
 }
 
 model Product {
-  id               String            @id @default(uuid(7)) @db.Uuid
-  lotId            String            @db.Uuid
-  lot              Lot               @relation(fields: [lotId], references: [id])
+  id               String             @id @default(uuid(7)) @db.Uuid
+  lotId            String             @db.Uuid
+  lot              Lot                @relation(fields: [lotId], references: [id])
   code             String?
   name             String
   brand            String?
   color            String?
   category         String?
   description      String?
-  originalValueUsd Decimal           @db.Decimal(12, 2)
+  originalValueUsd Decimal            @db.Decimal(12, 2)
   /// Recalculated from lot parameters on save; read by the catalog.
   priceGs          Int
-  isPublished      Boolean           @default(false)
+  isPublished      Boolean            @default(false)
   /// Lookbook placement: only pieces of a catalog are shown, in PDF page order.
   catalog          Catalog?
   catalogOrder     Int?
   catalogSection   String?
   /// Name shown in the lookbook; the workbook name is kept for the ERP and re-seeds.
   catalogName      String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
   variants         ProductVariant[]
   images           ProductImage[]
   discounts        DiscountProduct[]
+  bankPromos       BankPromoProduct[]
 
   @@index([lotId])
   @@index([isPublished])
@@ -163,6 +165,96 @@ model DiscountProduct {
   @@id([discountId, productId])
   @@index([productId])
   @@map("discount_products")
+}
+
+/// A bank shown in the catalog's promotions block.
+model Bank {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  name      String          @unique
+  /// Public URL of the logo (stored like product photos); null = show the name instead.
+  logoUrl   String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  promos    BankPromoBank[]
+
+  @@map("banks")
+}
+
+/// Informational card promotion (installments, refund or discount); never changes prices or sales.
+model BankPromo {
+  id        String             @id @default(uuid(7)) @db.Uuid
+  kind      BankPromoKind
+  /// Installments: integer 2-48. Refund and discount: integer percent 1-100.
+  value     Int
+  /// ISO weekdays it applies (1 = Monday ... 7 = Sunday); empty = every day.
+  days      Int[]
+  /// Maximum benefit in Gs; null = no cap.
+  capGs     Int?
+  /// First and last day (inclusive, Asunción calendar days); null = open-ended.
+  startsAt  DateTime?          @db.Date
+  endsAt    DateTime?          @db.Date
+  terms     String?
+  isActive  Boolean            @default(true)
+  scope     BankPromoScope
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  banks     BankPromoBank[]
+  /// Only used when scope is "lots".
+  lots      BankPromoLot[]
+  /// Only used when scope is "products".
+  products  BankPromoProduct[]
+
+  @@map("bank_promos")
+}
+
+enum BankPromoKind {
+  installments
+  refund
+  discount
+
+  @@map("bank_promo_kind")
+}
+
+enum BankPromoScope {
+  all
+  lots
+  products
+
+  @@map("bank_promo_scope")
+}
+
+model BankPromoBank {
+  promoId String    @db.Uuid
+  promo   BankPromo @relation(fields: [promoId], references: [id], onDelete: Cascade)
+  bankId  String    @db.Uuid
+  /// Restrict: a bank used by a promo cannot be deleted.
+  bank    Bank      @relation(fields: [bankId], references: [id], onDelete: Restrict)
+
+  @@id([promoId, bankId])
+  @@index([bankId])
+  @@map("bank_promo_banks")
+}
+
+model BankPromoLot {
+  promoId String    @db.Uuid
+  promo   BankPromo @relation(fields: [promoId], references: [id], onDelete: Cascade)
+  lotId   String    @db.Uuid
+  lot     Lot       @relation(fields: [lotId], references: [id], onDelete: Cascade)
+
+  @@id([promoId, lotId])
+  @@index([lotId])
+  @@map("bank_promo_lots")
+}
+
+model BankPromoProduct {
+  promoId   String    @db.Uuid
+  promo     BankPromo @relation(fields: [promoId], references: [id], onDelete: Cascade)
+  productId String    @db.Uuid
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([promoId, productId])
+  @@index([productId])
+  @@map("bank_promo_products")
 }
 
 /// Single row (id = 1) configured from the ERP and read by the catalog.

@@ -13,23 +13,27 @@ Let the owner publish bank card promotions (installments, refunds, discounts) fr
 ## Scope
 
 ### Data (packages/db)
+
 - `Bank`: name (unique), optional logo image (stored like product photos), createdAt/updatedAt.
 - `BankPromo`: kind (`installments` | `refund` | `discount`), value (installments: integer 2–48; refund/discount: percent 1–100), optional days of week (subset of Mon–Sun; empty = every day), optional cap in ₲ (`capGs`), optional startsAt/endsAt (`@db.Date`, inclusive, Asunción calendar like Discount), optional terms text, isActive, scope (`all` | `lots` | `products`), banks (≥1, join table), lots / products join tables (used only for their scope), timestamps.
 - Migration; seed untouched.
 
 ### Pure rules (shared, next to the discount rules in packages/pricing or a similar shared package both apps already import)
+
 - `isPromoLive(promo, now)`: active, inside its window (Asunción day), and today's weekday is allowed.
 - `promosForProduct(promos, {productId, lotId}, now)`: live promos whose scope covers the product.
 - `promoHeadline(promo)`: "Hasta 12 cuotas sin intereses", "20 % de reintegro", "15 % de descuento", plus " · Jueves" / " · Lunes y jueves" and " · Tope ₲ 200.000" when present.
 - Group for display: by headline, banks merged, ordered installments (desc value) → refund → discount.
 
 ### ERP (Promos → Bancos, /promos/bancos)
+
 - Banks management: list + create/edit/delete (name, logo upload, preview; fallback shows name). Deleting a bank used by promos is refused with a clear message.
 - Promos list like Descuentos: headline, banks, scope summary ("Todos los productos" / "3 lotes" / "12 productos"), window, status (Vigente / Programada / Vencida / Inactiva), active switch, edit, delete.
 - Promo form: kind, value, banks (checkboxes with logos), days of week, cap, window, terms, scope radios (Todos / Lotes / Productos) with lot checklist or the existing product picker (reuse Descuentos' picker). Validation in Spanish.
 - All server actions guarded by requireSession (actions guard test).
 
 ### Catalog (apps/catalog)
+
 - Product sheet / size picker area: block "Nuestras promociones bancarias" with grouped headlines and bank logos (name chip when no logo). Hidden when no promo applies.
 - Link "Ver bases y condiciones" to a page `/promociones-bancarias` listing every live promo with banks, days, cap, window and terms.
 - Read from DB with the same "today in Asunción" rule as discounts.
@@ -40,7 +44,7 @@ Let the owner publish bank card promotions (installments, refunds, discounts) fr
 
 ## Tasks
 
-- [ ] T1 — Schema + migration + pure rules (live, scope, headline, grouping) with tests.
+- [x] T1 — Schema + migration + pure rules (live, scope, headline, grouping) with tests.
 - [ ] T2 — ERP banks management (CRUD + logo) with tests.
 - [ ] T3 — ERP promos list + form (scope all/lots/products) with tests.
 - [ ] T4 — Catalog block on the product sheet + bases y condiciones page with tests.
@@ -48,10 +52,12 @@ Let the owner publish bank card promotions (installments, refunds, discounts) fr
 ## Progress
 
 - 2026-10-22: Document created.
+- 2026-10-22 T1: `Bank`, `BankPromo` (+ bank/lot/product join tables) and migration `20261022030000_bank_promos`; days stored as `Int[]` (ISO 1=Monday..7=Sunday); logo stored as `Bank.logoUrl`; pure rules in `packages/pricing/src/bank-promo.ts` (exports `isPromoLive`, `promosForProduct`, `promoHeadline`, `groupPromosForDisplay`, `asuncionDay` shared with discounts). Deleting a bank in use is blocked at DB level (`ON DELETE RESTRICT`).
 
 ## Verification evidence
 
-(pending)
+- T1 RED: `pnpm --filter @atika/pricing test` -> 21 failed (rules not implemented). GREEN: 48 passed. Schema DB test (`apps/erp/src/lib/bank-promos/schema.db.test.ts`) written after the migration (declarative schema): 4 passed; no RED observed for it. `packages/db/src/schema.test.ts` model list updated.
+- T1 commit: (recorded in next commit)
 
 ## Next step
 

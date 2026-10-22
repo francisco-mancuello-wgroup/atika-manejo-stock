@@ -6,6 +6,11 @@ describe("schema", () => {
   it("defines every model the ERP and catalog need", () => {
     expect(Object.values(Prisma.ModelName).sort()).toEqual([
       "AppSettings",
+      "Bank",
+      "BankPromo",
+      "BankPromoBank",
+      "BankPromoLot",
+      "BankPromoProduct",
       "CatalogSettings",
       "Discount",
       "DiscountProduct",

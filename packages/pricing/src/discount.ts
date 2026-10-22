@@ -17,7 +17,7 @@ export interface DiscountRule {
 const TIME_ZONE = "America/Asuncion";
 
 /** `yyyy-mm-dd` of the Asunción calendar day that contains `now` (en-CA formats it that way). */
-function asuncionDay(now: Date): string {
+export function asuncionDay(now: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: TIME_ZONE,
     year: "numeric",

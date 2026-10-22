@@ -90,4 +90,15 @@ export function priceLot(params: LotPricingParams, models: readonly LotModel[]):
     };
   });
 }
+export {
+  type BankPromoKind,
+  type BankPromoRule,
+  type BankPromoScope,
+  groupPromosForDisplay,
+  isPromoLive,
+  type PromoBank,
+  type PromoGroup,
+  promoHeadline,
+  promosForProduct,
+} from "./bank-promo";
 export { applyDiscount, type DiscountRule, effectiveDiscount } from "./discount";
