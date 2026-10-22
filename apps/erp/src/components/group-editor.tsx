@@ -3,7 +3,6 @@
 import type { Catalog } from "@atika/db";
 import { CATALOG_CATEGORIES } from "@atika/db/categories";
 import { Button, Input } from "@atika/ui";
-import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
 import type { ProductFilter } from "../lib/catalog-groups/groups";
@@ -12,7 +11,22 @@ import type { GroupDetail, GroupOptions, GroupProduct } from "../lib/queries/cat
 import type { PickerProduct } from "../lib/queries/discounts";
 import { ConfirmDeleteButton } from "./confirm-delete-button";
 import { Field, FormMessage, Select } from "./form-controls";
-import type { GroupsViewActions } from "./groups-view";
+
+export interface GroupEditorActions {
+  /** `groupId` is null when creating. */
+  saveGroup: (
+    groupId: string | null,
+    previous: FormState,
+    formData: FormData,
+  ) => Promise<FormState>;
+  saveAllocations: (
+    groupId: string,
+    entries: { variantId: string; allocated: number }[],
+  ) => Promise<FormState>;
+  addProducts: (groupId: string, filter: ProductFilter) => Promise<FormState>;
+  removeProduct: (groupId: string, productId: string) => Promise<FormState>;
+  deleteGroup: (groupId: string) => Promise<FormState>;
+}
 
 type Criterion = "lote" | "catalogo" | "categoria" | "marca";
 
@@ -70,23 +84,15 @@ function Outcome({ state }: { state: FormState | null }) {
 function GroupForm({
   detail,
   action,
-  closeHref,
 }: {
   detail: GroupDetail | null;
-  action: GroupsViewActions["saveGroup"];
-  closeHref: string;
+  action: GroupEditorActions["saveGroup"];
 }) {
   const [state, formAction, pending] = useActionState(action.bind(null, detail?.id ?? null), IDLE);
   const values = state.status === "error" ? state.values : undefined;
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="font-display text-2xl text-ink">{detail ? detail.name : "Nuevo grupo"}</h2>
-        <Link href={closeHref} className="text-sm text-muted underline-offset-4 hover:underline">
-          Cerrar
-        </Link>
-      </div>
       <Field label="Nombre" htmlFor="group-name" error={errors.name}>
         <Input
           id="group-name"
@@ -140,7 +146,7 @@ function AddProducts({
   inGroup: ReadonlySet<string>;
   options: GroupOptions;
   products: PickerProduct[];
-  add: GroupsViewActions["addProducts"];
+  add: GroupEditorActions["addProducts"];
 }) {
   const [criterion, setCriterion] = useState<Criterion>("lote");
   const [value, setValue] = useState("");
@@ -327,7 +333,7 @@ function Allocations({
   actions,
 }: {
   detail: GroupDetail;
-  actions: Pick<GroupsViewActions, "saveAllocations" | "removeProduct">;
+  actions: Pick<GroupEditorActions, "saveAllocations" | "removeProduct">;
 }) {
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -402,26 +408,27 @@ function Allocations({
   );
 }
 
-/** Side panel: group data, bulk and single add, per-size quantities and delete. */
+/** Body of the group page: group data, bulk and single add, per-size quantities and delete. */
 export function GroupEditor({
   detail,
   options,
   products,
   actions,
-  closeHref,
+  backHref,
 }: {
   /** The saved group, or null to create one. */
   detail: GroupDetail | null;
   options: GroupOptions;
   products: PickerProduct[];
-  actions: GroupsViewActions;
-  closeHref: string;
+  actions: GroupEditorActions;
+  /** Where to go once the group is deleted. */
+  backHref: string;
 }) {
   // Quantities restart from the saved values whenever the server sends new ones.
   const signature = JSON.stringify(detail?.products ?? []);
   return (
     <div className="flex flex-col gap-6">
-      <GroupForm detail={detail} action={actions.saveGroup} closeHref={closeHref} />
+      <GroupForm detail={detail} action={actions.saveGroup} />
       {detail ? (
         <>
           <AddProducts
@@ -441,7 +448,7 @@ export function GroupEditor({
                 name={detail.name}
                 noun="el grupo"
                 action={actions.deleteGroup}
-                redirectTo={closeHref}
+                redirectTo={backHref}
                 variant="outlined"
               />
             )}

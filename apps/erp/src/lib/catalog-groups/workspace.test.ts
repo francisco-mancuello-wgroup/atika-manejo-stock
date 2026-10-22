@@ -1,35 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { groupsHref, parseGroupsSelection } from "./workspace";
+import {
+  GROUPS_LIST_HREF,
+  groupHref,
+  legacyGroupRedirect,
+  NEW_GROUP_HREF,
+  parseCatalogTab,
+} from "./workspace";
 
-describe("parseGroupsSelection", () => {
+describe("parseCatalogTab", () => {
   it("defaults to the Prendas tab", () => {
-    expect(parseGroupsSelection({})).toEqual({ tab: "prendas", groupId: null, isNew: false });
-    expect(parseGroupsSelection({ tab: "otra" }).tab).toBe("prendas");
+    expect(parseCatalogTab({})).toBe("prendas");
+    expect(parseCatalogTab({ tab: "otra" })).toBe("prendas");
   });
 
-  it("reads the groups tab with a selected group or the new-group editor", () => {
-    expect(parseGroupsSelection({ tab: "grupos", grupo: "abc" })).toEqual({
-      tab: "grupos",
-      groupId: "abc",
-      isNew: false,
-    });
-    expect(parseGroupsSelection({ tab: "grupos", grupo: "nuevo" })).toEqual({
-      tab: "grupos",
-      groupId: null,
-      isNew: true,
-    });
-  });
-
-  it("ignores the group outside the groups tab and takes the first repeated value", () => {
-    expect(parseGroupsSelection({ grupo: "abc" }).groupId).toBeNull();
-    expect(parseGroupsSelection({ tab: ["grupos", "x"], grupo: ["a", "b"] }).groupId).toBe("a");
+  it("reads the Grupos tab", () => {
+    expect(parseCatalogTab({ tab: "grupos" })).toBe("grupos");
+    expect(parseCatalogTab({ tab: ["grupos", "x"] })).toBe("grupos");
   });
 });
 
-describe("groupsHref", () => {
-  it("builds short URLs", () => {
-    expect(groupsHref({})).toBe("/catalogo-web?tab=grupos");
-    expect(groupsHref({ groupId: "abc" })).toBe("/catalogo-web?tab=grupos&grupo=abc");
-    expect(groupsHref({ isNew: true })).toBe("/catalogo-web?tab=grupos&grupo=nuevo");
+describe("group hrefs", () => {
+  it("points at the list tab and at the group pages", () => {
+    expect(GROUPS_LIST_HREF).toBe("/catalogo-web?tab=grupos");
+    expect(NEW_GROUP_HREF).toBe("/catalogo-web/grupos/nuevo");
+    expect(groupHref("abc")).toBe("/catalogo-web/grupos/abc");
+  });
+});
+
+describe("legacyGroupRedirect", () => {
+  it("maps the old ?tab=grupos&grupo= links to the group pages", () => {
+    expect(legacyGroupRedirect({ tab: "grupos", grupo: "abc" })).toBe("/catalogo-web/grupos/abc");
+    expect(legacyGroupRedirect({ tab: "grupos", grupo: "nuevo" })).toBe(NEW_GROUP_HREF);
+    expect(legacyGroupRedirect({ tab: "grupos", grupo: ["a", "b"] })).toBe(
+      "/catalogo-web/grupos/a",
+    );
+  });
+
+  it("is null without a group or outside the Grupos tab", () => {
+    expect(legacyGroupRedirect({ tab: "grupos" })).toBeNull();
+    expect(legacyGroupRedirect({ grupo: "abc" })).toBeNull();
   });
 });

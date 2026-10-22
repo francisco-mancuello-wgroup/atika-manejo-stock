@@ -24,7 +24,7 @@ import {
   setGroupAllocations,
   updateGroup,
 } from "../../../lib/catalog-groups/groups";
-import { groupsHref } from "../../../lib/catalog-groups/workspace";
+import { groupHref } from "../../../lib/catalog-groups/workspace";
 import { getDb } from "../../../lib/db";
 
 const FAILED = {
@@ -37,8 +37,9 @@ function revalidateCatalogAdmin() {
 }
 
 /** Group changes move the free stock, so the inventory and the sales form refresh too. */
-function revalidateGroups() {
+function revalidateGroups(groupId?: string) {
   revalidatePath("/catalogo-web");
+  if (groupId) revalidatePath(groupHref(groupId));
   revalidatePath("/inventario");
   revalidatePath("/ventas");
 }
@@ -129,7 +130,7 @@ export async function saveLookbookAction(
   }
 }
 
-/** Creates (`groupId` null, then opens the new group) or renames/re-dates a publication group. */
+/** Creates (`groupId` null, then opens the new group page) or renames/re-dates a publication group. */
 export async function saveGroupAction(
   groupId: string | null,
   _previous: FormState,
@@ -142,20 +143,20 @@ export async function saveGroupAction(
   try {
     if (groupId) {
       const state = await updateGroup(getDb(), groupId, values);
-      if (state.status === "success") revalidateGroups();
+      if (state.status === "success") revalidateGroups(groupId);
       return state.status === "error" ? { ...state, values: raw } : state;
     }
     const outcome = await createGroup(getDb(), values);
     if (outcome.state.status !== "success" || !outcome.groupId) {
       return outcome.state.status === "error" ? { ...outcome.state, values: raw } : outcome.state;
     }
-    revalidateGroups();
+    revalidateGroups(outcome.groupId);
     createdId = outcome.groupId;
   } catch (error) {
     console.error("saveGroupAction failed", error);
     return { ...FAILED, values: raw };
   }
-  redirect(groupsHref({ groupId: createdId }));
+  redirect(groupHref(createdId));
 }
 
 export async function setGroupActiveAction(groupId: string, active: boolean): Promise<FormState> {
@@ -164,7 +165,7 @@ export async function setGroupActiveAction(groupId: string, active: boolean): Pr
     const state = active
       ? await activateGroup(getDb(), groupId)
       : await deactivateGroup(getDb(), groupId);
-    if (state.status === "success") revalidateGroups();
+    if (state.status === "success") revalidateGroups(groupId);
     return state;
   } catch (error) {
     console.error("setGroupActiveAction failed", error);
@@ -179,7 +180,7 @@ export async function saveGroupAllocationsAction(
   await requireSession();
   try {
     const state = await setGroupAllocations(getDb(), groupId, entries);
-    if (state.status === "success") revalidateGroups();
+    if (state.status === "success") revalidateGroups(groupId);
     return state;
   } catch (error) {
     console.error("saveGroupAllocationsAction failed", error);
@@ -194,7 +195,7 @@ export async function addProductsToGroupAction(
   await requireSession();
   try {
     const state = await addProductsToGroup(getDb(), groupId, filter);
-    if (state.status === "success") revalidateGroups();
+    if (state.status === "success") revalidateGroups(groupId);
     return state;
   } catch (error) {
     console.error("addProductsToGroupAction failed", error);
@@ -209,7 +210,7 @@ export async function removeProductFromGroupAction(
   await requireSession();
   try {
     const state = await removeProductFromGroup(getDb(), groupId, productId);
-    if (state.status === "success") revalidateGroups();
+    if (state.status === "success") revalidateGroups(groupId);
     return state;
   } catch (error) {
     console.error("removeProductFromGroupAction failed", error);
@@ -221,7 +222,7 @@ export async function deleteGroupAction(groupId: string): Promise<FormState> {
   await requireSession();
   try {
     const state = await deleteGroup(getDb(), groupId);
-    if (state.status === "success") revalidateGroups();
+    if (state.status === "success") revalidateGroups(groupId);
     return state;
   } catch (error) {
     console.error("deleteGroupAction failed", error);

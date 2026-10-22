@@ -55,6 +55,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - [x] T6 — Seed: Pink event group from evento-pink.xlsx (`pnpm db:group`).
 - [x] T7 — Groups table rows clickable as a whole (stretched link like /inventario; switch stays clickable). User request.
 - [x] T8 — Estado column removed (redundant with the switch); a note next to the switch only when it is on but out of window ("Programado · desde <fecha>" / "Vencido"). User request.
+- [x] T9 — Group editor on its own page (`/catalogo-web/grupos/nuevo`, `/catalogo-web/grupos/[id]`) instead of the side panel; Grupos tab is table only. User request ("no me gusta el sidebar").
 
 ## Acceptance criteria
 
@@ -77,6 +78,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - 2026-10-22: T4 done (commit f773273). Pure math in `apps/catalog/src/lib/web-stock.ts` (small duplicate of the ERP remainder math, no shared package: apps can't import each other and it is a few lines). The DB `where` only narrows (published OR some active allocation, physical stock > 0); remainder > 0 and web-stock filters apply in memory in `withWebStock`. `countProductsByCategory` now counts in memory over the same rows as `listProducts` so counts and lists agree.
 - 2026-10-22: T5 done (commits fbdd9f9 queries/actions, 4a2ee36 UI). Grupos tab at `/catalogo-web?tab=grupos[&grupo=<id|nuevo>]` (selection in the URL like bank promos). Origin/rule is not tracked (no schema change): the table shows the product count. Added `removeProductFromGroup` and a `productIds` filter to `addProductsToGroup` in the domain; a date-only "Hasta" covers the whole day (`endOfDayInput`). Prendas tab gets a "Grupo: <name>" badge (`getCatalogProducts` now takes optional `db`/`now`). New actions live in `catalogo-web/actions.ts` (guard test covers them). Preview line is computed live from the typed quantities.
 - 2026-10-22: T6 done (commit 87a245f). `packages/db/seed/group.ts`: env `GROUP_NAME`/`GROUP_FILE`/`GROUP_LOT`/`GROUP_STARTS_AT`/`GROUP_ENDS_AT`; INVENTARIO parsed by header labels until TOTALES; lot inferred from the sheet title; group upserted by name (inactive on create, switch kept); allocation = max(sold, min(stock actual, variant.stock)); `variant.stock` never written; one transaction; unmatched rows listed, not fatal. Documented in `seed/README.md`.
+- 2026-10-22: T9 done. `GroupPage` (`components/group-page.tsx`: back link "← Grupos", PageHeader, `GroupEditor`) served by two force-dynamic routes; `[id]` validates the UUID and `notFound()`s. `GroupEditor` lost the panel header/close link (`closeHref` is now `backHref`, used after delete) and owns `GroupEditorActions`; `GroupsView` takes only `setActive`. `workspace.ts`: `parseCatalogTab`, `legacyGroupRedirect` (old `?tab=grupos&grupo=` links redirect), `GROUPS_LIST_HREF`, `NEW_GROUP_HREF`, `groupHref`. Create redirects to `/catalogo-web/grupos/<id>`; group actions also revalidate the group page. Sidebar already highlights by path prefix; no change.
 
 ## Verification evidence
 
@@ -97,6 +99,8 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - T6 run: `GROUP_NAME=Pink GROUP_FILE=~/Descargas/stock-ropas/evento-pink.xlsx pnpm db:group` -> matched 46, units 56, zero rows 1 (COSTA BLACK XS), unmatched 0; second run identical. Query: group Pink isActive=false, 46 allocations, sum allocated 56.
 - T7 RED: `pnpm exec vitest run src/components/groups-view.test.tsx` (apps/erp) -> 1 failed (row not relative/cursor-pointer). GREEN: 16 passed; biome clean; erp tsc ok.
 - T8 RED: `pnpm exec vitest run src/components/groups-view.test.tsx` (apps/erp) -> 2 failed (Estado header present, no off-window note). GREEN: 17 passed; biome clean; erp tsc ok.
+- T9 RED: `pnpm exec vitest run src/lib/catalog-groups/workspace src/components/groups-view src/components/group-editor src/components/group-page` (apps/erp) -> 4 files / 23 tests failed (new helpers, `group-editor`/`group-page` modules missing, row hrefs).
+- T9 GREEN: `pnpm --filter @atika/erp test` -> 95 files / 674 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings); `pnpm --filter @atika/erp build` ok, lists `/catalogo-web/grupos/[id]` and `/catalogo-web/grupos/nuevo`.
 
 ## Next step
 
