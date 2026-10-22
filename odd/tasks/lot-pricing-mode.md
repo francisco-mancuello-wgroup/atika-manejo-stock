@@ -68,7 +68,8 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 - T4 RED: `pnpm exec vitest run src/lib/lots/save.test.ts` (apps/erp) -> 1 failed (message + price not repriced).
 - T4 GREEN: lots + shipping form tests 28 passed; `pnpm --filter @atika/erp test` 554 passed; typecheck 6/6; lint ok (2 known warnings).
 - T5 RED: lot-pricing-panel.test.tsx -> 2 failed (no "Activo: …" tag). GREEN: panel + lot detail tests 14 passed; biome clean; erp typecheck ok.
-- T6 RED: lot-pricing-panel.test.tsx -> 5 failed. GREEN: panel + lot detail 14 passed; erp suite passed; typecheck ok; lint ok (2 known warnings).
+- T6 RED: lot-pricing-panel.test.tsx -> 5 failed. GREEN: panel + lot detail 14 passed; erp suite then had 2 DB-state failures (local lot switched to Propio) fixed in the next commit; typecheck ok; lint ok (2 known warnings).
+- DB tests made independent of local lots in Propio; `pnpm --filter @atika/erp test` -> 82 files / 556 passed.
 
 ## Next step
 

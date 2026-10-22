@@ -47,6 +47,8 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
         { name: "B", originalValueUsd: 40, variants: [["U", 2, 2]] },
       ]);
       await tx.lot.update({ where: { id: b.lot.id }, data: { totalShippingUsd: 8 } });
+      // The local database may hold lots switched to Propio; this case is about global lots only.
+      await tx.lot.updateMany({ data: { pricingMode: "global" } });
       const lotCount = await tx.lot.count();
       const productCount = await tx.product.count();
 
