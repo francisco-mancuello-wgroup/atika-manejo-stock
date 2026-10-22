@@ -90,6 +90,10 @@ describe("schema", () => {
     );
   });
 
+  it("lets a group size carry its own price for the event", () => {
+    expect(Object.values(Prisma.GroupAllocationScalarFieldEnum)).toContain("priceGs");
+  });
+
   it("stores only hashes for passwords and session tokens", () => {
     expect(Object.values(Prisma.UserScalarFieldEnum)).toContain("passwordHash");
     expect(Object.values(Prisma.UserScalarFieldEnum)).not.toContain("password");
