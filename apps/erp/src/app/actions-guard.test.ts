@@ -50,6 +50,7 @@ describe("Server Actions require a session", () => {
         "setGroupActiveAction",
         "saveGroupAllocationsAction",
         "addProductsToGroupAction",
+        "listGroupCandidatesAction",
         "removeProductFromGroupAction",
         "deleteGroupAction",
       ]),

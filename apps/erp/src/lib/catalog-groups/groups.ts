@@ -2,7 +2,13 @@ import type { Catalog, Prisma } from "@atika/db";
 import type { FormState } from "../action-state";
 import type { TransactionRunner } from "../lots/save";
 import { parseGroup } from "./schema";
-import { activeGroupWhere, remaining, validateAllocation } from "./stock";
+import {
+  activeGroupWhere,
+  type Proposal,
+  proposedAllocation,
+  remaining,
+  validateAllocation,
+} from "./stock";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NOT_FOUND: FormState = { status: "error", message: "No se encontró el grupo." };
@@ -52,7 +58,7 @@ export async function updateGroup(
 
 /** Sum of the remainders other groups hold per variant, counting only groups active at `now`. */
 async function activeRemainders(
-  tx: Prisma.TransactionClient,
+  tx: Pick<Prisma.TransactionClient, "groupAllocation">,
   variantIds: readonly string[],
   now: Date,
   excludeGroupId: string,
@@ -170,15 +176,53 @@ export interface ProductFilter {
 }
 
 /**
+ * Stock each variant has free for `group`: physical stock minus what the other active groups hold,
+ * or nothing when the group is switched on and another switched-on group already has the size.
+ */
+export async function groupFreeStock(
+  tx: Pick<Prisma.TransactionClient, "groupAllocation">,
+  group: { id: string; isActive: boolean },
+  variants: readonly { id: string; stock: number }[],
+  now: Date,
+): Promise<Map<string, number>> {
+  const ids = variants.map((variant) => variant.id);
+  // A switched-on group can't share a size with another switched-on group (see activateGroup).
+  const heldElsewhere = group.isActive
+    ? new Set(
+        (
+          await tx.groupAllocation.findMany({
+            where: {
+              variantId: { in: ids },
+              groupId: { not: group.id },
+              group: { isActive: true },
+            },
+          })
+        ).map((row) => row.variantId),
+      )
+    : new Set<string>();
+  const others = await activeRemainders(tx, ids, now, group.id);
+  return new Map(
+    variants.map((variant) => [
+      variant.id,
+      heldElsewhere.has(variant.id)
+        ? 0
+        : Math.max(0, variant.stock - (others.get(variant.id) ?? 0)),
+    ]),
+  );
+}
+
+/**
  * One-off snapshot: adds every size of the matching products with the stock that is free right
- * now (stock minus what other active groups hold). Sizes without free stock and sizes already in
- * the group are left alone.
+ * now (stock minus what other active groups hold), as the proposal says: all of it, one unit per
+ * size, or none (rows at 0 to adjust later). Sizes without free stock and sizes already in the
+ * group are left alone.
  */
 export async function addProductsToGroup(
   db: TransactionRunner,
   groupId: string,
   filter: ProductFilter,
   now: Date = new Date(),
+  proposal: Proposal = "all",
 ): Promise<FormState> {
   if (!UUID.test(groupId)) return NOT_FOUND;
   const { productIds, lotId, catalog, category, brand } = filter;
@@ -210,26 +254,13 @@ export async function addProductsToGroup(
         (row) => row.variantId,
       ),
     );
-    // A switched-on group can't share a size with another switched-on group (see activateGroup).
-    const heldElsewhere = group.isActive
-      ? new Set(
-          (
-            await tx.groupAllocation.findMany({
-              where: {
-                variantId: { in: ids },
-                groupId: { not: groupId },
-                group: { isActive: true },
-              },
-            })
-          ).map((row) => row.variantId),
-        )
-      : new Set<string>();
-    const others = await activeRemainders(tx, ids, now, groupId);
-
+    const free = await groupFreeStock(tx, group, variants, now);
     const data = variants.flatMap((variant) => {
-      if (inGroup.has(variant.id) || heldElsewhere.has(variant.id)) return [];
-      const free = variant.stock - (others.get(variant.id) ?? 0);
-      return free > 0 ? [{ groupId, variantId: variant.id, allocated: free }] : [];
+      if (inGroup.has(variant.id)) return [];
+      const available = free.get(variant.id) ?? 0;
+      return available > 0
+        ? [{ groupId, variantId: variant.id, allocated: proposedAllocation(available, proposal) }]
+        : [];
     });
     if (data.length === 0) {
       return error("No hay stock libre para asignar en esos productos.");

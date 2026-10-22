@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dateInputValue, endOfDayInput, groupStatus } from "./format";
+import { dateInputValue, dayMonth, endOfDayInput, groupStatus, windowLabel } from "./format";
 
 const NOW = new Date("2026-10-22T15:00:00.000Z");
 
@@ -39,5 +39,18 @@ describe("window date helpers", () => {
     expect(endOfDayInput("2026-11-05")).toBe("2026-11-05T23:59:59.999Z");
     expect(endOfDayInput("")).toBe("");
     expect(endOfDayInput("2026-11-05T10:00")).toBe("2026-11-05T10:00");
+  });
+});
+
+describe("dayMonth / windowLabel", () => {
+  it("formats an ISO date as dd/mm", () => {
+    expect(dayMonth("2026-11-01")).toBe("01/11");
+  });
+
+  it("describes the window of a group", () => {
+    expect(windowLabel("2026-11-01", "2026-11-30")).toBe("01/11 – 30/11");
+    expect(windowLabel("2026-11-01", null)).toBe("Desde 01/11");
+    expect(windowLabel(null, "2026-11-30")).toBe("Hasta 30/11");
+    expect(windowLabel(null, null)).toBe("Sin fecha");
   });
 });

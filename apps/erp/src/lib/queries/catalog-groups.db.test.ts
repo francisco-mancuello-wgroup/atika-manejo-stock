@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { createFixtureLot, disconnectTestDb, hasDatabase, withRollback } from "../../test/db";
 import {
+  getGroupCandidates,
   getGroupDetail,
   getGroupList,
   getGroupOptions,
@@ -114,6 +115,8 @@ describe.skipIf(!hasDatabase)("catalog group queries (database)", () => {
           allocated: 0,
           sold: 0,
           remaining: 0,
+          // Nothing sold yet, 3 held by the other active group.
+          max: 7,
         },
         {
           variantId: variant(vestido, "M").id,
@@ -123,9 +126,11 @@ describe.skipIf(!hasDatabase)("catalog group queries (database)", () => {
           allocated: 3,
           sold: 1,
           remaining: 2,
+          max: 5,
         },
       ]);
       expect(detail?.preview).toEqual({ products: 1, units: 2 });
+      expect(product?.imageUrl).toBeNull();
       expect(other.id).not.toBe(group.id);
     });
   });
@@ -166,6 +171,77 @@ describe.skipIf(!hasDatabase)("catalog group queries (database)", () => {
       const names = await getProductGroupNames(tx, [vestido.id, top.id], NOW);
       expect(names.get(vestido.id)).toBe("En vivo");
       expect(names.has(top.id)).toBe(false);
+    });
+  });
+
+  it("gives the cover image of a product in the detail", async () => {
+    await withRollback(async (tx) => {
+      const { vestido, variant } = await fixture(tx);
+      await tx.productImage.createMany({
+        data: [
+          { productId: vestido.id, url: "/b.jpg", position: 1 },
+          { productId: vestido.id, url: "/a.jpg", position: 0 },
+        ],
+      });
+      const group = await tx.publicationGroup.create({
+        data: {
+          name: "Con foto",
+          allocations: { create: [{ variantId: variant(vestido, "S").id, allocated: 1 }] },
+        },
+      });
+      const detail = await getGroupDetail(tx, group.id, NOW);
+      expect(detail?.products[0]?.imageUrl).toBe("/a.jpg");
+    });
+  });
+
+  describe("getGroupCandidates", () => {
+    it("lists the products of a lot with the stock each size leaves free", async () => {
+      await withRollback(async (tx) => {
+        const { lot, vestido, top, variant } = await fixture(tx);
+        const other = await tx.publicationGroup.create({
+          data: {
+            name: "Otro",
+            isActive: true,
+            allocations: {
+              create: [{ variantId: variant(vestido, "S").id, allocated: 4, sold: 1 }],
+            },
+          },
+        });
+        const group = await tx.publicationGroup.create({
+          data: {
+            name: "Destino",
+            allocations: { create: [{ variantId: top.variants[0]?.id as string, allocated: 1 }] },
+          },
+        });
+        const candidates = await getGroupCandidates(tx, group.id, { lotId: lot.id }, NOW);
+        expect(candidates.map((candidate) => candidate.name)).toEqual(["Top", "Vestido"]);
+        const vest = candidates.find((candidate) => candidate.id === vestido.id);
+        expect(vest).toMatchObject({ inGroup: false, lotName: lot.name, imageUrl: null });
+        // S has 3 held by the other active group.
+        expect(vest?.sizes).toEqual([
+          { size: "S", free: 7 },
+          { size: "M", free: 4 },
+        ]);
+        expect(candidates.find((candidate) => candidate.id === top.id)?.inGroup).toBe(true);
+        expect(other.id).not.toBe(group.id);
+      });
+    });
+
+    it("filters by brand and category and returns nothing without a filter", async () => {
+      await withRollback(async (tx) => {
+        const { vestido } = await fixture(tx);
+        await tx.product.update({
+          where: { id: vestido.id },
+          data: { brand: "Zz Cand", category: "remeras" },
+        });
+        const group = await tx.publicationGroup.create({ data: { name: "Destino" } });
+        const byBrand = await getGroupCandidates(tx, group.id, { brand: "Zz Cand" }, NOW);
+        expect(byBrand.map((candidate) => candidate.id)).toEqual([vestido.id]);
+        const byCategory = await getGroupCandidates(tx, group.id, { category: "remeras" }, NOW);
+        expect(byCategory.map((candidate) => candidate.id)).toContain(vestido.id);
+        expect(await getGroupCandidates(tx, group.id, {}, NOW)).toEqual([]);
+        expect(await getGroupCandidates(tx, "nope", { brand: "Zz Cand" }, NOW)).toEqual([]);
+      });
     });
   });
 });

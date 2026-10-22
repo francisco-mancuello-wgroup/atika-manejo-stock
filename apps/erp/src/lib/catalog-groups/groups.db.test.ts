@@ -310,6 +310,34 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
       });
     });
 
+    it("proposes one unit per size", async () => {
+      await withRollback(async (tx) => {
+        const { a, variant } = await fixture(tx);
+        const id = await newGroup(tx);
+        const state = await addProductsToGroup(dbOver(tx), id, { productIds: [a.id] }, NOW, "one");
+        expect(state).toMatchObject({ status: "success" });
+        const rows = await tx.groupAllocation.findMany({ where: { groupId: id } });
+        expect(rows.map((row) => [row.variantId, row.allocated]).sort()).toEqual(
+          [
+            [variant(a, "S").id, 1],
+            [variant(a, "M").id, 1],
+          ].sort(),
+        );
+      });
+    });
+
+    it("adds the sizes with nothing assigned when the proposal is zero", async () => {
+      await withRollback(async (tx) => {
+        const { a } = await fixture(tx);
+        const id = await newGroup(tx);
+        const state = await addProductsToGroup(dbOver(tx), id, { productIds: [a.id] }, NOW, "zero");
+        expect(state).toMatchObject({ status: "success" });
+        const rows = await tx.groupAllocation.findMany({ where: { groupId: id } });
+        expect(rows).toHaveLength(2);
+        expect(rows.every((row) => row.allocated === 0 && row.sold === 0)).toBe(true);
+      });
+    });
+
     it("filters by catalog, category and brand", async () => {
       await withRollback(async (tx) => {
         const { lot, a, b } = await fixture(tx);

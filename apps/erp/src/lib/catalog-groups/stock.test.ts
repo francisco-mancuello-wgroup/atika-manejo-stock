@@ -4,6 +4,7 @@ import {
   freeInventory,
   isGroupActive,
   maxAllocation,
+  proposedAllocation,
   remaining,
   validateAllocation,
 } from "./stock";
@@ -106,5 +107,14 @@ describe("validateAllocation", () => {
       reason: "exceeds_free",
       limit: 8,
     });
+  });
+});
+
+describe("proposedAllocation", () => {
+  it("proposes all the free stock, one unit per size, or nothing", () => {
+    expect(proposedAllocation(5, "all")).toBe(5);
+    expect(proposedAllocation(5, "one")).toBe(1);
+    expect(proposedAllocation(0, "one")).toBe(0);
+    expect(proposedAllocation(5, "zero")).toBe(0);
   });
 });

@@ -78,3 +78,11 @@ export function validateAllocation({
   if (allocated > max) return { ok: false, reason: "exceeds_free", limit: max };
   return { ok: true };
 }
+
+/** What a bulk add proposes per size: all the free stock, one unit, or nothing (adjusted later). */
+export type Proposal = "all" | "one" | "zero";
+
+export function proposedAllocation(free: number, proposal: Proposal): number {
+  if (proposal === "zero") return 0;
+  return proposal === "one" ? Math.min(1, free) : free;
+}

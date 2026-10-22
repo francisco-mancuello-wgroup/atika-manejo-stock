@@ -1,6 +1,8 @@
 import type { Prisma } from "@atika/db";
 import { type GroupStatus, groupStatus } from "../catalog-groups/format";
-import { activeGroupWhere, freeInventory, remaining } from "../catalog-groups/stock";
+import { groupFreeStock, type ProductFilter } from "../catalog-groups/groups";
+import { activeGroupWhere, freeInventory, maxAllocation, remaining } from "../catalog-groups/stock";
+import { coverUrl } from "../cover";
 import { toIsoDate } from "../dates";
 import { sortSizes } from "../sizes";
 
@@ -38,12 +40,15 @@ export interface GroupSize {
   allocated: number;
   sold: number;
   remaining: number;
+  /** Most this group can assign to the size: what it sold plus the stock no other active group holds. */
+  max: number;
 }
 
 export interface GroupProduct {
   id: string;
   name: string;
   lotName: string;
+  imageUrl: string | null;
   sizes: GroupSize[];
 }
 
@@ -112,10 +117,17 @@ export async function getGroupDetail(
   const variants = await db.productVariant.findMany({
     where: { product: { variants: { some: { id: { in: [...own.keys()] } } } } },
     include: {
-      product: { select: { id: true, name: true, lot: { select: { name: true } } } },
+      product: {
+        select: {
+          id: true,
+          name: true,
+          lot: { select: { name: true } },
+          images: { select: { url: true, position: true } },
+        },
+      },
       allocations: {
         where: { group: activeGroupWhere(now) },
-        select: { allocated: true, sold: true },
+        select: { groupId: true, allocated: true, sold: true },
       },
     },
   });
@@ -132,6 +144,7 @@ export async function getGroupDetail(
       id: variant.product.id,
       name: variant.product.name,
       lotName: variant.product.lot.name,
+      imageUrl: coverUrl(variant.product.images),
       sizes: [],
     };
     product.sizes.push({
@@ -142,6 +155,13 @@ export async function getGroupDetail(
       allocated,
       sold,
       remaining: left,
+      max: maxAllocation({
+        sold,
+        stock: variant.stock,
+        otherActiveRemainder: variant.allocations
+          .filter((row) => row.groupId !== groupId)
+          .reduce((total, row) => total + remaining(row.allocated, row.sold, variant.stock), 0),
+      }),
     });
     byProduct.set(variant.product.id, product);
   }
@@ -201,4 +221,69 @@ export async function getProductGroupNames(
     if (!names.has(row.variant.productId)) names.set(row.variant.productId, row.group.name);
   }
   return names;
+}
+
+export interface GroupCandidate {
+  id: string;
+  name: string;
+  lotName: string;
+  imageUrl: string | null;
+  /** Some size of the product is already assigned to the group. */
+  inGroup: boolean;
+  /** Every size with the stock it has free for the group. */
+  sizes: { size: string; free: number }[];
+}
+
+/** Products matching a bulk-add filter, with the stock each size leaves free for `groupId`. */
+export async function getGroupCandidates(
+  db: Reader,
+  groupId: string,
+  filter: ProductFilter,
+  now: Date = new Date(),
+): Promise<GroupCandidate[]> {
+  const { lotId, catalog, category, brand } = filter;
+  if (!UUID.test(groupId) || (!lotId && !catalog && !category && !brand)) return [];
+  if (lotId && !UUID.test(lotId)) return [];
+  const group = await db.publicationGroup.findUnique({
+    where: { id: groupId },
+    select: { id: true, isActive: true },
+  });
+  if (!group) return [];
+  const products = await db.product.findMany({
+    where: {
+      ...(lotId ? { lotId } : {}),
+      ...(catalog ? { catalog } : {}),
+      ...(category ? { category } : {}),
+      ...(brand ? { brand } : {}),
+    },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      lot: { select: { name: true } },
+      images: { select: { url: true, position: true } },
+      variants: { select: { id: true, size: true, stock: true } },
+    },
+  });
+  const variants = products.flatMap((product) => product.variants);
+  const free = await groupFreeStock(db, group, variants, now);
+  const inGroup = new Set(
+    (
+      await db.groupAllocation.findMany({
+        where: { groupId, variantId: { in: variants.map((variant) => variant.id) } },
+        select: { variantId: true },
+      })
+    ).map((row) => row.variantId),
+  );
+  return products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    lotName: product.lot.name,
+    imageUrl: coverUrl(product.images),
+    inGroup: product.variants.some((variant) => inGroup.has(variant.id)),
+    sizes: sortSizes(product.variants.map((variant) => variant.size)).map((label) => ({
+      size: label,
+      free: free.get(product.variants.find((variant) => variant.size === label)?.id ?? "") ?? 0,
+    })),
+  }));
 }

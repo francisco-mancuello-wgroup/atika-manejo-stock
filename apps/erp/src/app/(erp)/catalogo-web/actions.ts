@@ -24,8 +24,10 @@ import {
   setGroupAllocations,
   updateGroup,
 } from "../../../lib/catalog-groups/groups";
+import type { Proposal } from "../../../lib/catalog-groups/stock";
 import { groupHref } from "../../../lib/catalog-groups/workspace";
 import { getDb } from "../../../lib/db";
+import { type GroupCandidate, getGroupCandidates } from "../../../lib/queries/catalog-groups";
 
 const FAILED = {
   status: "error",
@@ -191,15 +193,30 @@ export async function saveGroupAllocationsAction(
 export async function addProductsToGroupAction(
   groupId: string,
   filter: ProductFilter,
+  proposal: Proposal = "all",
 ): Promise<FormState> {
   await requireSession();
   try {
-    const state = await addProductsToGroup(getDb(), groupId, filter);
+    const state = await addProductsToGroup(getDb(), groupId, filter, new Date(), proposal);
     if (state.status === "success") revalidateGroups(groupId);
     return state;
   } catch (error) {
     console.error("addProductsToGroupAction failed", error);
     return FAILED;
+  }
+}
+
+/** Products a bulk add could take for a filter, with the stock each size has free (read only). */
+export async function listGroupCandidatesAction(
+  groupId: string,
+  filter: ProductFilter,
+): Promise<GroupCandidate[]> {
+  await requireSession();
+  try {
+    return await getGroupCandidates(getDb(), groupId, filter);
+  } catch (error) {
+    console.error("listGroupCandidatesAction failed", error);
+    return [];
   }
 }
 
