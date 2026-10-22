@@ -42,6 +42,20 @@ describe("Server Actions require a session", () => {
     ]);
   });
 
+  it("guards every publication group action of the catalog", () => {
+    const names = Object.keys(modules["./(erp)/catalogo-web/actions.ts"] ?? {});
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "saveGroupAction",
+        "setGroupActiveAction",
+        "saveGroupAllocationsAction",
+        "addProductsToGroupAction",
+        "removeProductFromGroupAction",
+        "deleteGroupAction",
+      ]),
+    );
+  });
+
   for (const [path, module] of guarded) {
     for (const [name, action] of Object.entries(module)) {
       it(`${path} ${name} redirects to /login`, async () => {

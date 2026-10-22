@@ -13,6 +13,7 @@ import {
   createGroup,
   deactivateGroup,
   deleteGroup,
+  removeProductFromGroup,
   setGroupAllocations,
   updateGroup,
 } from "./groups";
@@ -245,6 +246,19 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
   });
 
   describe("addProductsToGroup", () => {
+    it("adds only the chosen products by id", async () => {
+      await withRollback(async (tx) => {
+        const { a, b, variant } = await fixture(tx);
+        const id = await newGroup(tx);
+        const state = await addProductsToGroup(dbOver(tx), id, { productIds: [a.id, b.id] }, NOW);
+        expect(state).toMatchObject({ status: "success" });
+        const rows = await tx.groupAllocation.findMany({ where: { groupId: id } });
+        expect(rows.map((row) => row.variantId).sort()).toEqual(
+          [variant(a, "S").id, variant(a, "M").id].sort(),
+        );
+      });
+    });
+
     it("assigns the free stock of every size of the lot and skips sizes without it", async () => {
       await withRollback(async (tx) => {
         const { lot, a, variant } = await fixture(tx);
@@ -448,6 +462,57 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
         expect((await deleteGroup(dbOver(tx), id)).status).toBe("success");
         expect(await tx.publicationGroup.count({ where: { id } })).toBe(0);
         expect(await tx.groupAllocation.count({ where: { groupId: id } })).toBe(0);
+      });
+    });
+  });
+
+  describe("removeProductFromGroup", () => {
+    it("drops every size of the product that has no sales", async () => {
+      await withRollback(async (tx) => {
+        const { a, variant } = await fixture(tx);
+        const id = await newGroup(tx);
+        await setGroupAllocations(
+          dbOver(tx),
+          id,
+          [
+            { variantId: variant(a, "S").id, allocated: 5 },
+            { variantId: variant(a, "M").id, allocated: 2 },
+          ],
+          NOW,
+        );
+        const state = await removeProductFromGroup(dbOver(tx), id, a.id, NOW);
+        expect(state).toMatchObject({ status: "success" });
+        expect(await tx.groupAllocation.count({ where: { groupId: id } })).toBe(0);
+      });
+    });
+
+    it("keeps a size that already sold units, capped at what was sold", async () => {
+      await withRollback(async (tx) => {
+        const { a, variant } = await fixture(tx);
+        const id = await newGroup(tx);
+        await setGroupAllocations(
+          dbOver(tx),
+          id,
+          [{ variantId: variant(a, "S").id, allocated: 5 }],
+          NOW,
+        );
+        await tx.groupAllocation.updateMany({ where: { groupId: id }, data: { sold: 2 } });
+        await removeProductFromGroup(dbOver(tx), id, a.id, NOW);
+        const rows = await tx.groupAllocation.findMany({ where: { groupId: id } });
+        expect(rows.map((row) => [row.allocated, row.sold])).toEqual([[2, 2]]);
+      });
+    });
+
+    it("refuses an unknown group", async () => {
+      await withRollback(async (tx) => {
+        const { a } = await fixture(tx);
+        const state = await removeProductFromGroup(
+          dbOver(tx),
+          "00000000-0000-4000-8000-000000000000",
+          a.id,
+          NOW,
+        );
+        expect(state).toMatchObject({ status: "error", message: "No se encontró el grupo." });
       });
     });
   });

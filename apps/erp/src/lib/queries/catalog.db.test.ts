@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { disconnectTestDb, hasDatabase } from "../../test/db";
+import { createFixtureLot, disconnectTestDb, hasDatabase, withRollback } from "../../test/db";
 import { getDb } from "../db";
 import { getCatalogProducts, getCatalogSettings } from "./catalog";
 
@@ -30,5 +30,29 @@ describe.skipIf(!hasDatabase)("catalog management queries (database)", () => {
     const settings = await getCatalogSettings();
     expect(settings.whatsappNumber.length).toBeGreaterThan(0);
     expect(typeof settings.showPrices).toBe("boolean");
+  });
+
+  it("flags the products that sit in an active group with its name", async () => {
+    await withRollback(async (tx) => {
+      const { products } = await createFixtureLot(tx, [
+        { name: "Grouped q-hint", originalValueUsd: 10, variants: [["S", 5, 5]] },
+        { name: "Plain q-hint", originalValueUsd: 10, variants: [["S", 5, 5]] },
+      ]);
+      const [grouped] = products;
+      await tx.publicationGroup.create({
+        data: {
+          name: "Verano hint",
+          isActive: true,
+          allocations: {
+            create: [{ variantId: grouped?.variants[0]?.id as string, allocated: 2 }],
+          },
+        },
+      });
+      const list = await getCatalogProducts({ status: "todos", query: "q-hint" }, tx);
+      expect(list.map((p) => [p.name, p.groupName]).sort()).toEqual([
+        ["Grouped q-hint", "Verano hint"],
+        ["Plain q-hint", null],
+      ]);
+    });
   });
 });

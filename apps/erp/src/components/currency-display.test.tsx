@@ -90,6 +90,7 @@ describe("views in US$", () => {
       catalogOrder: null,
       catalogSection: null,
       catalogName: null,
+      groupName: null,
     };
     const idle = async (): Promise<FormState> => ({ status: "idle" });
     render(

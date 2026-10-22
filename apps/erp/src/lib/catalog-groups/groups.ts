@@ -162,6 +162,7 @@ export async function setGroupAllocations(
 }
 
 export interface ProductFilter {
+  productIds?: string[];
   lotId?: string;
   catalog?: Catalog;
   category?: string;
@@ -180,11 +181,12 @@ export async function addProductsToGroup(
   now: Date = new Date(),
 ): Promise<FormState> {
   if (!UUID.test(groupId)) return NOT_FOUND;
-  const { lotId, catalog, category, brand } = filter;
-  if (!lotId && !catalog && !category && !brand) {
+  const { productIds, lotId, catalog, category, brand } = filter;
+  if (!productIds?.length && !lotId && !catalog && !category && !brand) {
     return error("Elegí un lote, catálogo, categoría o marca.");
   }
   if (lotId && !UUID.test(lotId)) return error("No se encontró el lote.");
+  if (productIds?.some((id) => !UUID.test(id))) return error("Ese producto ya no existe.");
 
   return db.$transaction(async (tx): Promise<FormState> => {
     const group = await tx.publicationGroup.findUnique({ where: { id: groupId } });
@@ -193,6 +195,7 @@ export async function addProductsToGroup(
       where: {
         stock: { gt: 0 },
         product: {
+          ...(productIds?.length ? { id: { in: productIds } } : {}),
           ...(lotId ? { lotId } : {}),
           ...(catalog ? { catalog } : {}),
           ...(category ? { category } : {}),
@@ -242,6 +245,32 @@ export async function addProductsToGroup(
       message: `Se agregaron ${plural(data.length, "talle", "talles")} de ${plural(products.size, "producto", "productos")}.`,
     };
   });
+}
+
+/**
+ * Takes a product out of the group: its sizes go back to the inventory. A size that already sold
+ * units through the group stays at `allocated = sold` (see {@link setGroupAllocations}).
+ */
+export async function removeProductFromGroup(
+  db: TransactionRunner,
+  groupId: string,
+  productId: string,
+  now: Date = new Date(),
+): Promise<FormState> {
+  if (!UUID.test(groupId)) return NOT_FOUND;
+  if (!UUID.test(productId)) return error("Ese producto ya no existe.");
+  const variants = await db.$transaction((tx) =>
+    tx.productVariant.findMany({ where: { productId }, select: { id: true } }),
+  );
+  const state = await setGroupAllocations(
+    db,
+    groupId,
+    variants.map((variant) => ({ variantId: variant.id, allocated: 0 })),
+    now,
+  );
+  return state.status === "success"
+    ? { status: "success", message: "Producto quitado del grupo." }
+    : state;
 }
 
 /**

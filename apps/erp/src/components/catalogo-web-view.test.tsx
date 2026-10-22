@@ -18,6 +18,7 @@ const products: CatalogProduct[] = [
     catalogOrder: 4,
     catalogSection: "Vestidos",
     catalogName: "Vestido Lino Icona",
+    groupName: null,
   },
   {
     id: "p2",
@@ -32,6 +33,7 @@ const products: CatalogProduct[] = [
     catalogOrder: null,
     catalogSection: null,
     catalogName: null,
+    groupName: null,
   },
 ];
 
