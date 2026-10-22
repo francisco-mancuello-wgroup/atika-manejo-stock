@@ -6,6 +6,7 @@ import { type FormState, IDLE } from "../lib/action-state";
 import { formatGs } from "../lib/format";
 import type { SellableProduct } from "../lib/queries/sales";
 import { Field, FormMessage, Select } from "./form-controls";
+import { ProductPicker } from "./sale-product-picker";
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
@@ -51,24 +52,22 @@ export function SaleForm({
     <form action={formAction} className="flex flex-col gap-4 border border-line bg-surface p-5">
       <h2 className="font-display text-2xl text-ink">Registrar venta</h2>
 
-      <Field label="Producto" htmlFor="productId" error={errors.productId}>
-        <Select
-          id="productId"
-          name="productId"
-          required
-          value={productId}
-          onChange={(event) => {
-            setProductId(event.target.value);
+      <Field label="Producto" htmlFor="productSearch" error={errors.productId}>
+        <ProductPicker
+          id="productSearch"
+          products={products}
+          selected={product}
+          invalid={Boolean(errors.productId)}
+          onSelect={(chosen, chosenSize) => {
+            setProductId(chosen.id);
+            setSize(chosenSize ?? "");
+          }}
+          onClear={() => {
+            setProductId("");
             setSize("");
           }}
-        >
-          <option value="">Elegí un producto</option>
-          {products.map((candidate) => (
-            <option key={candidate.id} value={candidate.id}>
-              {candidate.label}
-            </option>
-          ))}
-        </Select>
+        />
+        <input type="hidden" name="productId" value={productId} />
       </Field>
 
       <Field label="Talle" htmlFor="size" error={errors.size}>
