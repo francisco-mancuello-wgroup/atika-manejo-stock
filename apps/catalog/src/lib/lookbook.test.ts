@@ -198,3 +198,15 @@ describe("pinkPages", () => {
     expect(pinkPages(lookbookPages([row(1, { color: "Rosa" })], settings))).toEqual([]);
   });
 });
+
+describe("hasPinkPieces", () => {
+  const pagesOf = (...rows: LookbookRow[]) => lookbookPages(rows, settings);
+
+  it("is true when any catalog has a page with a piece in an active group", () => {
+    expect(hasPinkPieces([pagesOf(row(1)), pagesOf(row(2, { inGroup: true }))])).toBe(true);
+  });
+
+  it("is false when no piece is in a group", () => {
+    expect(hasPinkPieces([pagesOf(row(1)), []])).toBe(false);
+  });
+});
