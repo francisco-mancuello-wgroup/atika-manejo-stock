@@ -38,7 +38,7 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
     });
   });
 
-  it("applies every pricing parameter to the selected lots only, keeping their shipping", async () => {
+  it("applies every pricing parameter to every lot, keeping each lot's own shipping", async () => {
     await withRollback(async (tx) => {
       const a = await createFixtureLot(tx, [
         { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
@@ -46,106 +46,49 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
       const b = await createFixtureLot(tx, [
         { name: "B", originalValueUsd: 40, variants: [["U", 2, 2]] },
       ]);
-
-      const state = await saveAndApplySettings(dbOver(tx), { ...form, scope: "selected" }, [
-        a.lot.id,
-      ]);
-      expect(state).toEqual({
-        status: "success",
-        message: "Parámetros guardados. Se actualizó 1 lote y se recalculó 1 precio.",
-      });
-
-      const stored = await tx.lot.findUniqueOrThrow({ where: { id: a.lot.id } });
-      expect(stored.saleFactor.toNumber()).toBe(3);
-      expect(stored.vatRate.toNumber()).toBe(0.05);
-      expect(stored.exchangeRate.toNumber()).toBe(7450);
-      expect(stored.costRate.toNumber()).toBe(0.6);
-      // Shipping is purchase data: the lot keeps its own.
-      expect(stored.totalShippingUsd.toNumber()).toBe(20);
-      const [expected] = priceLot(
-        { exchangeRate: 7450, saleFactor: 3, vatRate: 0.05, costRate: 0.6, totalShippingUsd: 20 },
-        [{ id: "x", originalValueUsd: 100, units: 3 }],
-      );
-      const product = await tx.product.findUniqueOrThrow({ where: { id: a.products[0]?.id } });
-      expect(product.priceGs).toBe(expected?.priceGs);
-
-      const untouched = await tx.lot.findUniqueOrThrow({ where: { id: b.lot.id } });
-      expect(untouched.saleFactor.toNumber()).toBe(2.5);
-      expect(untouched.vatRate.toNumber()).toBe(0.1);
-      expect(untouched.exchangeRate.toNumber()).toBe(7000);
-      expect(untouched.costRate.toNumber()).toBe(0.5);
-      const untouchedProduct = await tx.product.findUniqueOrThrow({
-        where: { id: b.products[0]?.id },
-      });
-      expect(untouchedProduct.priceGs).toBe(1000);
-    });
-  });
-
-  it("applies every pricing parameter to every lot when the scope is all", async () => {
-    await withRollback(async (tx) => {
-      const a = await createFixtureLot(tx, [
-        { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
-      ]);
-      const b = await createFixtureLot(tx, [
-        { name: "B", originalValueUsd: 40, variants: [["U", 2, 2]] },
-      ]);
+      await tx.lot.update({ where: { id: b.lot.id }, data: { totalShippingUsd: 8 } });
       const lotCount = await tx.lot.count();
       const productCount = await tx.product.count();
 
-      const state = await saveAndApplySettings(dbOver(tx), { ...form, scope: "all" }, []);
+      const state = await saveAndApplySettings(dbOver(tx), form);
       expect(state).toEqual({
         status: "success",
         message: `Parámetros guardados. Se actualizaron ${lotCount} lotes y se recalcularon ${productCount} precios.`,
       });
-      for (const { lot } of [a, b]) {
+      for (const [{ lot, products }, shipping, value, units] of [
+        [a, 20, 100, 3],
+        [b, 8, 40, 2],
+      ] as const) {
         const stored = await tx.lot.findUniqueOrThrow({ where: { id: lot.id } });
         expect(stored.saleFactor.toNumber()).toBe(3);
         expect(stored.vatRate.toNumber()).toBe(0.05);
         expect(stored.exchangeRate.toNumber()).toBe(7450);
         expect(stored.costRate.toNumber()).toBe(0.6);
-        expect(stored.totalShippingUsd.toNumber()).toBe(20);
+        expect(stored.totalShippingUsd.toNumber()).toBe(shipping);
+        const [expected] = priceLot(
+          {
+            exchangeRate: 7450,
+            saleFactor: 3,
+            vatRate: 0.05,
+            costRate: 0.6,
+            totalShippingUsd: shipping,
+          },
+          [{ id: "x", originalValueUsd: value, units }],
+        );
+        const product = await tx.product.findUniqueOrThrow({ where: { id: products[0]?.id } });
+        expect(product.priceGs).toBe(expected?.priceGs);
       }
     });
   });
 
-  it("only saves the defaults when the scope is new lots", async () => {
+  it("ignores a scope field sent by an old client", async () => {
     await withRollback(async (tx) => {
       const a = await createFixtureLot(tx, [
         { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
       ]);
-      const state = await saveAndApplySettings(dbOver(tx), { ...form, scope: "new" }, [a.lot.id]);
-      expect(state).toEqual({ status: "success", message: "Parámetros guardados." });
+      await saveAndApplySettings(dbOver(tx), { ...form, scope: "new" });
       const stored = await tx.lot.findUniqueOrThrow({ where: { id: a.lot.id } });
-      expect(stored.saleFactor.toNumber()).toBe(2.5);
-    });
-  });
-
-  it("requires a lot for the selected scope and writes nothing", async () => {
-    await withRollback(async (tx) => {
-      const before = await tx.appSettings.findUnique({ where: { id: 1 } });
-      const state = await saveAndApplySettings(dbOver(tx), { ...form, scope: "selected" }, []);
-      expect(state).toMatchObject({
-        status: "error",
-        fieldErrors: { lotIds: "Elegí al menos un lote." },
-      });
-      expect(await tx.appSettings.findUnique({ where: { id: 1 } })).toEqual(before);
-    });
-  });
-
-  it("rejects unknown lot ids and writes nothing", async () => {
-    await withRollback(async (tx) => {
-      const a = await createFixtureLot(tx, [
-        { name: "A", originalValueUsd: 100, variants: [["M", 3, 3]] },
-      ]);
-      const before = await tx.appSettings.findUnique({ where: { id: 1 } });
-      const state = await saveAndApplySettings(dbOver(tx), { ...form, scope: "selected" }, [
-        a.lot.id,
-        "0198a1b2-0000-7000-8000-00000000ffff",
-      ]);
-      expect(state).toMatchObject({ status: "error", fieldErrors: { lotIds: expect.any(String) } });
-      expect(await tx.appSettings.findUnique({ where: { id: 1 } })).toEqual(before);
-      const stored = await tx.lot.findUniqueOrThrow({ where: { id: a.lot.id } });
-      expect(stored.saleFactor.toNumber()).toBe(2.5);
+      expect(stored.saleFactor.toNumber()).toBe(3);
     });
   });
 });

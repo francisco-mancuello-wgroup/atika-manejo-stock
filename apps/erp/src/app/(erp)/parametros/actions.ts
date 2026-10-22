@@ -17,9 +17,8 @@ export async function saveSettingsAction(
 ): Promise<FormState> {
   await requireSession();
   const values = formValues(formData);
-  const lotIds = formData.getAll("lotIds").filter((id) => typeof id === "string");
   try {
-    const state = await saveAndApplySettings(getDb(), values, lotIds);
+    const state = await saveAndApplySettings(getDb(), values);
     if (state.status === "success") revalidateEverything();
     return state;
   } catch (error) {
