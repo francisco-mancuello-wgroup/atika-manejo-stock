@@ -43,6 +43,13 @@ describe("LotPricingPanel", () => {
       );
     });
 
+    it("labels Global as the mode in use", () => {
+      renderPanel();
+      const region = screen.getByRole("region", { name: "Precios del lote" });
+      expect(within(region).getByText("Activo: Global")).toBeInTheDocument();
+      expect(within(region).queryByText("Activo: Propio")).not.toBeInTheDocument();
+    });
+
     it("marks Global as the active mode", () => {
       renderPanel();
       const group = screen.getByRole("group", { name: "Modo de precios" });
@@ -71,6 +78,12 @@ describe("LotPricingPanel", () => {
   });
 
   describe("custom mode", () => {
+    it("labels Propio as the mode in use", () => {
+      renderPanel({ mode: "custom" });
+      const region = screen.getByRole("region", { name: "Precios del lote" });
+      expect(within(region).getByText("Activo: Propio")).toBeInTheDocument();
+    });
+
     it("shows an editable form with the lot's values and no link to Parámetros", () => {
       renderPanel({ mode: "custom" });
       expect(screen.getByLabelText("TC del lote (₲ / US$)")).toHaveValue(7400);

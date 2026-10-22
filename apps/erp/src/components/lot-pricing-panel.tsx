@@ -69,9 +69,14 @@ export function LotPricingPanel({
       aria-labelledby="lot-pricing-title"
       className="flex flex-col gap-4 border border-line bg-surface p-5"
     >
-      <h2 id="lot-pricing-title" className="font-display text-2xl text-ink">
-        Precios del lote
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="lot-pricing-title" className="font-display text-2xl text-ink">
+          Precios del lote
+        </h2>
+        <span className="bg-subtle px-2.5 py-1 text-xs font-medium text-ok">
+          Activo: {mode === "global" ? "Global" : "Propio"}
+        </span>
+      </div>
 
       <form action={modeFormAction} className="flex flex-col gap-2">
         <fieldset
