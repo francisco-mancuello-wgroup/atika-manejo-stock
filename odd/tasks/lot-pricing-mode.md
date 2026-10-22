@@ -30,7 +30,7 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 
 - [x] T1 — DB: `pricingMode` enum + column + migration; schema test. (commit: see Verification evidence)
 - [x] T2 — Parámetros applies only to `global` lots (save, preview, count copy) with tests.
-- [ ] T3 — Compras: mode switch, custom params form + save/reprice action, back-to-global action, "Difiere del global" flags, with tests.
+- [x] T3 — Compras: mode switch, custom params form + save/reprice action, back-to-global action, "Difiere del global" flags, with tests.
 
 ## Acceptance criteria
 
@@ -47,6 +47,7 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 
 - 2026-10-22: Document created (branch feat/lot-pricing-mode).
 - 2026-10-22: T1 done.
+- 2026-10-22: T3 done (Compras Global/Propio switch, own-params form with "Difiere del global", actions `saveLotParamsAction` / `setLotPricingModeAction`).
 - 2026-10-22: T2 done (save, preview and copy limited to `global` lots; `PreviewLot.pricingMode`).
 
 ## Verification evidence
@@ -55,7 +56,10 @@ Today saving /parametros overwrites TC, factor, IVA and % costo on every lot. Th
 - T1 GREEN: migration `20261022040000_lot_pricing_mode` applied to local DB (`pnpm db:migrate`), client regenerated; `pnpm --filter @atika/db test` -> 205 passed.
 - T2 RED: `pnpm exec vitest run src/lib/settings src/components/settings-forms.test.tsx` (apps/erp) -> 3 failed (new copy, `Se recalculan 2 de 3 lotes`, custom lot untouched message/prices).
 - T2 GREEN: same command + `src/components` -> 171 passed; `pnpm typecheck` ok.
+- T3 RED: `pnpm exec vitest run src/components/lot-pricing-panel.test.tsx src/components/lot-detail-view.test.tsx src/lib/lots/pricing-mode.test.ts src/lib/view-models.test.ts` (apps/erp) -> modules `./lot-pricing-panel` and `./pricing-mode` unresolved; view-model `pricingMode` undefined; lot detail missing `Guardar y recalcular` for a custom lot.
+- T3 GREEN: `pnpm --filter @atika/erp test` -> 82 files / 554 tests passed; typecheck and lint ok.
+- Decision: `saveLotShipping` keeps its behavior (no reprice) and message.
 
 ## Next step
 
-T3.
+Review and merge decision (user).

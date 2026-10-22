@@ -32,6 +32,7 @@ describe.skipIf(!hasDatabase)("read queries (database)", () => {
     expect(first).toEqual({
       id: expect.any(String),
       name: expect.any(String),
+      pricingMode: "global",
       totalShippingUsd: expect.any(Number),
       products: expect.any(Array),
     });

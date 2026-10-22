@@ -26,6 +26,7 @@ function lotRow(overrides: Partial<LotRow> = {}): LotRow {
     saleFactor: dec(2.5),
     vatRate: dec(0.1),
     costRate: dec(0.5),
+    pricingMode: "global",
     totalShippingUsd: dec(20),
     products: [
       {
@@ -151,6 +152,11 @@ describe("toLotDetail", () => {
       costPercent: 50,
       totalShippingUsd: 20,
     });
+  });
+
+  it("exposes whether the lot follows the global parameters or has its own", () => {
+    expect(toLotDetail(lotRow()).pricingMode).toBe("global");
+    expect(toLotDetail(lotRow({ pricingMode: "custom" })).pricingMode).toBe("custom");
   });
 
   it("does not divide by zero when the lot has no units", () => {
