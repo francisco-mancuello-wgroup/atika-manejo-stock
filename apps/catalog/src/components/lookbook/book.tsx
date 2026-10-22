@@ -234,15 +234,16 @@ function PinkBanner() {
       aria-labelledby="pink-heading"
       className="mb-12 flex flex-col overflow-hidden rounded-[4px] bg-pink sm:flex-row-reverse lg:mb-16"
     >
-      <div className="relative aspect-[9/10] sm:aspect-auto sm:w-[42%] sm:shrink-0">
+      {/* Same 2:3 shape as the photo, so the model shows whole */}
+      <div className="relative aspect-[2/3] sm:h-[560px] sm:shrink-0 lg:h-[720px]">
         <Image
           src={pinkPhoto}
           alt="Vestido Cora Fucsia de Casa Icona"
           fill
           priority
-          sizes="(min-width: 640px) 42vw, 100vw"
+          sizes="(min-width: 1024px) 480px, (min-width: 640px) 374px, 100vw"
           placeholder="blur"
-          className="object-cover object-top"
+          className="object-cover"
         />
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 px-6 py-8 sm:px-10 sm:py-12 lg:px-20">
