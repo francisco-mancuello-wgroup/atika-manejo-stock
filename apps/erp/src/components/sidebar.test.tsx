@@ -53,6 +53,7 @@ describe("Sidebar", () => {
       "Ventas",
       "Catálogo web",
       "Descuentos",
+      "Bancos",
       "Parámetros",
       "Seguridad",
     ]);
@@ -69,6 +70,29 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     expect(screen.getByRole("link", { name: "Ventas" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("groups Descuentos and Bancos under Promos", () => {
+    render(<Sidebar />);
+    const promos = screen.getByRole("group", { name: "Promos" });
+    expect(within(promos).getByRole("link", { name: "Descuentos" })).toHaveAttribute(
+      "href",
+      "/promos/descuentos",
+    );
+    expect(within(promos).getByRole("link", { name: "Bancos" })).toHaveAttribute(
+      "href",
+      "/promos/bancos",
+    );
+  });
+
+  it("marks the promo option of a nested discount page", () => {
+    vi.mocked(usePathname).mockReturnValue("/promos/descuentos/d1");
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: "Descuentos" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: "Bancos" })).not.toHaveAttribute("aria-current");
   });
 
   it("keeps the section marked on nested pages", () => {
