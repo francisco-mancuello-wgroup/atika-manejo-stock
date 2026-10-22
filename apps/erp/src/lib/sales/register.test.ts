@@ -32,6 +32,7 @@ function fakeTx(options: { variant?: object | null; updated?: number; discounts?
     productVariant: { findUnique: vi.fn(async () => variant), updateMany },
     sale: { create },
     discount: { findMany: vi.fn(async () => options.discounts ?? []) },
+    groupAllocation: { findFirst: vi.fn(async () => null), update: vi.fn() },
   } as unknown as SaleTx;
   return { tx, updateMany, create };
 }
@@ -175,6 +176,115 @@ describe.skipIf(!hasDatabase)("registerSale (database)", () => {
       const product = await fixture(tx, 2);
       const result = await registerSale(tx, { ...input, productId: product.id, quantity: 2 });
       expect(result).toMatchObject({ ok: true, remainingStock: 0 });
+    });
+  });
+
+  describe("publication groups", () => {
+    const group = (over: object = {}) => ({ name: "Grupo", isActive: true, ...over });
+
+    async function grouped(
+      tx: Prisma.TransactionClient,
+      stock: number,
+      allocation: { allocated: number; sold?: number },
+      groupData: object = {},
+    ) {
+      const product = await fixture(tx, stock);
+      const variant = await tx.productVariant.findFirstOrThrow({
+        where: { productId: product.id },
+      });
+      const created = await tx.publicationGroup.create({ data: group(groupData) });
+      const row = await tx.groupAllocation.create({
+        data: { groupId: created.id, variantId: variant.id, ...allocation },
+      });
+      return { product, variant, row };
+    }
+
+    const sold = async (tx: Prisma.TransactionClient, id: string) =>
+      (await tx.groupAllocation.findUniqueOrThrow({ where: { id } })).sold;
+
+    it("consumes the active group first", async () => {
+      await withRollback(async (tx) => {
+        const { product, variant, row } = await grouped(tx, 5, { allocated: 3 });
+        const result = await registerSale(
+          tx,
+          { ...input, productId: product.id, quantity: 2 },
+          NOW,
+        );
+        expect(result).toMatchObject({ ok: true, remainingStock: 3 });
+        expect(await sold(tx, row.id)).toBe(2);
+        // The physical stock only moves by the sale itself.
+        expect(
+          (await tx.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).stock,
+        ).toBe(3);
+      });
+    });
+
+    it("only consumes the remainder when the sale is larger", async () => {
+      await withRollback(async (tx) => {
+        const { product, row } = await grouped(tx, 5, { allocated: 3, sold: 1 });
+        await registerSale(tx, { ...input, productId: product.id, quantity: 4 }, NOW);
+        expect(await sold(tx, row.id)).toBe(3);
+      });
+    });
+
+    it("never consumes more than the physical stock allows", async () => {
+      await withRollback(async (tx) => {
+        const { product, row } = await grouped(tx, 2, { allocated: 9 });
+        await registerSale(tx, { ...input, productId: product.id, quantity: 2 }, NOW);
+        expect(await sold(tx, row.id)).toBe(2);
+      });
+    });
+
+    it("leaves a spent group alone and sells from the free inventory", async () => {
+      await withRollback(async (tx) => {
+        const { product, row } = await grouped(tx, 5, { allocated: 2, sold: 2 });
+        await registerSale(tx, { ...input, productId: product.id, quantity: 1 }, NOW);
+        expect(await sold(tx, row.id)).toBe(2);
+      });
+    });
+
+    it("does nothing to allocations without an active group", async () => {
+      await withRollback(async (tx) => {
+        const { product, row } = await grouped(tx, 5, { allocated: 3 }, { isActive: false });
+        await registerSale(tx, { ...input, productId: product.id, quantity: 2 }, NOW);
+        expect(await sold(tx, row.id)).toBe(0);
+        const plain = await fixture(tx, 5);
+        expect((await registerSale(tx, { ...input, productId: plain.id }, NOW)).ok).toBe(true);
+      });
+    });
+
+    it("ignores a group outside its window", async () => {
+      await withRollback(async (tx) => {
+        const expired = await grouped(
+          tx,
+          5,
+          { allocated: 3 },
+          { endsAt: new Date("2026-10-20T00:00:00.000Z") },
+        );
+        const future = await grouped(
+          tx,
+          5,
+          { allocated: 3 },
+          { startsAt: new Date("2026-10-22T00:00:00.000Z") },
+        );
+        await registerSale(tx, { ...input, productId: expired.product.id, quantity: 2 }, NOW);
+        await registerSale(tx, { ...input, productId: future.product.id, quantity: 2 }, NOW);
+        expect(await sold(tx, expired.row.id)).toBe(0);
+        expect(await sold(tx, future.row.id)).toBe(0);
+      });
+    });
+
+    it("does not touch the group when the sale is refused", async () => {
+      await withRollback(async (tx) => {
+        const { product, row } = await grouped(tx, 1, { allocated: 1 });
+        const result = await registerSale(
+          tx,
+          { ...input, productId: product.id, quantity: 2 },
+          NOW,
+        );
+        expect(result.ok).toBe(false);
+        expect(await sold(tx, row.id)).toBe(0);
+      });
     });
   });
 });
