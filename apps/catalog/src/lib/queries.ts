@@ -457,7 +457,6 @@ const lookbookSelect = (now: Date) =>
     catalog: true,
     catalogOrder: true,
     catalogSection: true,
-    catalogName: true,
   }) satisfies Prisma.ProductSelect;
 
 /** Lookbook rows matching `where`, with web stock, discounts, bank promos and their Pink fields. */

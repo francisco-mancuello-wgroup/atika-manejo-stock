@@ -33,7 +33,7 @@ User decisions 2026-10-22:
 
 - [x] T1 — ERP: `notifyCatalogChanged` helper + tests; wire into catalog-affecting server actions.
 - [x] T2 — Catalog: `LiveRefresh` subscriber (throttled `router.refresh()`) in root layout + tests; env example.
-- [x] T3 — ERP: renaming a product also sets its lookbook name (`catalogName`), so the web shows the new name; an unchanged name keeps a custom lookbook name. User decision 2026-10-22 ("actualiza también el lookbook a la par"). RED (lookbook kept old name) -> GREEN `save.test.ts` 14/14; biome + erp typecheck ok.
+- [x] T3 — Web shows the ERP product `name` (lookbook `catalogName` no longer displayed). First tried syncing `catalogName` on rename (700f55f); user rejected it ("sigue usando el nombre viejo, tiene que ser name"), so that ERP change is undone. RED (lookbook showed "Costa Coco" over "COSTA COCOO") -> GREEN `lookbook.test.ts` 18/18; catalog + erp typecheck ok; biome ok. Catalog DB tests time out (5000ms) against the remote Supabase DB, count varies per run.
 
 ## Progress / evidence
 

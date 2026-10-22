@@ -48,7 +48,6 @@ export function withPieces<T extends { pages: readonly unknown[] }>(catalogs: re
 
 /** What the lookbook reads of a product (the public columns plus its placement). */
 export interface LookbookRow extends ProductSource {
-  catalogName: string | null;
   catalog: CatalogValue | null;
   catalogOrder: number | null;
   catalogSection: string | null;
@@ -99,7 +98,8 @@ export interface LookbookPage {
   page: number;
 }
 
-const displayName = (row: LookbookRow) => row.catalogName?.trim() || row.name;
+// The web shows the ERP product name, so a rename in the ERP reaches the lookbook.
+const displayName = (row: LookbookRow) => row.name;
 
 function byPdfOrder(a: LookbookRow, b: LookbookRow): number {
   const orderA = a.catalogOrder ?? Number.POSITIVE_INFINITY;

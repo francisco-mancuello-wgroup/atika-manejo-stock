@@ -89,30 +89,6 @@ describe.skipIf(!hasDatabase)("product edit and create (database)", () => {
     });
   });
 
-  it("renaming a product also renames it in the lookbook", async () => {
-    await withRollback(async (tx) => {
-      const { a } = await fixture(tx);
-      await tx.product.update({ where: { id: a }, data: { catalogName: "Lookbook A" } });
-      expect(await updateProduct(dbOver(tx), a, form({ name: "A nueva" }))).toMatchObject({
-        status: "success",
-      });
-      const stored = await tx.product.findUniqueOrThrow({ where: { id: a } });
-      expect(stored).toMatchObject({ name: "A nueva", catalogName: "A nueva" });
-    });
-  });
-
-  it("keeps the lookbook name when the product name does not change", async () => {
-    await withRollback(async (tx) => {
-      const { a } = await fixture(tx);
-      await tx.product.update({ where: { id: a }, data: { catalogName: "Lookbook A" } });
-      expect(await updateProduct(dbOver(tx), a, form({ name: "A" }))).toMatchObject({
-        status: "success",
-      });
-      const stored = await tx.product.findUniqueOrThrow({ where: { id: a } });
-      expect(stored.catalogName).toBe("Lookbook A");
-    });
-  });
-
   it("reprices every product of the lot when units change", async () => {
     await withRollback(async (tx) => {
       const { a, b } = await fixture(tx);
