@@ -16,6 +16,7 @@ import {
   type CatalogProduct,
   type CatalogProductDetail,
   type CatalogSettingsView,
+  type PaymentDetailsView,
   toCatalogProduct,
   toCatalogProductDetail,
 } from "./catalog-view";
@@ -31,7 +32,7 @@ import {
 /** The slice of the Prisma client the catalog reads (a rolled back transaction works too). */
 export type CatalogDb = Pick<
   PrismaClient,
-  "product" | "catalogSettings" | "discount" | "bankPromo"
+  "product" | "catalogSettings" | "discount" | "bankPromo" | "paymentDetails"
 >;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -204,6 +205,14 @@ export async function getCatalogSettings(db: CatalogDb): Promise<CatalogSettings
     showSoldOutSizes: row.showSoldOutSizes,
     hideOutOfStock: row.hideOutOfStock,
   };
+}
+
+/** The bank details for /datos-bancarios, or null when the ERP has not loaded them yet. */
+export async function getPaymentDetails(db: CatalogDb): Promise<PaymentDetailsView | null> {
+  return db.paymentDetails.findUnique({
+    where: { id: 1 },
+    select: { holderName: true, bank: true, accountGs: true, accountUsd: true, ruc: true },
+  });
 }
 
 type ListFilters = Pick<CatalogFilters, "talle" | "q" | "orden">;

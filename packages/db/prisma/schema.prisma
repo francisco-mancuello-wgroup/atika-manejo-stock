@@ -283,6 +283,21 @@ model CatalogSettings {
   @@map("catalog_settings")
 }
 
+/// Single row (id = 1): the bank account shoppers pay into, shown on the store's /datos-bancarios
+/// page. The printed QR points to that page, so editing these values never changes the QR.
+model PaymentDetails {
+  id         Int      @id @default(1)
+  /// Razón social of the account holder.
+  holderName String
+  bank       String
+  accountGs  String
+  accountUsd String
+  ruc        String
+  updatedAt  DateTime @updatedAt
+
+  @@map("payment_details")
+}
+
 /// Single row (id = 1) with the exchange rate of the day and the defaults for new lots.
 model AppSettings {
   id           Int      @id @default(1)

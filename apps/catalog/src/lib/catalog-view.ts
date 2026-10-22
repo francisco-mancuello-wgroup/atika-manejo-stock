@@ -11,6 +11,15 @@ export interface CatalogSettingsView {
   hideOutOfStock: boolean;
 }
 
+/** The bank account shoppers pay into by transfer (loaded in the ERP). */
+export interface PaymentDetailsView {
+  holderName: string;
+  bank: string;
+  accountGs: string;
+  accountUsd: string;
+  ruc: string;
+}
+
 /** What the public site may know about a size: whether it can be bought, never how many. */
 export interface CatalogSize {
   size: string;

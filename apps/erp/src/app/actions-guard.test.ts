@@ -32,6 +32,7 @@ describe("Server Actions require a session", () => {
     expect(guarded.map(([path]) => path).sort()).toEqual([
       "./(erp)/catalogo-web/actions.ts",
       "./(erp)/compras/[lotId]/actions.ts",
+      "./(erp)/datos-bancarios/actions.ts",
       "./(erp)/inventario/actions.ts",
       "./(erp)/moneda/actions.ts",
       "./(erp)/parametros/actions.ts",

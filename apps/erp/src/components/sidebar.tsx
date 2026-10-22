@@ -16,6 +16,7 @@ const NAV_ITEMS: readonly (NavLink | NavGroup)[] = [
   { href: "/compras", label: "Compras" },
   { href: "/ventas", label: "Ventas" },
   { href: "/catalogo-web", label: "Catálogo web" },
+  { href: "/datos-bancarios", label: "Datos bancarios" },
   {
     label: "Promos",
     items: [
