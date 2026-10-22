@@ -57,7 +57,7 @@ export function LotDetailView({
           detail="a precio de lista"
         />
       </div>
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-2xl text-ink">Stock por modelo y talle</h2>
           {lot.rows.length === 0 ? (

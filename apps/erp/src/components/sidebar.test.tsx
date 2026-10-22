@@ -79,6 +79,36 @@ describe("Sidebar", () => {
     expect(screen.queryByRole("link", { name: "Descuentos" })).not.toBeInTheDocument();
   });
 
+  it("starts with the phone menu closed behind a Menú button", () => {
+    render(<Sidebar />);
+    const toggle = screen.getByRole("button", { name: "Menú" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    const panel = document.getElementById(toggle.getAttribute("aria-controls") ?? "");
+    expect(panel).toHaveClass("hidden", "md:flex");
+    expect(
+      within(panel as HTMLElement).getByRole("navigation", { name: "Principal" }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the phone menu and closes it again", () => {
+    render(<Sidebar />);
+    fireEvent.click(screen.getByRole("button", { name: "Menú" }));
+    const close = screen.getByRole("button", { name: "Cerrar menú" });
+    expect(close).toHaveAttribute("aria-expanded", "true");
+    const panel = document.getElementById(close.getAttribute("aria-controls") ?? "");
+    expect(panel).not.toHaveClass("hidden");
+
+    fireEvent.click(close);
+    expect(screen.getByRole("button", { name: "Menú" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("closes the phone menu when a section is chosen", () => {
+    render(<Sidebar />);
+    fireEvent.click(screen.getByRole("button", { name: "Menú" }));
+    fireEvent.click(screen.getByRole("link", { name: "Inventario" }));
+    expect(screen.getByRole("button", { name: "Menú" })).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("opens Promos to reveal Descuentos and Bancos", () => {
     render(<Sidebar activeHref="/" />);
     fireEvent.click(screen.getByRole("button", { name: "Promos" }));

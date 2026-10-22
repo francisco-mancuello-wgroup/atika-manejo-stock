@@ -76,7 +76,7 @@ function toggled<T>(list: readonly T[], item: T, on: boolean): T[] {
   return on ? [...without, item] : without;
 }
 
-const PANEL = "flex flex-col gap-3";
+const PANEL = "flex min-w-0 flex-col gap-3";
 const LEGEND = "text-xs font-medium text-ink";
 
 /**
@@ -315,7 +315,7 @@ export function BankPromoForm({
           </div>
 
           {scope === "lots" ? (
-            <fieldset className="flex flex-col gap-2 border border-line bg-surface p-4">
+            <fieldset className="flex min-w-0 flex-col gap-2 border border-line bg-surface p-4">
               <legend className="px-2 text-xs font-medium text-ink">Lotes de la promoción</legend>
               {lots.length === 0 ? (
                 <p className="text-sm text-muted">Todavía no hay lotes.</p>

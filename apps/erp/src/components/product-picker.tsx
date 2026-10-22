@@ -50,7 +50,7 @@ export function ProductPicker({
   };
 
   return (
-    <fieldset className="flex flex-col gap-4 border border-line bg-surface p-5">
+    <fieldset className="flex min-w-0 flex-col gap-4 border border-line bg-surface p-5">
       <legend className="px-2 text-xs font-medium text-ink">{legend}</legend>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Field label="Buscar producto" htmlFor="picker-query">
