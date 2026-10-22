@@ -149,3 +149,74 @@ describe("resolveStockList", () => {
     expect(problems[2]).toMatch(/row 4.*Lia Dress.*XL/);
   });
 });
+
+describe("resolveStockList matching rules", () => {
+  const v = (id: string, size: string) => ({ id, size, stock: 3 });
+  const product = (id: string, name: string, code: string | null, sizes: string[]) => ({
+    id,
+    code,
+    name,
+    variants: sizes.map((size) => v(`${id}-${size}`, size)),
+  });
+  const line = (description: string, size: string, row = 2) => ({
+    description,
+    size,
+    qty: 1,
+    row,
+  });
+
+  it("picks the only product with the size when a name is ambiguous", () => {
+    const products = [
+      product("g1", "Ginger Maxi", null, ["S"]),
+      product("g2", "Ginger Maxi", null, ["L"]),
+    ];
+    const { resolved, problems, notes } = resolveStockList(
+      [line("GINGER MAXI", "L", 68)],
+      products,
+    );
+    expect(problems).toEqual([]);
+    expect(resolved.map((r) => r.variantId)).toEqual(["g2-L"]);
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatch(/row 68.*GINGER MAXI.*L.*Ginger Maxi.*L/);
+  });
+
+  it("stays ambiguous when several products have the size", () => {
+    const products = [product("a", "Twin", null, ["S"]), product("b", "Twin", null, ["S", "M"])];
+    expect(resolveStockList([line("twin", "S")], products).problems[0]).toMatch(/ambiguous/);
+  });
+
+  it("matches a size inside a compound variant only when exactly one variant fits", () => {
+    const products = [
+      product("p", "Cardigan A", "PALC04", ["XS/S", "M/L"]),
+      product("q", "Wide", "WIDE", ["XS/S", "S/M"]),
+    ];
+    const ok = resolveStockList([line("PALC04", "S", 2), line("PALC04", "M", 3)], products);
+    expect(ok.problems).toEqual([]);
+    expect(ok.resolved.map((r) => r.variantId)).toEqual(["p-XS/S", "p-M/L"]);
+    expect(ok.notes).toHaveLength(2);
+    expect(ok.notes[0]).toMatch(/row 2.*S.*XS\/S/);
+    const bad = resolveStockList([line("WIDE", "S", 4)], products);
+    expect(bad.resolved).toEqual([]);
+    expect(bad.problems[0]).toMatch(/row 4.*WIDE.*S/);
+  });
+
+  it("maps U to the only variant of a one-variant product, but exact wins", () => {
+    const products = [
+      product("m", "Cardigan A", "MAUC06", ["M"]),
+      product("u", "One", "ONE", ["U"]),
+      product("two", "Two", "TWO", ["S", "M"]),
+    ];
+    const ok = resolveStockList([line("MAUC06", "U", 7), line("ONE", "U", 8)], products);
+    expect(ok.resolved.map((r) => r.variantId)).toEqual(["m-M", "u-U"]);
+    expect(ok.notes).toHaveLength(1);
+    expect(ok.notes[0]).toMatch(/row 7.*U.*M/);
+    expect(resolveStockList([line("TWO", "U")], products).problems).toHaveLength(1);
+  });
+
+  it("an exact size beats compound and one-size rules", () => {
+    const products = [product("e", "Mix", "MIX", ["S", "XS/S"])];
+    const { resolved, notes } = resolveStockList([line("MIX", "S")], products);
+    expect(resolved.map((r) => r.variantId)).toEqual(["e-S"]);
+    expect(notes).toEqual([]);
+  });
+});

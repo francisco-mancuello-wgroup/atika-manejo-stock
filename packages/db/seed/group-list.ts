@@ -50,6 +50,8 @@ export interface GroupListSummary {
   entries: GroupListEntry[];
   removedLabels: string[];
   keptLabels: string[];
+  /** Lines settled by a matching rule (compound size, one-size product, size-based pick). */
+  ruleResolved: string[];
 }
 
 /** Same inputs as `db:group` (GROUP_LOT is ignored: the list spans every lot) plus DRY_RUN=1. */
@@ -120,14 +122,42 @@ export function parseStockList(workbook: ExcelJS.Workbook): {
   return { lines, problems };
 }
 
+type Variant = CatalogProduct["variants"][number];
+type Pick = { variant: Variant; rule: string | null } | "none" | "unclear";
+
 /**
- * Matches each line to a variant: exact normalized code first, then exact normalized name. A code or
- * name shared by several products is ambiguous. Repeated (variant) lines add up.
+ * Exact size first. Otherwise a variant whose "/"-parts contain the size (S -> "XS/S"), only when
+ * exactly one fits; otherwise "U" maps to the only variant of a one-variant product.
+ */
+function pickVariant(product: CatalogProduct, size: string): Pick {
+  const exact = product.variants.find((v) => v.size.toUpperCase() === size);
+  if (exact) return { variant: exact, rule: null };
+  const compound = product.variants.filter((v) =>
+    v.size
+      .toUpperCase()
+      .split("/")
+      .map((part) => part.trim())
+      .includes(size),
+  );
+  const [first] = compound;
+  if (first && compound.length === 1) return { variant: first, rule: "compound size" };
+  if (compound.length > 1) return "unclear";
+  const [only] = product.variants;
+  if (size === "U" && only && product.variants.length === 1) {
+    return { variant: only, rule: "one-size product" };
+  }
+  return "none";
+}
+
+/**
+ * Matches each line to a variant: exact normalized code first, then exact normalized name. A name
+ * shared by several products is resolved only when exactly one of them has the size. Sizes follow
+ * `pickVariant`. Every line settled by a rule is described in `notes`. Repeated lines add up.
  */
 export function resolveStockList(
   lines: StockLine[],
   products: CatalogProduct[],
-): { resolved: ResolvedLine[]; problems: string[] } {
+): { resolved: ResolvedLine[]; problems: string[]; notes: string[] } {
   const byCode = new Map<string, CatalogProduct[]>();
   const byName = new Map<string, CatalogProduct[]>();
   const push = (map: Map<string, CatalogProduct[]>, key: string, product: CatalogProduct) => {
@@ -139,6 +169,7 @@ export function resolveStockList(
   }
 
   const problems: string[] = [];
+  const notes: string[] = [];
   const merged = new Map<string, ResolvedLine>();
   for (const line of lines) {
     const key = normalizeLabel(line.description);
@@ -147,17 +178,45 @@ export function resolveStockList(
       problems.push(`row ${line.row}: "${line.description}" matches no product`);
       continue;
     }
-    const [product] = matches;
-    if (matches.length > 1 || !product) {
+    const candidates = matches.map((product) => ({
+      product,
+      pick: pickVariant(product, line.size),
+    }));
+    let chosen: { product: CatalogProduct; pick: Pick } | undefined;
+    let byProductSize = false;
+    if (matches.length === 1) chosen = candidates[0];
+    else {
+      const fitting = candidates.filter(({ pick }) => typeof pick === "object");
+      if (fitting.length === 1) {
+        chosen = fitting[0];
+        byProductSize = true;
+      } else if (fitting.length > 1) {
+        problems.push(
+          `row ${line.row}: "${line.description}" is ambiguous (matches ${fitting.length} products with size ${line.size})`,
+        );
+        continue;
+      } else {
+        problems.push(
+          `row ${line.row}: "${line.description}" is ambiguous (matches ${matches.length} products, none with size ${line.size})`,
+        );
+        continue;
+      }
+    }
+    if (!chosen || typeof chosen.pick !== "object") {
       problems.push(
-        `row ${line.row}: "${line.description}" is ambiguous (matches ${matches.length} products)`,
+        chosen?.pick === "unclear"
+          ? `row ${line.row}: "${line.description}" size ${line.size} fits several variants`
+          : `row ${line.row}: "${line.description}" has no size ${line.size}`,
       );
       continue;
     }
-    const variant = product.variants.find((v) => v.size.toUpperCase() === line.size);
-    if (!variant) {
-      problems.push(`row ${line.row}: "${line.description}" has no size ${line.size}`);
-      continue;
+    const { product, pick } = chosen;
+    const { variant } = pick;
+    const rules = [byProductSize ? "only product with that size" : null, pick.rule].filter(Boolean);
+    if (rules.length > 0) {
+      notes.push(
+        `row ${line.row}: "${line.description}" ${line.size} -> ${product.name} (${variant.size}) [${rules.join(", ")}]`,
+      );
     }
     const current = merged.get(variant.id);
     if (current) current.qty += line.qty;
@@ -171,7 +230,7 @@ export function resolveStockList(
       });
     }
   }
-  return { resolved: [...merged.values()], problems };
+  return { resolved: [...merged.values()], problems, notes };
 }
 
 /**
@@ -197,7 +256,7 @@ export async function applyGroupList(
       variants: { select: { id: true, size: true, stock: true } },
     },
   });
-  const { resolved, problems } = resolveStockList(input.lines, products);
+  const { resolved, problems, notes } = resolveStockList(input.lines, products);
   if (problems.length > 0) {
     throw new Error(
       `${problems.length} problem(s) in the stock list, nothing was written:\n${problems
@@ -268,6 +327,7 @@ export async function applyGroupList(
     })),
     removedLabels: removed.map(label),
     keptLabels: kept.map(label),
+    ruleResolved: notes,
   };
 }
 
@@ -310,6 +370,8 @@ async function main(): Promise<void> {
     for (const l of summary.removedLabels) console.log(`    - ${l}`);
     console.log(`  kept for history (sold > 0): ${summary.keptForHistory}`);
     for (const l of summary.keptLabels) console.log(`    - ${l}`);
+    console.log(`  resolved by a rule: ${summary.ruleResolved.length}`);
+    for (const l of summary.ruleResolved) console.log(`    - ${l}`);
   } finally {
     await prisma.$disconnect();
   }

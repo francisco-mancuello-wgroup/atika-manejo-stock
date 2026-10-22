@@ -179,6 +179,10 @@ GROUP_NAME="Evento Pink" GROUP_FILE=~/Descargas/stock.xlsx pnpm db:group-list
 - `DESCRIPCION` is a product code or name (case and accents ignored); the exact code wins over the
   name. A name shared by several products is ambiguous. A `TALLES` value under an empty
   `DESCRIPCION` continues the product above. Repeated product + size lines add up.
+- Size matching: an exact size always wins. Otherwise a compound variant whose `/` parts contain the
+  size (`S` -> `XS/S`) when exactly one fits, and `U` maps to the only variant of a one-variant
+  product. A shared name resolves when exactly one of those products has the size. Every line settled
+  by one of these rules is listed in the summary.
 - One transaction. If any line is unreadable, unmatched, ambiguous or has no such size variant, every
   problem is listed and nothing is written.
 - The group is created when missing (`isActive` is never changed). Each listed variant gets
