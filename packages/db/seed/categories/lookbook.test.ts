@@ -94,7 +94,6 @@ describe("planLookbook", () => {
       catalogOrder: 4,
       catalogSection: "Vestidos",
       catalogName: "Vestido L",
-      inPink: false,
     });
     expect(plan.get("Casa Icona", 0)?.lookbook.catalogName).toBe("Costa Coco");
     expect(plan.get("Átika", 0)?.lookbook).toMatchObject({ catalog: "sordo" });
@@ -140,7 +139,7 @@ describe("planChoices with lookbook placements", () => {
     const choices = planChoices(lots, [], new Map(), plan);
     expect(choices.get("Milonga", 0)).toMatchObject({
       isPublished: true,
-      lookbook: { catalog: "milonga", catalogOrder: 4, inPink: false },
+      lookbook: { catalog: "milonga", catalogOrder: 4 },
     });
     expect(choices.get("Milonga", 1)).toMatchObject({
       isPublished: false,
@@ -162,7 +161,6 @@ describe("planChoices with lookbook placements", () => {
             catalogOrder: 9,
             catalogSection: "Otros",
             catalogName: "Mío",
-            inPink: true,
           },
         },
       ],
@@ -176,7 +174,6 @@ describe("planChoices with lookbook placements", () => {
             catalogOrder: null,
             catalogSection: null,
             catalogName: null,
-            inPink: true,
           },
         },
       ],
@@ -184,11 +181,11 @@ describe("planChoices with lookbook placements", () => {
     const choices = planChoices(lots, [], preserved, plan);
     expect(choices.get("Átika", 0)).toMatchObject({
       isPublished: false,
-      lookbook: { catalogOrder: 9, catalogName: "Mío", inPink: true },
+      lookbook: { catalogOrder: 9, catalogName: "Mío" },
     });
     expect(choices.get("Casa Icona", 0)).toMatchObject({
       isPublished: true,
-      lookbook: { catalog: "casa_icona", catalogOrder: 1, inPink: true },
+      lookbook: { catalog: "casa_icona", catalogOrder: 1 },
     });
   });
 });

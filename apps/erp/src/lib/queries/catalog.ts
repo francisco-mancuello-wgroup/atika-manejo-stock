@@ -23,7 +23,6 @@ export interface CatalogProduct {
   catalogSection: string | null;
   catalogName: string | null;
   /** In the Pink selection on the store's home. */
-  inPink: boolean;
   /** Name of the active publication group the product sits in, or null. */
   groupName: string | null;
 }
@@ -104,7 +103,6 @@ export async function getCatalogProducts(
     catalogOrder: product.catalogOrder,
     catalogSection: product.catalogSection,
     catalogName: product.catalogName,
-    inPink: product.inPink,
     groupName: groupNames.get(product.id) ?? null,
   }));
 }
