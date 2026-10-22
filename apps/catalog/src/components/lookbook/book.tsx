@@ -1,12 +1,12 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { type LookbookPage, type LookbookPiece, pageAnchor } from "../../lib/lookbook";
-import { effectivePriceGs, type PriceFields } from "../../lib/price";
-import { Price } from "../price";
+import { type LookbookPage, pageAnchor } from "../../lib/lookbook";
+import { searchEntriesOf } from "../../lib/search";
 import { AddToCart } from "./add-to-cart";
 import { ArrowIcon } from "./icons";
 import { PiecePhotos } from "./piece-photos";
+import { LookbookSearch } from "./search";
 import { AtikaWordmark } from "./wordmark";
 
 /*
@@ -28,7 +28,15 @@ export interface BookCatalog {
   pages: LookbookPage[];
 }
 
-function BookBar({ title, backHref }: { title: string; backHref: string }) {
+function BookBar({
+  title,
+  backHref,
+  catalogs,
+}: {
+  title: string;
+  backHref: string;
+  catalogs: BookCatalog[];
+}) {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between gap-3 pr-16 pl-4 lg:pr-20 lg:pl-8">
       <Link
@@ -38,9 +46,14 @@ function BookBar({ title, backHref }: { title: string; backHref: string }) {
         <ArrowIcon className="size-3.5 rotate-180" />
         Catálogos
       </Link>
-      <span className="pointer-events-auto rounded-full bg-background/85 px-4 py-2 text-xs tracking-[2.4px] uppercase backdrop-blur">
-        {title}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="pointer-events-auto hidden rounded-full bg-background/85 px-4 py-2 text-xs tracking-[2.4px] uppercase backdrop-blur sm:inline">
+          {title}
+        </span>
+        <LookbookSearch
+          entries={catalogs.flatMap((catalog) => searchEntriesOf(catalog, catalog.pages))}
+        />
+      </div>
     </div>
   );
 }
@@ -79,59 +92,6 @@ function CoverPage({ catalog }: { catalog: BookCatalog }) {
   );
 }
 
-/** Name and price on one line, like fashion apps; the price never wraps. */
-function NamePrice({
-  name,
-  price,
-  as: Tag,
-}: {
-  name: string;
-  price: PriceFields;
-  as: "h2" | "h3";
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <Tag
-        className={
-          Tag === "h2"
-            ? "font-heading text-[28px] leading-tight sm:text-[34px] landscape:lg:text-[44px]"
-            : "font-heading text-xl"
-        }
-      >
-        {name}
-      </Tag>
-      <p className="shrink-0 text-base tracking-[1px] whitespace-nowrap sm:text-lg">
-        <Price {...price} />
-      </p>
-    </div>
-  );
-}
-
-function PieceDetails({
-  piece,
-  inSet,
-  link,
-}: {
-  piece: LookbookPiece;
-  inSet: boolean;
-  link: string;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      {inSet && <NamePrice name={piece.name} price={piece} as="h3" />}
-      <AddToCart
-        id={piece.id}
-        name={piece.name}
-        priceGs={effectivePriceGs(piece)}
-        discountPercent={piece.discountPercent}
-        sizes={piece.sizes}
-        color={piece.color}
-        link={link}
-      />
-    </div>
-  );
-}
-
 function PiecePage({
   page,
   anchor,
@@ -145,7 +105,7 @@ function PiecePage({
   catalogName: string;
   link: string;
 }) {
-  const set = page.pieces.length > 1;
+  const set = page.items.length > 1;
   const description = page.pieces[0]?.description;
   return (
     <section
@@ -168,24 +128,22 @@ function PiecePage({
             {pad(page.page)} / {pad(total)}
           </p>
         </div>
-        {set ? (
+        {set && (
           <h2 className="font-heading text-[28px] leading-tight sm:text-[34px] landscape:lg:text-[44px]">
             {page.title}
           </h2>
-        ) : (
-          <NamePrice
-            name={page.title}
-            price={
-              page.pieces[0] ?? { priceGs: null, discountPercent: null, discountedPriceGs: null }
-            }
-            as="h2"
-          />
         )}
-        {description && (
+        {set && description && (
           <p className="-mt-2 hidden text-sm text-fg-muted sm:block">{description}</p>
         )}
-        {page.pieces.map((piece) => (
-          <PieceDetails key={piece.id} piece={piece} inSet={set} link={link} />
+        {page.items.map((item) => (
+          <AddToCart
+            key={item.name}
+            item={item}
+            heading={set ? "h3" : "h2"}
+            description={set ? null : description}
+            link={link}
+          />
         ))}
       </div>
     </section>
@@ -232,7 +190,7 @@ export function LookbookBook({
 }) {
   return (
     <div data-lookbook>
-      <BookBar title={title} backHref={intro ? `#${INTRO_ID}` : "/"} />
+      <BookBar title={title} backHref={intro ? `#${INTRO_ID}` : "/"} catalogs={catalogs} />
       {intro && (
         <div id={INTRO_ID} className="min-h-svh snap-start pt-14">
           {intro}

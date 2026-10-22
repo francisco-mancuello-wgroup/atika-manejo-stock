@@ -24,6 +24,16 @@ export function CloseIcon(props: IconProps) {
   );
 }
 
+export function SearchIcon(props: IconProps) {
+  return (
+    <DawnIcon
+      viewBox="0 0 18 19"
+      d="M11.03 11.68A5.784 5.784 0 1 1 2.85 3.5a5.784 5.784 0 0 1 8.18 8.18m.26 1.12a6.78 6.78 0 1 1 .72-.7l5.4 5.4a.5.5 0 1 1-.71.7z"
+      {...props}
+    />
+  );
+}
+
 export function BagIcon(props: IconProps) {
   return (
     <DawnIcon

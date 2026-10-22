@@ -127,6 +127,29 @@ describe("lookbookPages", () => {
     expect(pages.map((page) => page.page)).toEqual([1, 2]);
   });
 
+  it("shows a garment once with its colors when a page has it in several colors", () => {
+    const [page] = lookbookPages(
+      [
+        row(1, { catalogOrder: 16, name: "Falda", color: "Marfil", priceGs: 761_000 }),
+        row(2, { catalogOrder: 16, name: "T Bsc M", color: "Negro" }),
+        row(3, {
+          catalogOrder: 16,
+          name: "Falda",
+          color: "Negro",
+          variants: [{ size: "M", stock: 1 }],
+        }),
+      ],
+      settings,
+    );
+    expect(page?.title).toBe("Falda + T Bsc M");
+    expect(page?.items.map((item) => [item.name, item.options.map((o) => o.id)])).toEqual([
+      ["Falda", ["p1", "p3"]],
+      ["T Bsc M", ["p2"]],
+    ]);
+    expect(page?.items[0]?.options[1]).toMatchObject({ color: { label: "Negro" }, sizes: ["M"] });
+    expect(page?.photos.find((photo) => photo.url.includes("p3"))?.pieceId).toBe("p3");
+  });
+
   it("hides prices when the store hides them", () => {
     const [page] = lookbookPages([row(1)], { ...settings, showPrices: false });
     expect(page?.pieces[0]?.priceGs).toBeNull();
