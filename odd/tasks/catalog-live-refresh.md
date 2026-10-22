@@ -33,6 +33,7 @@ User decisions 2026-10-22:
 
 - [x] T1 — ERP: `notifyCatalogChanged` helper + tests; wire into catalog-affecting server actions.
 - [x] T2 — Catalog: `LiveRefresh` subscriber (throttled `router.refresh()`) in root layout + tests; env example.
+- [x] T3 — ERP: renaming a product also sets its lookbook name (`catalogName`), so the web shows the new name; an unchanged name keeps a custom lookbook name. User decision 2026-10-22 ("actualiza también el lookbook a la par"). RED (lookbook kept old name) -> GREEN `save.test.ts` 14/14; biome + erp typecheck ok.
 
 ## Progress / evidence
 

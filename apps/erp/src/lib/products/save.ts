@@ -174,9 +174,11 @@ export async function updateProduct(
     outcome = await db.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
         where: { id: productId },
-        select: { lotId: true, variants: true },
+        select: { lotId: true, name: true, variants: true },
       });
       if (!product) return fail(NOT_FOUND, raw);
+      // A rename reaches the public lookbook too; an unchanged name keeps its lookbook name.
+      const renamed = input.name !== product.name ? { catalogName: input.name } : {};
 
       const keep = new Set(input.sizes.map((row) => row.size));
       const removed = product.variants.filter((variant) => !keep.has(variant.size));
@@ -187,7 +189,10 @@ export async function updateProduct(
         if (sold > 0) return invalid({ sizes: SOLD_SIZE }, raw);
       }
 
-      await tx.product.update({ where: { id: productId }, data: productData(input) });
+      await tx.product.update({
+        where: { id: productId },
+        data: { ...productData(input), ...renamed },
+      });
       if (removed.length > 0) {
         await tx.productVariant.deleteMany({ where: { id: { in: removed.map((v) => v.id) } } });
       }
