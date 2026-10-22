@@ -98,12 +98,14 @@ describe("GroupAddModal", () => {
     expect(screen.getByText("Ya está en Pink")).toBeInTheDocument();
   });
 
-  it("selects everything selectable by default, with a header checkbox and its count", async () => {
+  it("starts with nothing selected, with a header checkbox and its count", async () => {
     setup();
     await pickLot();
     const header = screen.getByRole("checkbox", { name: "Seleccionar las 2" }) as HTMLInputElement;
-    expect(header).toBeChecked();
+    expect(header).not.toBeChecked();
     expect(header.indeterminate).toBe(false);
+    expect(screen.getByRole("checkbox", { name: "Seleccionar Prenda a" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: /Agregar 0 prendas/ })).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar Prenda b" }));
     expect(header).not.toBeChecked();
     expect(header.indeterminate).toBe(true);
@@ -117,6 +119,7 @@ describe("GroupAddModal", () => {
   it("counts the products and units of each proposal", async () => {
     setup();
     await pickLot();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar las 2" }));
     expect(screen.getByRole("button", { name: "Agregar 2 prendas · 7 unidades" })).toBeEnabled();
     fireEvent.change(screen.getByLabelText("Proponer"), { target: { value: "one" } });
     expect(screen.getByRole("button", { name: "Agregar 2 prendas · 4 unidades" })).toBeEnabled();
@@ -130,7 +133,7 @@ describe("GroupAddModal", () => {
     const { addProducts, onClose } = setup();
     await pickLot();
     fireEvent.change(screen.getByLabelText("Proponer"), { target: { value: "one" } });
-    fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar Prenda b" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar Prenda a" }));
     fireEvent.click(screen.getByRole("button", { name: /Agregar 1 prenda/ }));
     await waitFor(() =>
       expect(addProducts).toHaveBeenCalledWith("g1", { productIds: ["a"] }, "one"),
@@ -147,6 +150,7 @@ describe("GroupAddModal", () => {
       ),
     });
     await pickLot();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar las 2" }));
     fireEvent.click(screen.getByRole("button", { name: /Agregar 2 prendas/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No hay stock libre.");
     expect(onClose).not.toHaveBeenCalled();

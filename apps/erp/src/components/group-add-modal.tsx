@@ -109,7 +109,7 @@ export function GroupAddModal({
     listCandidates(groupId, criterionFilter(criterion, value)).then((found) => {
       if (stale) return;
       setCandidates(found);
-      setSelected(new Set(selectableIds(found)));
+      setSelected(new Set());
     });
     return () => {
       stale = true;

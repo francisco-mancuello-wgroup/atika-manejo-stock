@@ -58,6 +58,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - [x] T9 — Group editor on its own page (`/catalogo-web/grupos/nuevo`, `/catalogo-web/grupos/[id]`) instead of the side panel; Grupos tab is table only. User request ("no me gusta el sidebar").
 - [x] T10 — Fix: Asignado input rendered next to Libre (inline input ignored ml-auto); now block + ml-auto under its header. Found by parent screenshot of the Pink group.
 - [x] T11 — Group editor redesign (Pencil board G, option A + modal C): breadcrumb, header with status pill and switch, KPI strip, toolbar (search, chips, "Asignar todo el libre", "Agregar prendas"), quantity matrix with dirty tracking and sticky save bar, side cards (datos, cómo se cuenta, zona de riesgo), add-products modal with candidate checklist and proposals ("Todo el libre", "1 por talle", "0"). User request.
+- [x] T12 — Agregar prendas modal starts with nothing selected (preselecting everything made deselecting tedious); "Seleccionar las N" selects all. User request.
 
 ## Acceptance criteria
 
@@ -107,6 +108,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - T10 RED: `pnpm exec vitest run src/components/group-editor.test.tsx` (apps/erp) -> 1 failed (input lacks block/ml-auto). GREEN: 12 passed; biome clean; headless Chrome screenshot of /catalogo-web/grupos/<Pink> shows inputs under Asignado.
 - T11 RED: `pnpm exec vitest run src/lib/catalog-groups src/lib/queries/catalog-groups` (apps/erp) -> 4 files failed / 9 tests failed (proposedAllocation, dayMonth/windowLabel, proposal modes, `max`, `getGroupCandidates` missing); `matrix.test.ts`, `candidates.test.ts`, `group-workspace.test.tsx`, `group-add-modal.test.tsx` each failed on the missing module first.
 - T11 GREEN: same files pass (domain/query 104 tests; matrix 12; candidates 3; workspace + page + modal 42); tsc ok. Screenshots of the Pink group (page, dirty bar, modal, nuevo) at 1440px checked.
+- T12 RED: `pnpm exec vitest run src/components/group-add-modal.test.tsx` (apps/erp) -> 3 failed (preselected). GREEN: 9 passed; biome clean; erp tsc ok.
 
 ## Next step
 
