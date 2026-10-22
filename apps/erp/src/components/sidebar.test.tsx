@@ -17,10 +17,10 @@ describe("Sidebar", () => {
     expect(screen.queryByRole("button", { name: "Salir" })).not.toBeInTheDocument();
   });
 
-  it("renders the átika logo with the CASA ICONA eyebrow", () => {
+  it("renders the átika logo alone, without a brand eyebrow", () => {
     render(<Sidebar />);
     expect(screen.getByRole("img", { name: "átika" })).toBeInTheDocument();
-    expect(screen.getByText("CASA ICONA")).toBeInTheDocument();
+    expect(screen.queryByText(/casa icona/i)).not.toBeInTheDocument();
   });
 
   it("marks Resumen as the current page by default", () => {

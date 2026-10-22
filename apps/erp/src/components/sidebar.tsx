@@ -140,11 +140,8 @@ export function Sidebar({
   return (
     <aside className="flex shrink-0 flex-col border-b border-line bg-surface px-4 py-4 md:w-[232px] md:gap-8 md:border-r md:border-b-0 md:py-6">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-2 px-3">
-          <Wordmark className="h-6 self-start text-ink" />
-          <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
-            CASA ICONA
-          </span>
+        <div className="px-3">
+          <Wordmark className="h-6 text-ink" />
         </div>
         <button
           type="button"
