@@ -9,6 +9,7 @@ import {
   saveBankPromo,
   setBankPromoActive,
 } from "../../../../lib/bank-promos/save";
+import { workspaceHref } from "../../../../lib/bank-promos/workspace";
 import { readLogoFields } from "../../../../lib/banks/form-data";
 import { localLogoStorage } from "../../../../lib/banks/local-logo-storage";
 import { deleteBank, saveBank } from "../../../../lib/banks/save";
@@ -35,7 +36,10 @@ function listsOf(formData: FormData) {
   };
 }
 
-/** "Guardar" on a bank: `bankId` is null when creating. Bound to the bank by the form. */
+/**
+ * "Guardar" on a bank: `bankId` is null when creating. Bound to the bank by the form. A new bank
+ * is selected in the master-detail screen once created.
+ */
 export async function saveBankAction(
   bankId: string | null,
   _previous: FormState,
@@ -43,15 +47,19 @@ export async function saveBankAction(
 ): Promise<FormState> {
   await requireSession();
   const values = formValues(formData);
+  let createdId: string | null = null;
   try {
     const logo = await readLogoFields(formData);
     const state = await saveBank(getDb(), bankId, values, { ...logo, storage: localLogoStorage() });
-    if (state.status === "success") revalidateBanks();
-    return state;
+    if (state.status !== "success") return state;
+    revalidateBanks();
+    if (bankId !== null || !("bankId" in state)) return state;
+    createdId = state.bankId;
   } catch (error) {
     console.error("saveBankAction failed", error);
     return { ...FAILED, values };
   }
+  redirect(workspaceHref({ tab: "bancos", id: createdId }));
 }
 
 export async function deleteBankAction(bankId: string): Promise<FormState> {
@@ -66,40 +74,29 @@ export async function deleteBankAction(bankId: string): Promise<FormState> {
   }
 }
 
-/** "Guardar" on the edit page of a promo: bound to the promo id by the page. */
+/**
+ * "Guardar" on a promo: `promoId` is null when creating. Bound to the promo by the form. A new
+ * promo is selected in the master-detail screen once created.
+ */
 export async function saveBankPromoAction(
-  promoId: string,
+  promoId: string | null,
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
   await requireSession();
   const values = formValues(formData);
+  let createdId: string | null = null;
   try {
     const state = await saveBankPromo(getDb(), promoId, values, listsOf(formData));
-    if (state.status === "success") revalidateBanks();
-    return state;
+    if (state.status !== "success") return state;
+    revalidateBanks();
+    if (promoId !== null || !("promoId" in state)) return state;
+    createdId = state.promoId;
   } catch (error) {
     console.error("saveBankPromoAction failed", error);
     return { ...FAILED, values };
   }
-}
-
-/** "Guardar" on the new promo page; goes back to the list on success. */
-export async function createBankPromoAction(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  await requireSession();
-  const values = formValues(formData);
-  try {
-    const state = await saveBankPromo(getDb(), null, values, listsOf(formData));
-    if (state.status !== "success") return state;
-    revalidateBanks();
-  } catch (error) {
-    console.error("createBankPromoAction failed", error);
-    return { ...FAILED, values };
-  }
-  redirect("/promos/bancos");
+  redirect(workspaceHref({ tab: "promos", id: createdId }));
 }
 
 export async function setBankPromoActiveAction(
