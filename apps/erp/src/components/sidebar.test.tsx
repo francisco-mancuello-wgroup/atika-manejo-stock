@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
 
@@ -52,11 +52,10 @@ describe("Sidebar", () => {
       "Compras",
       "Ventas",
       "Catálogo web",
-      "Descuentos",
-      "Bancos",
       "Parámetros",
       "Seguridad",
     ]);
+    expect(within(nav).getByRole("button", { name: "Promos" })).toBeInTheDocument();
   });
 
   it("marks only the active section as the current page", () => {
@@ -72,22 +71,31 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
   });
 
-  it("groups Descuentos and Bancos under Promos", () => {
-    render(<Sidebar />);
-    const promos = screen.getByRole("group", { name: "Promos" });
-    expect(within(promos).getByRole("link", { name: "Descuentos" })).toHaveAttribute(
+  it("shows Promos as a closed dropdown outside its pages", () => {
+    render(<Sidebar activeHref="/" />);
+    const promos = screen.getByRole("button", { name: "Promos" });
+    expect(promos).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: "Descuentos" })).not.toBeInTheDocument();
+  });
+
+  it("opens Promos to reveal Descuentos and Bancos", () => {
+    render(<Sidebar activeHref="/" />);
+    fireEvent.click(screen.getByRole("button", { name: "Promos" }));
+    expect(screen.getByRole("button", { name: "Promos" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: "Descuentos" })).toHaveAttribute(
       "href",
       "/promos/descuentos",
     );
-    expect(within(promos).getByRole("link", { name: "Bancos" })).toHaveAttribute(
-      "href",
-      "/promos/bancos",
-    );
+    expect(screen.getByRole("link", { name: "Bancos" })).toHaveAttribute("href", "/promos/bancos");
+
+    fireEvent.click(screen.getByRole("button", { name: "Promos" }));
+    expect(screen.queryByRole("link", { name: "Bancos" })).not.toBeInTheDocument();
   });
 
-  it("marks the promo option of a nested discount page", () => {
+  it("starts Promos open and marks the option of a nested discount page", () => {
     vi.mocked(usePathname).mockReturnValue("/promos/descuentos/d1");
     render(<Sidebar />);
+    expect(screen.getByRole("button", { name: "Promos" })).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByRole("link", { name: "Descuentos" })).toHaveAttribute(
       "aria-current",
       "page",
