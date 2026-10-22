@@ -52,6 +52,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - [x] T3 — Sales consume the active group remainder first (`registerSale`), tests.
 - [x] T4 — Public catalog: visibility and size stock from groups, tests.
 - [x] T5 — ERP UI: Grupos tab (table, switch, editor panel with per-size quantities, vigencia, bulk add, preview) + actions, tests.
+- [x] T6 — Seed: Pink event group from evento-pink.xlsx (`pnpm db:group`).
 
 ## Acceptance criteria
 
@@ -73,6 +74,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - 2026-10-22: T3 done (commit d4b8a24). `registerSale` uses its `now` (registration instant, not the date-only `soldAt`) to decide whether the group is active; consumed = min(quantity, remainder computed with the stock before the sale).
 - 2026-10-22: T4 done (commit f773273). Pure math in `apps/catalog/src/lib/web-stock.ts` (small duplicate of the ERP remainder math, no shared package: apps can't import each other and it is a few lines). The DB `where` only narrows (published OR some active allocation, physical stock > 0); remainder > 0 and web-stock filters apply in memory in `withWebStock`. `countProductsByCategory` now counts in memory over the same rows as `listProducts` so counts and lists agree.
 - 2026-10-22: T5 done (commits fbdd9f9 queries/actions, 4a2ee36 UI). Grupos tab at `/catalogo-web?tab=grupos[&grupo=<id|nuevo>]` (selection in the URL like bank promos). Origin/rule is not tracked (no schema change): the table shows the product count. Added `removeProductFromGroup` and a `productIds` filter to `addProductsToGroup` in the domain; a date-only "Hasta" covers the whole day (`endOfDayInput`). Prendas tab gets a "Grupo: <name>" badge (`getCatalogProducts` now takes optional `db`/`now`). New actions live in `catalogo-web/actions.ts` (guard test covers them). Preview line is computed live from the typed quantities.
+- 2026-10-22: T6 done (commit 87a245f). `packages/db/seed/group.ts`: env `GROUP_NAME`/`GROUP_FILE`/`GROUP_LOT`/`GROUP_STARTS_AT`/`GROUP_ENDS_AT`; INVENTARIO parsed by header labels until TOTALES; lot inferred from the sheet title; group upserted by name (inactive on create, switch kept); allocation = max(sold, min(stock actual, variant.stock)); `variant.stock` never written; one transaction; unmatched rows listed, not fatal. Documented in `seed/README.md`.
 
 ## Verification evidence
 
@@ -88,6 +90,9 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - T5 RED: `pnpm exec vitest run src/lib/catalog-groups` (apps/erp) -> 4 failed (removeProductFromGroup, productIds) + `format` suite unresolved; `src/lib/queries/catalog.db.test.ts` -> 1 failed (no groupName); `src/app/actions-guard.test.ts` -> 1 failed (group actions missing); `src/components/groups-view.test.tsx` -> suite unresolved, `catalogo-web-view.test.tsx` -> 2 failed (tabs, badge).
 - T5 GREEN: same commands pass (catalog-groups 4 files / 53 tests; queries 22; groups-view 15).
 - Final (T5): `pnpm --filter @atika/erp test` 93 files / 668 passed; `pnpm --filter @atika/catalog test` 32 files / 258 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings); `pnpm --filter @atika/erp build` ok.
+- T6 RED: `pnpm exec vitest run seed/group` (packages/db) -> 2 suites failed (module `./group` missing).
+- T6 GREEN: same command -> 9 passed (7 pure + 2 DB with rollback); `pnpm --filter @atika/db test` 32 files / 217 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings).
+- T6 run: `GROUP_NAME=Pink GROUP_FILE=~/Descargas/stock-ropas/evento-pink.xlsx pnpm db:group` -> matched 46, units 56, zero rows 1 (COSTA BLACK XS), unmatched 0; second run identical. Query: group Pink isActive=false, 46 allocations, sum allocated 56.
 
 ## Next step
 
