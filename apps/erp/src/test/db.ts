@@ -43,6 +43,28 @@ export function dbOver(tx: Prisma.TransactionClient) {
   return { $transaction: <R>(fn: (inner: Prisma.TransactionClient) => Promise<R>) => fn(tx) };
 }
 
+/**
+ * Like `dbOver`, but each `$transaction` runs inside a savepoint that is rolled back when the
+ * callback throws, so all-or-nothing flows can be tested inside the rolled back outer transaction.
+ */
+export function dbOverSavepoint(tx: Prisma.TransactionClient) {
+  let depth = 0;
+  return {
+    $transaction: async <R>(fn: (inner: Prisma.TransactionClient) => Promise<R>): Promise<R> => {
+      const name = `test_sp_${++depth}`;
+      await tx.$executeRawUnsafe(`SAVEPOINT ${name}`);
+      try {
+        const result = await fn(tx);
+        await tx.$executeRawUnsafe(`RELEASE SAVEPOINT ${name}`);
+        return result;
+      } catch (error) {
+        await tx.$executeRawUnsafe(`ROLLBACK TO SAVEPOINT ${name}`);
+        throw error;
+      }
+    },
+  };
+}
+
 let counter = 0;
 
 /** Creates a supplier, lot, products and variants with deterministic, known numbers. */

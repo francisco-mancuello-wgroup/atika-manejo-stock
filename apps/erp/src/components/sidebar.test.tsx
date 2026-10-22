@@ -50,26 +50,55 @@ describe("Sidebar", () => {
       "Resumen",
       "Inventario",
       "Compras",
-      "Ventas",
       "Catálogo web",
       "Datos bancarios",
       "Parámetros",
       "Seguridad",
     ]);
+    expect(within(nav).getByRole("button", { name: "Ventas" })).toBeInTheDocument();
     expect(within(nav).getByRole("button", { name: "Promos" })).toBeInTheDocument();
   });
 
   it("marks only the active section as the current page", () => {
-    render(<Sidebar activeHref="/ventas" />);
-    expect(screen.getByRole("link", { name: "Ventas" })).toHaveAttribute("aria-current", "page");
+    render(<Sidebar activeHref="/compras" />);
+    expect(screen.getByRole("link", { name: "Compras" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
   });
 
   it("marks the section of the current URL when no active section is given", () => {
-    vi.mocked(usePathname).mockReturnValue("/ventas");
+    vi.mocked(usePathname).mockReturnValue("/compras");
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: "Ventas" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Compras" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Resumen" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("shows Ventas as a closed dropdown outside its pages and opens it to its two pages", () => {
+    render(<Sidebar activeHref="/" />);
+    const ventas = screen.getByRole("button", { name: "Ventas" });
+    expect(ventas).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(ventas);
+    expect(screen.getByRole("link", { name: "Registradas" })).toHaveAttribute("href", "/ventas");
+    expect(screen.getByRole("link", { name: "Pedidos" })).toHaveAttribute(
+      "href",
+      "/ventas/pedidos",
+    );
+  });
+
+  it("starts Ventas open on its pages and marks only the one being viewed", () => {
+    vi.mocked(usePathname).mockReturnValue("/ventas");
+    const { unmount } = render(<Sidebar />);
+    expect(screen.getByRole("button", { name: "Ventas" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: "Registradas" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: "Pedidos" })).not.toHaveAttribute("aria-current");
+    unmount();
+
+    vi.mocked(usePathname).mockReturnValue("/ventas/pedidos/o1");
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: "Pedidos" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Registradas" })).not.toHaveAttribute("aria-current");
   });
 
   it("shows Promos as a closed dropdown outside its pages", () => {

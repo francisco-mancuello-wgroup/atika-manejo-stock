@@ -17,6 +17,8 @@ describe("schema", () => {
       "DiscountProduct",
       "GroupAllocation",
       "Lot",
+      "Order",
+      "OrderItem",
       "PaymentDetails",
       "Product",
       "ProductImage",

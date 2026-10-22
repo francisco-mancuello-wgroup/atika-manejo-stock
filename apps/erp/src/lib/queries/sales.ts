@@ -38,13 +38,21 @@ export async function getMonthSalesTotalGs(monthStart: Date): Promise<number> {
 
 export interface SellableProduct {
   id: string;
+  /** Name plus colour and code, so repeated names can be told apart. */
   label: string;
+  name: string;
+  catalogName: string | null;
+  color: string | null;
+  code: string | null;
+  brand: string | null;
+  lotName: string;
   /** List price of the product. */
   priceGs: number;
   /** Percent off that applies today, and the price after it; null without a discount. */
   discountPercent: number | null;
   discountedPriceGs: number | null;
-  sizes: { size: string; stock: number }[];
+  /** `barcode` is the size's printed label code (AT + 6 digits). */
+  sizes: { size: string; stock: number; barcode: string }[];
 }
 
 /** Products with at least one size in stock, for the sale form. */
@@ -63,12 +71,18 @@ export async function getSellableProducts(
     const percent = effectiveDiscount(rules, product.id, now);
     return {
       id: product.id,
-      label: `${product.name} · ${product.lot.name}`,
+      label: [product.name, product.color, product.code].filter(Boolean).join(" · "),
+      name: product.name,
+      catalogName: product.catalogName,
+      color: product.color,
+      code: product.code,
+      brand: product.brand,
+      lotName: product.lot.name,
       priceGs: product.priceGs,
       discountPercent: percent,
       discountedPriceGs: percent === null ? null : applyDiscount(product.priceGs, percent),
       sizes: product.variants
-        .map((v) => ({ size: v.size, stock: v.stock }))
+        .map((v) => ({ size: v.size, stock: v.stock, barcode: v.barcode }))
         .sort((a, b) => order.indexOf(a.size) - order.indexOf(b.size)),
     };
   });

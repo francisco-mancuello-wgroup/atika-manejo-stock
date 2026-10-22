@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  type MouseEvent,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { placeOrderAction } from "../../app/actions";
 import {
   addToCart,
   type CartItem,
@@ -9,6 +18,7 @@ import {
   orderMessage,
   removeFromCart,
 } from "../../lib/cart";
+import { navigateTo, saveOrder } from "../../lib/checkout";
 import { formatGs } from "../../lib/format";
 import { discountLabel } from "../../lib/price";
 import { whatsappContactUrl } from "../../lib/whatsapp";
@@ -42,8 +52,8 @@ function readSaved(): CartItem[] {
 }
 
 /**
- * The cart lives on the device (the store tablet), so it survives a reload. "Pagar" opens
- * WhatsApp with the whole order; nothing is paid or stored on the server.
+ * The cart lives on the device (the store tablet), so it survives a reload. "Pagar" saves the
+ * order on the server (so the ERP lists it) and opens WhatsApp with the whole order and its number.
  */
 export function CartProvider({
   whatsappNumber,
@@ -55,6 +65,7 @@ export function CartProvider({
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const paying = useRef(false);
 
   useEffect(() => {
     setItems(readSaved());
@@ -78,7 +89,33 @@ export function CartProvider({
   };
 
   const count = cartCount(items);
-  const payUrl = `${whatsappContactUrl(whatsappNumber)}?text=${encodeURIComponent(orderMessage(items))}`;
+  const chatUrl = (orderNumber?: number | null) =>
+    `${whatsappContactUrl(whatsappNumber)}?text=${encodeURIComponent(orderMessage(items, orderNumber))}`;
+  // Without JavaScript (or with a modified click) the link still opens today's message.
+  const payUrl = chatUrl();
+
+  /**
+   * Browsers only allow a new tab opened straight from the click, not after an await, so a blank
+   * tab is opened first and pointed at WhatsApp once the order is saved (or failed). If the
+   * browser still blocks it, this tab goes to WhatsApp instead (the cart stays in localStorage).
+   */
+  const pay = async (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    if (paying.current) return;
+    paying.current = true;
+    const tab = window.open("", "_blank");
+    try {
+      const url = chatUrl(await saveOrder(items, placeOrderAction));
+      if (tab) {
+        tab.opener = null;
+        tab.location.href = url;
+      } else {
+        navigateTo(url);
+      }
+    } finally {
+      paying.current = false;
+    }
+  };
 
   return (
     <CartContext.Provider value={value}>
@@ -167,6 +204,7 @@ export function CartProvider({
             {items.length > 0 ? (
               <a
                 href={payUrl}
+                onClick={pay}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-12 items-center justify-center gap-2.5 bg-primary px-[30px] text-[15px] tracking-[1px] text-primary-foreground transition-colors hover:bg-primary/90"

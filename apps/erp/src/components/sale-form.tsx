@@ -6,6 +6,7 @@ import { type FormState, IDLE } from "../lib/action-state";
 import { formatGs } from "../lib/format";
 import type { SellableProduct } from "../lib/queries/sales";
 import { Field, FormMessage, Select } from "./form-controls";
+import { ProductPicker } from "./sale-product-picker";
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
@@ -28,6 +29,7 @@ export function SaleForm({
 }) {
   const [productId, setProductId] = useState("");
   const [size, setSize] = useState("");
+  const [chargedGs, setChargedGs] = useState("");
 
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     async (previous, formData) => {
@@ -36,6 +38,9 @@ export function SaleForm({
       if (next.status === "success") {
         setProductId("");
         setSize("");
+        setChargedGs("");
+      } else if (next.status === "error" && next.values?.chargedGs !== undefined) {
+        setChargedGs(next.values.chargedGs);
       }
       return next;
     },
@@ -51,24 +56,24 @@ export function SaleForm({
     <form action={formAction} className="flex flex-col gap-4 border border-line bg-surface p-5">
       <h2 className="font-display text-2xl text-ink">Registrar venta</h2>
 
-      <Field label="Producto" htmlFor="productId" error={errors.productId}>
-        <Select
-          id="productId"
-          name="productId"
-          required
-          value={productId}
-          onChange={(event) => {
-            setProductId(event.target.value);
-            setSize("");
+      <Field label="Producto" htmlFor="productSearch" error={errors.productId}>
+        <ProductPicker
+          id="productSearch"
+          products={products}
+          selected={product}
+          invalid={Boolean(errors.productId)}
+          onSelect={(chosen, chosenSize) => {
+            setProductId(chosen.id);
+            setSize(chosenSize ?? "");
+            setChargedGs(String(chosen.discountedPriceGs ?? chosen.priceGs));
           }}
-        >
-          <option value="">Elegí un producto</option>
-          {products.map((candidate) => (
-            <option key={candidate.id} value={candidate.id}>
-              {candidate.label}
-            </option>
-          ))}
-        </Select>
+          onClear={() => {
+            setProductId("");
+            setSize("");
+            setChargedGs("");
+          }}
+        />
+        <input type="hidden" name="productId" value={productId} />
       </Field>
 
       <Field label="Talle" htmlFor="size" error={errors.size}>
@@ -123,7 +128,7 @@ export function SaleForm({
         label="Precio cobrado por unidad (₲)"
         htmlFor="chargedGs"
         error={errors.chargedGs}
-        hint="Opcional. Dejalo vacío para cobrar el precio de lista."
+        hint="Precargado con el precio de lista. Cambialo si cobraste otro."
       >
         <Input
           id="chargedGs"
@@ -131,7 +136,8 @@ export function SaleForm({
           type="number"
           min={0}
           step={1}
-          defaultValue={values.chargedGs ?? ""}
+          value={chargedGs}
+          onChange={(event) => setChargedGs(event.target.value)}
           aria-invalid={errors.chargedGs ? true : undefined}
         />
       </Field>

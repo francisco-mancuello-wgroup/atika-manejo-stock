@@ -4,6 +4,7 @@ import {
   type CartItem,
   cartCount,
   cartTotal,
+  formatOrderNumber,
   orderMessage,
   removeFromCart,
 } from "./cart";
@@ -79,5 +80,21 @@ describe("orderMessage", () => {
         `Total: ${formatGs(5_207_000)}`,
       ].join("\n"),
     );
+  });
+});
+
+describe("order number", () => {
+  it("is shown padded like the ERP shows it", () => {
+    expect(formatOrderNumber(42)).toBe("#0042");
+    expect(formatOrderNumber(12345)).toBe("#12345");
+  });
+
+  it("is added as the last line of the message when the order was saved", () => {
+    const plain = orderMessage([zamba]);
+    expect(orderMessage([zamba], 42)).toBe(`${plain}\nPedido #0042`);
+  });
+
+  it("leaves today's message untouched without a number", () => {
+    expect(orderMessage([zamba], null)).toBe(orderMessage([zamba]));
   });
 });

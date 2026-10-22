@@ -41,8 +41,16 @@ export function cartTotal(items: readonly CartItem[]): number {
   return items.reduce((sum, line) => sum + (line.priceGs ?? 0) * line.quantity, 0);
 }
 
-/** "Pagar": the whole order as one WhatsApp message, a line per piece and the total. */
-export function orderMessage(items: readonly CartItem[]): string {
+/** "#0042": the number the ERP shows for the order, so the owner can find it from the chat. */
+export function formatOrderNumber(number: number): string {
+  return `#${String(number).padStart(4, "0")}`;
+}
+
+/**
+ * "Pagar": the whole order as one WhatsApp message, a line per piece and the total. When the
+ * order was saved, its number closes the message ("Pedido #0042").
+ */
+export function orderMessage(items: readonly CartItem[], orderNumber?: number | null): string {
   const lines = items.map((line, index) => {
     const name = line.quantity > 1 ? `${line.name} (x${line.quantity})` : line.name;
     const parts = [
@@ -58,7 +66,10 @@ export function orderMessage(items: readonly CartItem[]): string {
     ].filter(Boolean);
     return `${index + 1}. ${parts.join(" – ")}`;
   });
-  return ["Hola Átika! Quiero comprar:", ...lines, `Total: ${formatGs(cartTotal(items))}`].join(
-    "\n",
-  );
+  return [
+    "Hola Átika! Quiero comprar:",
+    ...lines,
+    `Total: ${formatGs(cartTotal(items))}`,
+    ...(orderNumber == null ? [] : [`Pedido ${formatOrderNumber(orderNumber)}`]),
+  ].join("\n");
 }

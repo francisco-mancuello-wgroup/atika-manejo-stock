@@ -103,6 +103,7 @@ model ProductVariant {
   unitsBought Int
   stock       Int
   sales       Sale[]
+  orderItems  OrderItem[]
   allocations GroupAllocation[]
   /// Opaque internal code (AT000123) printed as a Code 128 barcode. Comes from a Postgres sequence, so it is never reused or changed.
   barcode     String            @unique @default(dbgenerated("('AT'::text || lpad((nextval('product_variant_barcode_seq'::regclass))::text, 6, '0'::text))"))
@@ -156,10 +157,60 @@ model Sale {
   customer    String?
   notes       String?
   createdAt   DateTime       @default(now())
+  /// Web order this sale came from (set when the order is approved); null for sales typed in the ERP.
+  orderId     String?        @db.Uuid
+  order       Order?         @relation(fields: [orderId], references: [id])
 
   @@index([variantId])
   @@index([soldAt])
+  @@index([orderId])
   @@map("sales")
+}
+
+/// An order placed from the public cart. It never reserves stock: approving it in the ERP registers the sales.
+model Order {
+  id        String      @id @default(uuid(7)) @db.Uuid
+  /// Human number shown as "Pedido #0042"; comes from a sequence, so it is never reused.
+  number    Int         @unique @default(autoincrement())
+  status    OrderStatus @default(pending)
+  createdAt DateTime    @default(now())
+  /// When it was approved or rejected.
+  decidedAt DateTime?
+  items     OrderItem[]
+  sales     Sale[]
+
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  pending
+  approved
+  rejected
+
+  @@map("order_status")
+}
+
+/// One line of an order. Price and names are snapshots of what the catalog showed when it was placed.
+model OrderItem {
+  id              String         @id @default(uuid(7)) @db.Uuid
+  orderId         String         @db.Uuid
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  /// Restrict like Sale: a variant with ordered lines can't be deleted by accident.
+  variantId       String         @db.Uuid
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+  quantity        Int
+  /// Price per unit the customer saw (discount included), computed on the server.
+  unitPriceGs     Int
+  /// Percent off included in `unitPriceGs`, or null.
+  discountPercent Int?
+  productName     String
+  size            String
+  color           String?
+
+  @@index([orderId])
+  @@index([variantId])
+  @@map("order_items")
 }
 
 model ProductImage {

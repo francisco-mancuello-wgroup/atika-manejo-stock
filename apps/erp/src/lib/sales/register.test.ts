@@ -110,6 +110,28 @@ describe("registerSale (stock guard)", () => {
   });
 });
 
+describe("registerSale charged price equal to the list price", () => {
+  it("stores null when the charged price equals the list price", async () => {
+    const { tx, create } = fakeTx({});
+    await registerSale(tx, { ...input, chargedGs: 500_000 });
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ listPriceGs: 500_000, chargedGs: null }),
+    });
+  });
+
+  it("compares against the discounted list price when a discount applies", async () => {
+    const { tx, create } = fakeTx({
+      discounts: [
+        { percent: 20, isActive: true, startsAt: null, endsAt: null, scope: "all", products: [] },
+      ],
+    });
+    await registerSale(tx, { ...input, chargedGs: 400_000 }, NOW);
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ listPriceGs: 400_000, chargedGs: null }),
+    });
+  });
+});
+
 describe.skipIf(!hasDatabase)("registerSale (database)", () => {
   afterAll(disconnectTestDb);
 
