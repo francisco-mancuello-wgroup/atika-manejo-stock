@@ -26,8 +26,8 @@ describe("previewLot", () => {
           shippingPerUnitUsd: 4,
           unitCostUsd: 104,
           currentPriceGs: 2_000_000,
-          newPriceGs: 2_116_000,
-          differenceGs: 116_000,
+          newPriceGs: 2_116_400,
+          differenceGs: 116_400,
         },
         {
           id: "p2",
@@ -37,8 +37,8 @@ describe("previewLot", () => {
           shippingPerUnitUsd: 4,
           unitCostUsd: 44,
           currentPriceGs: 900_000,
-          newPriceGs: 895_000,
-          differenceGs: -5_000,
+          newPriceGs: 895_400,
+          differenceGs: -4_600,
         },
       ],
     });

@@ -25,7 +25,7 @@ const FORMULA_STEPS = [
   {
     label: "Precio de venta",
     formula: "Costo unitario × factor × (1 + IVA) × TC",
-    note: "Redondeado a 1.000 ₲",
+    note: "Al guaraní, sin redondeo",
   },
 ];
 

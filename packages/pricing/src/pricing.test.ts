@@ -50,20 +50,25 @@ describe("unitCostUsd", () => {
 });
 
 describe("roundGs", () => {
-  it("rounds to the nearest ₲ 1.000", () => {
-    expect(roundGs(2_518_086)).toBe(2_518_000);
-    expect(roundGs(2_518_500)).toBe(2_519_000);
-    expect(roundGs(2_518_499.99)).toBe(2_518_000);
+  it("rounds to the nearest whole guaraní, like the price workbooks", () => {
+    expect(roundGs(2_035_474.74)).toBe(2_035_475);
+    expect(roundGs(2_518_086.5)).toBe(2_518_087);
+    expect(roundGs(2_518_086.49)).toBe(2_518_086);
   });
 
-  it("keeps exact thousands unchanged", () => {
-    expect(roundGs(805_000)).toBe(805_000);
+  it("keeps whole guaraníes unchanged", () => {
+    expect(roundGs(805_123)).toBe(805_123);
   });
 });
 
 describe("priceGs", () => {
   it("multiplies cost by sale factor, adds IVA, converts to guaraníes and rounds", () => {
-    expect(priceGs(123.7389, casaIcona)).toBe(2_518_000);
+    expect(priceGs(123.7389, casaIcona)).toBe(2_518_087);
+  });
+
+  it("matches the Casa Icona valued workbook (COSTA COCO)", () => {
+    const workbook = { exchangeRate: 7000, saleFactor: 2.5, vatRate: 0.1 };
+    expect(priceGs(unitCostUsd(120, 0.55, shippingPerUnit(2265.12, 57)), workbook)).toBe(2_035_475);
   });
 
   it("supports IVA exento (0 %)", () => {
@@ -86,10 +91,10 @@ describe("priceLot", () => {
     const priced = priceLot(casaIcona, models);
 
     expect(priced).toHaveLength(3);
-    expect(priced[0]).toMatchObject({ id: "palmira", priceGs: 2_518_000 });
+    expect(priced[0]).toMatchObject({ id: "palmira", priceGs: 2_518_088 });
     expect(priced[0]?.shippingPerUnitUsd).toBeCloseTo(39.7389, 4);
     expect(priced[0]?.unitCostUsd).toBeCloseTo(123.7389, 4);
-    expect(priced[1]).toMatchObject({ id: "costa-black", priceGs: 1_834_000 });
+    expect(priced[1]).toMatchObject({ id: "costa-black", priceGs: 1_834_328 });
   });
 
   it("recalculates every price when a lot parameter changes", () => {
@@ -98,8 +103,8 @@ describe("priceLot", () => {
     const before = priceLot(casaIcona, models)[0]?.priceGs;
     const after = priceLot({ ...casaIcona, saleFactor: 3 }, models)[0]?.priceGs;
 
-    expect(before).toBe(2_518_000);
-    expect(after).toBe(3_022_000);
+    expect(before).toBe(2_518_088);
+    expect(after).toBe(3_021_705);
   });
 
   it("returns an empty list for a lot without models", () => {

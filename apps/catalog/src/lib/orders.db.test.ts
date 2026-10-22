@@ -117,7 +117,7 @@ describe.skipIf(!hasDatabase)("createOrder (database)", () => {
       const items = await tx.orderItem.findMany({ where: { orderId: result.id } });
       const bySize = Object.fromEntries(items.map((item) => [item.size, item]));
       expect(bySize.S).toMatchObject({ unitPriceGs: 1_553_000, discountPercent: null });
-      expect(bySize.M).toMatchObject({ unitPriceGs: 1_426_000, discountPercent: 10 });
+      expect(bySize.M).toMatchObject({ unitPriceGs: 1_425_600, discountPercent: 10 });
     });
   });
 

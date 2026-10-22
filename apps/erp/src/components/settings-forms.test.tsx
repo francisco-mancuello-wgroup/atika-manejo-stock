@@ -146,7 +146,7 @@ describe("SettingsForm", () => {
     expect(steps[0]).toHaveTextContent("Envío total del lote ÷ unidades compradas");
     expect(steps[1]).toHaveTextContent("Costo unitario");
     expect(steps[2]).toHaveTextContent("Precio de venta");
-    expect(steps[2]).toHaveTextContent("Redondeado a 1.000 ₲");
+    expect(steps[2]).toHaveTextContent("Al guaraní, sin redondeo");
   });
 
   describe("Ver cálculo por lote", () => {
@@ -229,13 +229,13 @@ describe("SettingsForm", () => {
         formatUsd(4),
         formatUsd(104),
         formatGs(2_000_000),
-        formatGs(2_116_000),
-        `+${formatGs(116_000)}`,
+        formatGs(2_116_400),
+        `+${formatGs(116_400)}`,
       ]);
       expect(cells(short)?.slice(5)).toEqual([
         formatGs(900_000),
-        formatGs(895_000),
-        formatGs(-5_000),
+        formatGs(895_400),
+        formatGs(-4_600),
       ]);
     });
 
@@ -269,7 +269,7 @@ describe("SettingsForm", () => {
       fireEvent.click(toggle());
       const [, remera] = within(table()).getAllByRole("row");
       expect(remera?.textContent).toContain(formatUsd(2_000_000 / 7400));
-      expect(remera?.textContent).toContain(formatUsd(2_116_000 / 7400));
+      expect(remera?.textContent).toContain(formatUsd(2_116_400 / 7400));
     });
 
     it("explains a lot without bought units", () => {

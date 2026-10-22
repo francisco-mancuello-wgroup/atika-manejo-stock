@@ -158,7 +158,7 @@ describe.skipIf(!hasDatabase)("discount queries (database)", () => {
       expect(con).toMatchObject({
         priceGs: 259_000,
         discountPercent: 20,
-        discountedPriceGs: 207_000,
+        discountedPriceGs: 207_200,
       });
       expect(sin).toMatchObject({
         priceGs: 259_000,

@@ -16,10 +16,10 @@ function rule(overrides: Partial<DiscountRule> = {}): DiscountRule {
 }
 
 describe("applyDiscount", () => {
-  it("takes the percent off and rounds to the nearest 1.000 Gs", () => {
+  it("takes the percent off and rounds to the nearest whole guaraní", () => {
     expect(applyDiscount(250_000, 20)).toBe(200_000);
-    expect(applyDiscount(259_000, 20)).toBe(207_000); // 207.200
-    expect(applyDiscount(259_000, 15)).toBe(220_000); // 220.150
+    expect(applyDiscount(259_000, 20)).toBe(207_200);
+    expect(applyDiscount(2_035_475, 15)).toBe(1_730_154); // 1.730.153,75
   });
 
   it("returns the price unchanged for 0 %", () => {
