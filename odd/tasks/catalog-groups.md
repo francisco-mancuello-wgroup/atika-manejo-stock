@@ -56,6 +56,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - [x] T7 — Groups table rows clickable as a whole (stretched link like /inventario; switch stays clickable). User request.
 - [x] T8 — Estado column removed (redundant with the switch); a note next to the switch only when it is on but out of window ("Programado · desde <fecha>" / "Vencido"). User request.
 - [x] T9 — Group editor on its own page (`/catalogo-web/grupos/nuevo`, `/catalogo-web/grupos/[id]`) instead of the side panel; Grupos tab is table only. User request ("no me gusta el sidebar").
+- [x] T10 — Fix: Asignado input rendered next to Libre (inline input ignored ml-auto); now block + ml-auto under its header. Found by parent screenshot of the Pink group.
 
 ## Acceptance criteria
 
@@ -101,6 +102,7 @@ Today the owner publishes products one by one (`Product.isPublished`, bulk switc
 - T8 RED: `pnpm exec vitest run src/components/groups-view.test.tsx` (apps/erp) -> 2 failed (Estado header present, no off-window note). GREEN: 17 passed; biome clean; erp tsc ok.
 - T9 RED: `pnpm exec vitest run src/lib/catalog-groups/workspace src/components/groups-view src/components/group-editor src/components/group-page` (apps/erp) -> 4 files / 23 tests failed (new helpers, `group-editor`/`group-page` modules missing, row hrefs).
 - T9 GREEN: `pnpm --filter @atika/erp test` -> 95 files / 674 passed; `pnpm typecheck` 6/6 ok; `pnpm lint` ok (2 known warnings); `pnpm --filter @atika/erp build` ok, lists `/catalogo-web/grupos/[id]` and `/catalogo-web/grupos/nuevo`.
+- T10 RED: `pnpm exec vitest run src/components/group-editor.test.tsx` (apps/erp) -> 1 failed (input lacks block/ml-auto). GREEN: 12 passed; biome clean; headless Chrome screenshot of /catalogo-web/grupos/<Pink> shows inputs under Asignado.
 
 ## Next step
 

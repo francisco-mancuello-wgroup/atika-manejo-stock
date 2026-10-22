@@ -126,9 +126,10 @@ describe("GroupEditor", () => {
       "1",
       "3",
     ]);
-    expect(panel.getByRole("spinbutton", { name: "Asignado: Vestido Lino, talle S" })).toHaveValue(
-      4,
-    );
+    const assignedS = panel.getByRole("spinbutton", { name: "Asignado: Vestido Lino, talle S" });
+    expect(assignedS).toHaveValue(4);
+    // A block input pushed right, so it sits under the "Asignado" header and not next to "Libre".
+    expect(assignedS).toHaveClass("block", "ml-auto");
     expect(panel.getByRole("spinbutton", { name: "Asignado: Vestido Lino, talle M" })).toHaveValue(
       0,
     );

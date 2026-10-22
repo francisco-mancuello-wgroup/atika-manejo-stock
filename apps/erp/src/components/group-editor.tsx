@@ -311,7 +311,7 @@ function AllocationTable({
                   step={1}
                   inputMode="numeric"
                   aria-label={`Asignado: ${product.name}, talle ${size.size}`}
-                  className="ml-auto h-8 w-20 text-right tabular-nums"
+                  className="ml-auto block h-8 w-20 text-right tabular-nums"
                   value={values[size.variantId] ?? ""}
                   onChange={(event) => onChange(size.variantId, event.target.value)}
                 />
