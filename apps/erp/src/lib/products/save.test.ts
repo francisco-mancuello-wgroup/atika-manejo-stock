@@ -328,4 +328,52 @@ describe.skipIf(!hasDatabase)("product edit and create (database)", () => {
       expect(images[0]?.url.startsWith(`/media/products/uploads/${id}/`)).toBe(true);
     });
   });
+
+  it("saves the focal point of this product's photos only, ignoring unknown or invalid ones", async () => {
+    await withRollback(async (tx) => {
+      const { a, b } = await fixture(tx);
+      const mine = await tx.productImage.create({
+        data: { productId: a, url: "/a1.webp", position: 0 },
+      });
+      const second = await tx.productImage.create({
+        data: { productId: a, url: "/a2.webp", position: 1, focusX: 10, focusY: 10 },
+      });
+      const other = await tx.productImage.create({
+        data: { productId: b, url: "/b1.webp", position: 0 },
+      });
+      const state = await updateProduct(
+        dbOver(tx),
+        a,
+        form({
+          [`focus.${mine.id}`]: "20,80",
+          [`focus.${second.id}`]: "150,5",
+          [`focus.${other.id}`]: "1,1",
+          [`focus.${MISSING}`]: "5,5",
+        }),
+      );
+      expect(state).toMatchObject({ status: "success" });
+      const read = async (id: string) => {
+        const image = await tx.productImage.findUniqueOrThrow({ where: { id } });
+        return [image.focusX, image.focusY];
+      };
+      expect(await read(mine.id)).toEqual([20, 80]);
+      // invalid point: the stored one stays
+      expect(await read(second.id)).toEqual([10, 10]);
+      // another product's photo is untouched
+      expect(await read(other.id)).toEqual([50, 50]);
+    });
+  });
+
+  it("keeps the stored focal points when the form sends them back unchanged", async () => {
+    await withRollback(async (tx) => {
+      const { a } = await fixture(tx);
+      const image = await tx.productImage.create({
+        data: { productId: a, url: "/a1.webp", position: 0, focusX: 33, focusY: 66 },
+      });
+      await updateProduct(dbOver(tx), a, form({ [`focus.${image.id}`]: "33,66" }));
+      await updateProduct(dbOver(tx), a, form());
+      const after = await tx.productImage.findUniqueOrThrow({ where: { id: image.id } });
+      expect([after.focusX, after.focusY]).toEqual([33, 66]);
+    });
+  });
 });

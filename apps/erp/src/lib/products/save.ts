@@ -4,6 +4,7 @@ import type { FormState } from "../action-state";
 import { formatGs } from "../format";
 import { recalculateLot } from "../lots/recalculate";
 import type { TransactionRunner } from "../lots/save";
+import { type FocalPoint, parseFocusFields } from "./focus";
 import { isUploadedPhoto, type PhotoStorage } from "./photo-storage";
 import { arrangePhotos, type PhotoUpload, prepareUpload } from "./photos";
 import {
@@ -77,6 +78,7 @@ async function applyPhotos(
   urls: readonly string[],
   options: SaveOptions,
   cover: string | null,
+  focus: Record<string, FocalPoint> = {},
 ): Promise<string[]> {
   const remove = options.removePhotoIds ?? [];
   const existing = await tx.productImage.findMany({
@@ -87,6 +89,13 @@ async function applyPhotos(
   const removing = existing.filter((image) => remove.includes(image.id));
   if (removing.length > 0) {
     await tx.productImage.deleteMany({ where: { id: { in: removing.map((image) => image.id) } } });
+  }
+  // Only this product's photos that stay: the ids come from the form, so never trust them
+  for (const image of existing) {
+    const point = focus[image.id];
+    if (point && !remove.includes(image.id)) {
+      await tx.productImage.update({ where: { id: image.id }, data: point });
+    }
   }
   const created: Record<string, string> = {};
   for (const [index, url] of urls.entries()) {
@@ -198,7 +207,14 @@ export async function updateProduct(
           update: { unitsBought: row.unitsBought, stock: row.stock },
         });
       }
-      const deleted = await applyPhotos(tx, productId, uploadedUrls, options, raw.cover ?? null);
+      const deleted = await applyPhotos(
+        tx,
+        productId,
+        uploadedUrls,
+        options,
+        raw.cover ?? null,
+        parseFocusFields(raw),
+      );
       await repriceLot(tx, product.lotId);
       const { priceGs } = await tx.product.findUniqueOrThrow({
         where: { id: productId },

@@ -3,7 +3,6 @@
 import { CATALOG_CATEGORIES } from "@atika/db/categories";
 import type { LotPricingParams } from "@atika/pricing";
 import { Button, Input } from "@atika/ui";
-import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
@@ -11,6 +10,7 @@ import { formatGs, formatUsd } from "../lib/format";
 import { previewPrice } from "../lib/products/preview";
 import { shrinkInputPhotos, tooBigToUpload } from "../lib/products/shrink-photos";
 import { SIZE_ORDER } from "../lib/sizes";
+import { FocalPointPicker, type FocusablePhoto } from "./focal-point-picker";
 import { Field, FormMessage, Select } from "./form-controls";
 import { table } from "./styles";
 
@@ -80,7 +80,7 @@ export function ProductForm({
   /** The product's lot (edit mode). */
   lotId?: string;
   initial?: ProductFormInitial;
-  photos?: { id: string; url: string }[];
+  photos?: FocusablePhoto[];
   action: Action;
 }) {
   const [state, formAction, pending] = useActionState(action, IDLE);
@@ -311,20 +311,19 @@ export function ProductForm({
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-2xl text-ink">Fotos</h2>
         {photos.length > 0 ? (
+          <p className="text-xs text-muted">
+            Tocá la foto para elegir qué parte se ve siempre en la web.
+          </p>
+        ) : null}
+        {photos.length > 0 ? (
           <ul key={photos.map((photo) => photo.id).join()} className="flex flex-wrap gap-4">
             {photos.map((photo, index) => (
               <li
-                key={photo.id}
-                className="flex w-32 flex-col gap-2 border border-line bg-surface p-2"
+                // A new saved point remounts the picker so it shows what is stored
+                key={`${photo.id}:${photo.focusX ?? 50},${photo.focusY ?? 50}`}
+                className="flex w-48 flex-col gap-2 border border-line bg-surface p-2"
               >
-                <Image
-                  src={photo.url}
-                  alt={`Foto ${index + 1}`}
-                  width={112}
-                  height={146}
-                  sizes="112px"
-                  className="h-[146px] w-28 object-cover"
-                />
+                <FocalPointPicker photo={photo} index={index} />
                 <label className="flex items-center gap-2 text-xs">
                   <input type="radio" name="cover" value={photo.id} defaultChecked={index === 0} />
                   Portada

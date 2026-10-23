@@ -148,6 +148,9 @@ describe("ProductForm (edit)", () => {
   it("lists the photos with cover radio and remove checkbox, cover first", () => {
     renderEdit();
     const radios = screen.getAllByRole("radio", { name: /Portada/ });
+    expect(
+      screen.getByText("Tocá la foto para elegir qué parte se ve siempre en la web."),
+    ).toBeInTheDocument();
     expect(radios).toHaveLength(2);
     expect(radios[0]).toBeChecked();
     expect(radios[1]).toHaveAttribute("value", "img-2");
@@ -180,6 +183,48 @@ describe("ProductForm (edit)", () => {
     expect(data.get("sizes.0.unitsBought")).toBe("2");
     expect(data.get("sizes.0.stock")).toBe("1");
     expect(data.get("cover")).toBe("img-2");
+  });
+
+  it("submits each photo's focal point and keeps it after a successful save", async () => {
+    const action = vi.fn(
+      async (_p: FormState, _d: FormData): Promise<FormState> => ({
+        status: "success",
+        message: "Guardado. Nuevo precio: X.",
+      }),
+    );
+    render(
+      <ProductForm
+        mode="edit"
+        lots={[lots[0] as LotContext]}
+        lotId="lot-1"
+        initial={initial}
+        photos={[
+          { ...(photos[0] as (typeof photos)[number]), focusX: 30, focusY: 70 },
+          photos[1] as (typeof photos)[number],
+        ]}
+        action={action}
+      />,
+    );
+    fireEvent.keyDown(
+      screen.getByRole("button", {
+        name: "Punto de enfoque de la foto 2: 50% horizontal, 50% vertical",
+      }),
+      { key: "ArrowRight" },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Guardado");
+    const data = action.mock.calls[0]?.[1] as FormData;
+    expect(data.get("focus.img-1")).toBe("30,70");
+    expect(data.get("focus.img-2")).toBe("55,50");
+    // The form reset after the action must not bring back the old points
+    expect(
+      screen.getByRole("button", {
+        name: "Punto de enfoque de la foto 2: 55% horizontal, 50% vertical",
+      }),
+    ).toBeInTheDocument();
+    const field = (id: string) =>
+      document.querySelector<HTMLInputElement>(`input[name='focus.${id}']`)?.value;
+    expect([field("img-1"), field("img-2")]).toEqual(["30,70", "55,50"]);
   });
 
   it("shows field and row errors and keeps what was typed", async () => {
