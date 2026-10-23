@@ -26,7 +26,7 @@ The ERP routes are dynamic Server Components that query the database. No route h
 
 - [x] T1 — `Skeleton` primitive in `packages/ui` with a test, exported from the package index.
 - [x] T2 — ERP skeleton compositions (table, detail, form, dashboard) with tests.
-- [ ] T3 — `loading.tsx` for every ERP route segment, each using the composition that matches its page.
+- [x] T3 — `loading.tsx` for every ERP route segment, each using the composition that matches its page.
 
 ## Acceptance criteria
 
@@ -35,4 +35,6 @@ The ERP routes are dynamic Server Components that query the database. No route h
 - lint, typecheck, `@atika/ui` and `@atika/erp` tests, and the ERP build pass.
 
 ## Progress
+
 - T1 done: commit 99d6805 `feat(ui): add Skeleton primitive` (author fvera).
+- T2 done: commit 9090944 `feat(erp): add loading skeleton compositions` (author fvera).
