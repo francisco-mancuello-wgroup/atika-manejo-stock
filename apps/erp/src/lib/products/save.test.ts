@@ -210,6 +210,15 @@ describe.skipIf(!hasDatabase)("product edit and create (database)", () => {
     });
   });
 
+  it("creates the product visible on the web when asked to", async () => {
+    await withRollback(async (tx) => {
+      const { lot } = await fixture(tx);
+      const state = await createProduct(dbOver(tx), form({ lotId: lot.id, isPublished: "true" }));
+      const id = state.status === "success" && "productId" in state ? state.productId : "";
+      expect((await tx.product.findUniqueOrThrow({ where: { id } })).isPublished).toBe(true);
+    });
+  });
+
   it("rejects creating without a size or in an unknown lot", async () => {
     await withRollback(async (tx) => {
       const { lot } = await fixture(tx);
@@ -311,6 +320,39 @@ describe.skipIf(!hasDatabase)("product edit and create (database)", () => {
       expect(state).toMatchObject({ status: "error", fieldErrors: { photos: expect.any(String) } });
       expect(files.size).toBe(0);
       expect((await tx.product.findUniqueOrThrow({ where: { id: a } })).name).toBe("A");
+    });
+  });
+
+  it("registers a brand typed on a new product, active and before Otras marcas", async () => {
+    await withRollback(async (tx) => {
+      const { lot } = await fixture(tx);
+      const state = await createProduct(
+        dbOver(tx),
+        form({ lotId: lot.id, brand: "Marca Nueva Test" }),
+      );
+      expect(state).toMatchObject({ status: "success" });
+      const brand = await tx.brand.findUniqueOrThrow({ where: { key: "marca nueva test" } });
+      const fallback = await tx.brand.findFirstOrThrow({ where: { isFallback: true } });
+      expect(brand).toMatchObject({ name: "Marca Nueva Test", isActive: true });
+      expect(brand.position).toBeLessThan(fallback.position);
+    });
+  });
+
+  it("registers a brand typed when editing, and reuses it in another case", async () => {
+    await withRollback(async (tx) => {
+      const { a, b } = await fixture(tx);
+      await updateProduct(dbOver(tx), a, form({ brand: "Marca Editada" }));
+      await updateProduct(dbOver(tx), b, form({ brand: " MARCA EDITADA " }));
+      expect(await tx.brand.count({ where: { key: "marca editada" } })).toBe(1);
+    });
+  });
+
+  it("registers no brand for a product without one", async () => {
+    await withRollback(async (tx) => {
+      const { a } = await fixture(tx);
+      const before = await tx.brand.count();
+      await updateProduct(dbOver(tx), a, form());
+      expect(await tx.brand.count()).toBe(before);
     });
   });
 

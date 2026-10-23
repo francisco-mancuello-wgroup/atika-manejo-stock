@@ -6,7 +6,7 @@ import type { TransactionRunner } from "./save";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const NOT_FOUND = "No se encontró el lote.";
+const NOT_FOUND = "No se encontró la marca.";
 
 function repriced(count: number): string {
   return `${count === 1 ? "Se recalculó" : "Se recalcularon"} ${countOf(count, "precio", "precios")}.`;
@@ -41,7 +41,7 @@ export async function saveLotParams(
     if (lot.pricingMode !== "custom") {
       return {
         status: "error",
-        message: "Este lote sigue los Parámetros globales. Pasalo a Propio para editarlo acá.",
+        message: "Esta marca sigue los Parámetros globales. Pasala a Propio para editarla acá.",
         values: raw,
       };
     }
@@ -83,7 +83,7 @@ export async function setLotPricingMode(
       await tx.lot.update({ where: { id: lotId }, data: { pricingMode: "custom" } });
       return {
         status: "success",
-        message: "El lote ahora usa parámetros propios. Parámetros ya no lo modifica.",
+        message: "La marca ahora usa parámetros propios. Parámetros ya no la modifica.",
       };
     }
 
@@ -105,7 +105,7 @@ export async function setLotPricingMode(
     await tx.lot.update({ where: { id: lotId }, data: { pricingMode: "global" } });
     return {
       status: "success",
-      message: `El lote vuelve a seguir los Parámetros globales. ${repriced(result.updatedProducts)}`,
+      message: `La marca vuelve a seguir los Parámetros globales. ${repriced(result.updatedProducts)}`,
     };
   });
 }

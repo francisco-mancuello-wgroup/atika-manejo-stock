@@ -55,7 +55,7 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
       const state = await saveAndApplySettings(dbOver(tx), form);
       expect(state).toEqual({
         status: "success",
-        message: `Parámetros guardados. Se actualizaron ${lotCount} lotes y se recalcularon ${productCount} precios.`,
+        message: `Parámetros guardados. Se actualizaron ${lotCount} marcas y se recalcularon ${productCount} precios.`,
       });
       for (const [{ lot, products }, shipping, value, units] of [
         [a, 20, 100, 3],
@@ -99,7 +99,7 @@ describe.skipIf(!hasDatabase)("app settings (database)", () => {
       const state = await saveAndApplySettings(dbOver(tx), form);
       expect(state).toEqual({
         status: "success",
-        message: `Parámetros guardados. Se actualizaron ${globalCount} lotes y se recalcularon ${productCount} precios. ${customCount === 1 ? "1 lote con parámetros propios no se modificó." : `${customCount} lotes con parámetros propios no se modificaron.`}`,
+        message: `Parámetros guardados. Se actualizaron ${globalCount} marcas y se recalcularon ${productCount} precios. ${customCount === 1 ? "1 marca con parámetros propios no se modificó." : `${customCount} marcas con parámetros propios no se modificaron.`}`,
       });
 
       const storedOwn = await tx.lot.findUniqueOrThrow({ where: { id: own.lot.id } });

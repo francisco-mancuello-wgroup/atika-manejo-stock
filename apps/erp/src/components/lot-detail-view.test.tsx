@@ -51,7 +51,7 @@ function renderView(detail: LotDetail = lot) {
 describe("LotDetailView", () => {
   it("shows the pricing values read-only with a link to Parámetros while the lot is global", () => {
     renderView();
-    const pricing = screen.getByRole("region", { name: "Precios del lote" });
+    const pricing = screen.getByRole("region", { name: "Precios de la marca" });
     expect(pricing).toHaveTextContent("2,5");
     expect(pricing).toHaveTextContent("55");
     expect(screen.queryByRole("button", { name: "Guardar y recalcular" })).not.toBeInTheDocument();

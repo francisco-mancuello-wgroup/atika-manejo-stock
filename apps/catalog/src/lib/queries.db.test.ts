@@ -1,14 +1,15 @@
+import { ensureBrand } from "@atika/db/brands";
 import { afterAll, describe, expect, it } from "vitest";
 import { createProducts, disconnectTestDb, hasDatabase, withRollback } from "../test/db";
 import {
   countProductsByCategory,
+  getBrandLookbook,
   getCatalogSettings,
   getCollectionPresentation,
   getProduct,
   getProductDetail,
   listCollections,
   listLookbook,
-  listPinkOnly,
   listProducts,
   listPublicBankPromos,
 } from "./queries";
@@ -23,8 +24,14 @@ const open = { showPrices: true, showSoldOutSizes: false, hideOutOfStock: true }
 const isolated: typeof withRollback = (fn) =>
   withRollback(async (tx) => {
     await tx.publicationGroup.updateMany({ data: { isActive: false } });
+    // The lookbook is built from registered brands: make sure the ones the tests use exist.
+    for (const name of ["Milonga", "Baobab"]) await ensureBrand(tx, name);
     return fn(tx);
   });
+
+type Lookbook = Awaited<ReturnType<typeof listLookbook>>;
+const pagesOf = (lookbook: Lookbook, slug: string) =>
+  lookbook.find((brand) => brand.slug === slug)?.pages ?? [];
 
 describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
   afterAll(disconnectTestDb);
@@ -470,7 +477,7 @@ describe.skipIf(!hasDatabase)("catalog discounts (database)", () => {
       );
       await tx.product.update({
         where: { id: id ?? "" },
-        data: { catalog: "milonga", catalogOrder: 1 },
+        data: { brand: "Milonga", catalog: "milonga", catalogOrder: 1 },
       });
       await tx.discount.create({ data: { name: "Todos", percent: 20, scope: "all" } });
 
@@ -483,7 +490,7 @@ describe.skipIf(!hasDatabase)("catalog discounts (database)", () => {
       });
 
       const lookbook = await listLookbook(tx, open);
-      expect(lookbook.milonga[0]?.pieces[0]).toMatchObject({
+      expect(pagesOf(lookbook, "milonga")[0]?.pieces[0]).toMatchObject({
         priceGs: 500_000,
         discountPercent: 20,
         discountedPriceGs: 400_000,
@@ -602,7 +609,7 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
       const { a, itau } = await setup(tx);
       await tx.product.update({
         where: { id: a },
-        data: { isPublished: true, catalog: "milonga", catalogOrder: 1 },
+        data: { isPublished: true, brand: "Milonga", catalog: "milonga", catalogOrder: 1 },
       });
       await tx.productImage.create({ data: { productId: a, url: "/media/a.webp", position: 0 } });
       await tx.bankPromo.create({
@@ -614,7 +621,9 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
         },
       });
       const lookbook = await listLookbook(tx, open, now);
-      const piece = lookbook.milonga.flatMap((page) => page.pieces).find((p) => p.id === a);
+      const piece = pagesOf(lookbook, "milonga")
+        .flatMap((page) => page.pieces)
+        .find((p) => p.id === a);
       expect(piece?.bankPromos?.map((g) => g.headline)).toEqual(["20 % de reintegro"]);
     });
   });
@@ -839,7 +848,7 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
       );
       await tx.product.update({
         where: { id: id ?? "" },
-        data: { catalog: "milonga", catalogOrder: 1 },
+        data: { brand: "Milonga", catalog: "milonga", catalogOrder: 1 },
       });
       await group(tx, id ?? "", [["S", 2]]);
       expect(await listCollections(tx, open, now)).toMatchObject([
@@ -848,9 +857,9 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
       const collection = await getCollectionPresentation(tx, open, "group-collection", now);
       expect(collection?.pieces.map((piece) => piece.sizes.map((s) => s.size))).toEqual([["S"]]);
       const lookbook = await listLookbook(tx, open, now);
-      expect(lookbook.milonga.flatMap((page) => page.pieces.map((piece) => piece.sizes))).toEqual([
-        ["S"],
-      ]);
+      expect(
+        pagesOf(lookbook, "milonga").flatMap((page) => page.pieces.map((piece) => piece.sizes)),
+      ).toEqual([["S"]]);
     });
   });
 
@@ -865,13 +874,13 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
       for (const [index, id] of ids.entries()) {
         await tx.product.update({
           where: { id },
-          data: { catalog: "milonga", catalogOrder: index + 1 },
+          data: { brand: "Milonga", catalog: "milonga", catalogOrder: index + 1 },
         });
       }
       await group(tx, ids[0] ?? "", [["S", 2]]);
       await group(tx, ids[2] ?? "", [["S", 2]], { isActive: false });
       const lookbook = await listLookbook(tx, open, now);
-      const pieces = lookbook.milonga.flatMap((page) => page.pieces);
+      const pieces = pagesOf(lookbook, "milonga").flatMap((page) => page.pieces);
       expect(pieces.map((piece) => [piece.name, piece.inGroup])).toEqual([
         ["InGroup", true],
         ["Plain", false],
@@ -889,11 +898,13 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
       ]);
       await tx.product.updateMany({
         where: { id: { in: [priced, plain] } },
-        data: { catalog: "milonga" },
+        data: { brand: "Milonga", catalog: "milonga" },
       });
       await group(tx, priced, [["S", 1, 0, 1_553_000]]);
       await group(tx, plain, [["S", 1]]);
-      const pieces = (await listLookbook(tx, open, now)).milonga.flatMap((page) => page.pieces);
+      const pieces = pagesOf(await listLookbook(tx, open, now), "milonga").flatMap(
+        (page) => page.pieces,
+      );
       expect(
         pieces.map((piece) => [piece.name, piece.priceGs, piece.pinkPrice?.priceGs ?? null]),
       ).toEqual([
@@ -903,16 +914,15 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
     });
   });
 
-  it("keeps group pieces without a catalog off the catalogs and files them for Pink", async () => {
+  it("shows group pieces in the lookbook of their brand, without a hand-set catalog", async () => {
     await isolated(async (tx) => {
       await tx.product.updateMany({ data: { isPublished: false } });
       const ids = await createProducts(tx, [
         { name: "Falda Atlas", photos: ["/a.jpg"], variants: [["S", 1]] },
         { name: "Lia Dress", photos: ["/b.jpg"], variants: [["S", 1]] },
-        { name: "Published loose", isPublished: true, photos: ["/c.jpg"], variants: [["S", 1]] },
         { name: "Off group", photos: ["/d.jpg"], variants: [["S", 1]] },
       ]);
-      const [atlas = "", lia = "", , off = ""] = ids;
+      const [atlas = "", lia = "", off = ""] = ids;
       await tx.product.update({ where: { id: atlas }, data: { brand: "Milonga" } });
       await tx.product.update({ where: { id: lia }, data: { brand: "Baobab" } });
       await group(tx, atlas, [["S", 1]]);
@@ -920,19 +930,235 @@ describe.skipIf(!hasDatabase)("catalog publication groups (database)", () => {
       await group(tx, off, [["S", 1]], { isActive: false });
 
       const lookbook = await listLookbook(tx, open, now);
-      const onCatalogs = Object.values(lookbook).flatMap((pages) =>
-        pages.flatMap((page) => page.pieces.map((piece) => piece.name)),
-      );
-      expect(onCatalogs).not.toEqual(expect.arrayContaining(["Falda Atlas"]));
-      expect(onCatalogs).not.toEqual(expect.arrayContaining(["Lia Dress"]));
+      const names = (slug: string) =>
+        pagesOf(lookbook, slug).flatMap((page) => page.pieces.map((piece) => piece.name));
+      expect(names("milonga")).toEqual(["Falda Atlas"]);
+      expect(names("baobab")).toEqual(["Lia Dress"]);
+      expect(pagesOf(lookbook, "baobab")[0]?.pieces[0]?.pinkPrice?.priceGs).toBe(1_553_000);
+    });
+  });
+});
 
-      const pinkOnly = await listPinkOnly(tx, open, now);
-      const names = (pages: { pieces: { name: string }[] }[]) =>
-        pages.flatMap((page) => page.pieces.map((piece) => piece.name));
-      expect(names(pinkOnly.milonga)).toEqual(["Falda Atlas"]);
-      expect(names(pinkOnly["otras-marcas"])).toEqual(["Lia Dress"]);
-      expect(names(pinkOnly["casa-icona"])).toEqual([]);
-      expect(pinkOnly["otras-marcas"][0]?.pieces[0]?.pinkPrice?.priceGs).toBe(1_553_000);
+describe.skipIf(!hasDatabase)("brand lookbooks (database)", () => {
+  afterAll(disconnectTestDb);
+
+  const now = new Date("2030-06-15T12:00:00.000Z");
+
+  /** Holds one unit of the first size of a product in a new active group. */
+  async function group(tx: Parameters<Parameters<typeof withRollback>[0]>[0], productId: string) {
+    const variant = await tx.productVariant.findFirstOrThrow({ where: { productId } });
+    await tx.publicationGroup.create({
+      data: {
+        name: "Test group",
+        isActive: true,
+        allocations: { create: [{ variantId: variant.id, allocated: 1 }] },
+      },
+    });
+  }
+
+  /** A brand of its own for the test, so real data never mixes in. */
+  async function brand(
+    tx: Parameters<Parameters<typeof withRollback>[0]>[0],
+    name: string,
+    data: { isActive?: boolean; coverUrl?: string } = {},
+  ) {
+    const row = await ensureBrand(tx, name);
+    return data.isActive === undefined && data.coverUrl === undefined
+      ? row
+      : tx.brand.update({ where: { id: row.id }, data });
+  }
+
+  const piece = (name: string, brandName: string | undefined, extra = {}) => ({
+    name,
+    brand: brandName,
+    photos: [`/media/${name}.webp`],
+    variants: [["M", 1]] as [string, number][],
+    ...extra,
+  });
+
+  async function unpublishAll(tx: Parameters<Parameters<typeof withRollback>[0]>[0]) {
+    await tx.product.updateMany({ data: { isPublished: false } });
+  }
+
+  it("makes one catalog per active brand with pieces, in brand order, with no hand-set catalog", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      await brand(tx, "Zeta Brand");
+      await brand(tx, "Alfa Brand");
+      await brand(tx, "Empty Brand");
+      await createProducts(tx, [
+        piece("Z1", "Zeta Brand"),
+        piece("A1", "alfa brand"),
+        piece("Hidden", "Empty Brand", { isPublished: false }),
+      ]);
+      const lookbook = await listLookbook(tx, open, now);
+      // Registered in this order: Zeta first, then Alfa (position), "Empty Brand" has no piece
+      expect(lookbook.map((entry) => entry.slug)).toEqual(["zeta-brand", "alfa-brand"]);
+      expect(lookbook.map((entry) => entry.name)).toEqual(["Zeta Brand", "Alfa Brand"]);
+      expect(pagesOf(lookbook, "alfa-brand")[0]?.title).toBe("A1");
+    });
+  });
+
+  it("orders a brand: PDF pages first, then the pieces without one newest first", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      await brand(tx, "Order Brand");
+      const ids = await createProducts(tx, [
+        piece("Old loose", "Order Brand"),
+        piece("Page 5", "Order Brand"),
+        piece("New loose", "Order Brand"),
+        piece("Page 2", "Order Brand"),
+      ]);
+      await tx.product.update({ where: { id: ids[1] ?? "" }, data: { catalogOrder: 5 } });
+      await tx.product.update({ where: { id: ids[3] ?? "" }, data: { catalogOrder: 2 } });
+      const pages = pagesOf(await listLookbook(tx, open, now), "order-brand");
+      expect(pages.map((page) => page.title)).toEqual([
+        "Page 2",
+        "Page 5",
+        "New loose",
+        "Old loose",
+      ]);
+      expect(pages.map((page) => page.page)).toEqual([1, 2, 3, 4]);
+    });
+  });
+
+  it("keeps the sets that share a page together inside the brand", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      await brand(tx, "Set Brand");
+      const ids = await createProducts(tx, [
+        piece("Top", "Set Brand"),
+        piece("Falda", "Set Brand"),
+      ]);
+      await tx.product.updateMany({ where: { id: { in: ids } }, data: { catalogOrder: 7 } });
+      const pages = pagesOf(await listLookbook(tx, open, now), "set-brand");
+      expect(pages).toHaveLength(1);
+      expect(pages[0]?.pieces.map((p) => p.name).sort()).toEqual(["Falda", "Top"]);
+    });
+  });
+
+  it("ignores the old catalog column: grouping is by brand", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      await brand(tx, "Moved Brand");
+      const [id = ""] = await createProducts(tx, [piece("Moved", "Moved Brand")]);
+      await tx.product.update({ where: { id }, data: { catalog: "sordo", catalogOrder: 1 } });
+      const lookbook = await listLookbook(tx, open, now);
+      expect(pagesOf(lookbook, "moved-brand")).toHaveLength(1);
+      expect(pagesOf(lookbook, "sordo")).toEqual([]);
+    });
+  });
+
+  it("sends pieces without a brand or with an unregistered one to Otras marcas", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      await createProducts(tx, [
+        piece("No brand", undefined),
+        piece("Unknown", "Nobody Registered"),
+      ]);
+      const names = pagesOf(await listLookbook(tx, open, now), "otras-marcas").flatMap((page) =>
+        page.pieces.map((p) => p.name),
+      );
+      expect(names.sort()).toEqual(["No brand", "Unknown"]);
+    });
+  });
+
+  describe("an inactive brand disappears from the whole web", () => {
+    async function setup(tx: Parameters<Parameters<typeof withRollback>[0]>[0]) {
+      await unpublishAll(tx);
+      await brand(tx, "Gone Brand", { isActive: false });
+      await brand(tx, "Kept Brand");
+      const [gone = "", kept = ""] = await createProducts(tx, [
+        piece("Gone piece", "gone brand", { category: "vestidos" }),
+        piece("Kept piece", "Kept Brand", { category: "vestidos" }),
+      ]);
+      return { gone, kept };
+    }
+
+    it("leaves it out of the lookbook, the lists, the counts and the collections", async () => {
+      await isolated(async (tx) => {
+        await setup(tx);
+        const lookbook = await listLookbook(tx, open, now);
+        expect(lookbook.map((entry) => entry.slug)).toEqual(["kept-brand"]);
+        expect((await listProducts(tx, open, null, noFilters, now)).map((p) => p.name)).toEqual([
+          "Kept piece",
+        ]);
+        expect((await countProductsByCategory(tx, open, noFilters, now)).novedades).toBe(1);
+        const collections = await listCollections(tx, open, now);
+        expect(collections).toHaveLength(1);
+      });
+    });
+
+    it("hides its product page and detail", async () => {
+      await isolated(async (tx) => {
+        const { gone, kept } = await setup(tx);
+        expect(await getProduct(tx, open, gone, now)).toBeNull();
+        expect(await getProductDetail(tx, open, gone, now)).toBeNull();
+        expect((await getProduct(tx, open, kept, now))?.name).toBe("Kept piece");
+      });
+    });
+
+    it("hides it from the search by name, and from the lookbook of its slug", async () => {
+      await isolated(async (tx) => {
+        await setup(tx);
+        const found = await listProducts(tx, open, null, { ...noFilters, q: "gone" }, now);
+        expect(found).toEqual([]);
+        expect(await getBrandLookbook(tx, open, "gone-brand", now)).toBeNull();
+      });
+    });
+
+    it("hides the Pink pieces of the brand too", async () => {
+      await isolated(async (tx) => {
+        const { gone, kept } = await setup(tx);
+        for (const id of [gone, kept]) await group(tx, id);
+        const lookbook = await listLookbook(tx, open, now);
+        expect(
+          lookbook.flatMap((entry) => entry.pages).flatMap((p) => p.pieces.map((x) => x.name)),
+        ).toEqual(["Kept piece"]);
+      });
+    });
+  });
+
+  it("hides the pieces without a known brand when Otras marcas is turned off", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      await brand(tx, "Still Brand");
+      await tx.brand.updateMany({ where: { isFallback: true }, data: { isActive: false } });
+      const [loose = "", still = ""] = await createProducts(tx, [
+        piece("Loose", undefined),
+        piece("Still", "Still Brand"),
+      ]);
+      await createProducts(tx, [piece("Unknown", "Never Registered")]);
+      expect((await listProducts(tx, open, null, noFilters, now)).map((p) => p.name)).toEqual([
+        "Still",
+      ]);
+      expect(await getProduct(tx, open, loose, now)).toBeNull();
+      expect((await getProduct(tx, open, still, now))?.name).toBe("Still");
+      expect((await listLookbook(tx, open, now)).map((entry) => entry.slug)).toEqual([
+        "still-brand",
+      ]);
+    });
+  });
+
+  it("looks a brand up by slug, empty or not, and by its old catalog slug", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      const empty = await brand(tx, "Quiet Brand");
+      const found = await getBrandLookbook(tx, open, empty.slug, now);
+      expect(found).toMatchObject({ slug: "quiet-brand", name: "Quiet Brand", pages: [] });
+      expect(await getBrandLookbook(tx, open, "nope", now)).toBeNull();
+      // The old catalogs are brands with the same slug
+      expect((await getBrandLookbook(tx, open, "milonga", now))?.name).toBe("Milonga");
+    });
+  });
+
+  it("reads the cover uploaded for the brand", async () => {
+    await isolated(async (tx) => {
+      await unpublishAll(tx);
+      await brand(tx, "Cover Brand", { coverUrl: "/media/brands/uploads/x/c.webp" });
+      await createProducts(tx, [piece("C1", "Cover Brand")]);
+      const entry = (await listLookbook(tx, open, now)).find((e) => e.slug === "cover-brand");
+      expect(entry?.coverUrl).toBe("/media/brands/uploads/x/c.webp");
     });
   });
 });

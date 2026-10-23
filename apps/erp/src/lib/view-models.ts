@@ -2,6 +2,7 @@ import type { LotPricingMode } from "@atika/db";
 import { shippingPerUnit, unitCostUsd } from "@atika/pricing";
 import { coverUrl } from "./cover";
 import { toIsoDate } from "./dates";
+import type { DeletionBlock } from "./products/delete";
 import { sortSizes } from "./sizes";
 
 /** Prisma `Decimal` is mapped to numbers here, at the edge. */
@@ -137,6 +138,8 @@ export interface InventoryProduct {
   sizes: SizeStock[];
   totalStock: number;
   imageUrl: string | null;
+  /** Why it can't be deleted (sales or web orders), or null when it can. */
+  deletionBlock: DeletionBlock | null;
 }
 
 function sortedVariants(variants: readonly VariantRow[]): VariantRow[] {
@@ -147,6 +150,7 @@ function sortedVariants(variants: readonly VariantRow[]): VariantRow[] {
 export function toInventoryProduct(
   product: ProductRow,
   lot: { id: string; name: string },
+  deletionBlock: DeletionBlock | null = null,
 ): InventoryProduct {
   const variants = sortedVariants(product.variants);
   return {
@@ -160,6 +164,7 @@ export function toInventoryProduct(
     sizes: variants.map((v) => ({ size: v.size, stock: v.stock })),
     totalStock: sum(variants.map((v) => v.stock)),
     imageUrl: coverUrl(product.images),
+    deletionBlock,
   };
 }
 
@@ -184,6 +189,8 @@ export interface LotGridRow {
   unitCostUsd: number;
   priceGs: number;
   cells: Record<string, GridCell>;
+  /** Cover photo, or null without photos. */
+  imageUrl: string | null;
 }
 
 export interface LotDetail {
@@ -235,6 +242,7 @@ export function toLotDetail(lot: LotRow): LotDetail {
         cells: Object.fromEntries(
           product.variants.map((v) => [v.size, { stock: v.stock, bought: v.unitsBought }]),
         ),
+        imageUrl: coverUrl(product.images),
       };
     }),
     summary: toLotSummary(lot),

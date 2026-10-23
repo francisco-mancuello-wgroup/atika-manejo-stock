@@ -1,4 +1,3 @@
-import type { Catalog } from "@atika/db";
 import { isCatalogCategory } from "@atika/db/categories";
 import { z } from "zod";
 import { fieldErrors } from "../form";
@@ -52,68 +51,4 @@ export function parseCategory(
 ): { success: true; data: string | null } | { success: false } {
   if (raw === "") return { success: true, data: null };
   return isCatalogCategory(raw) ? { success: true, data: raw } : { success: false };
-}
-
-/** The three lookbooks, in display order (values are the Prisma `Catalog` enum). */
-export const CATALOG_OPTIONS = [
-  { value: "casa_icona", label: "Casa Icona" },
-  { value: "milonga", label: "Milonga" },
-  { value: "sordo", label: "Sordo" },
-] as const satisfies readonly { value: Catalog; label: string }[];
-
-const CATALOG_VALUES = CATALOG_OPTIONS.map((option) => option.value) as [Catalog, ...Catalog[]];
-
-/** Blank or missing text becomes null, anything else is trimmed. */
-function blankToNull(value: unknown): unknown {
-  if (value === undefined || value === null) return null;
-  if (typeof value !== "string") return value;
-  const text = value.trim();
-  return text === "" ? null : text;
-}
-
-/** Like `blankToNull`, then a number (a decimal comma is accepted). */
-function blankToNumber(value: unknown): unknown {
-  const text = blankToNull(value);
-  return typeof text === "string" ? Number(text.replace(",", ".")) : text;
-}
-
-function optionalText(label: string, max: number) {
-  return z.preprocess(
-    blankToNull,
-    z
-      .string()
-      .max(max, { error: `${label} no puede superar ${max} caracteres.` })
-      .nullable(),
-  );
-}
-
-/** One product's lookbook placement; blank fields are stored as null. */
-export const lookbookSchema = z.object({
-  catalog: z.preprocess(
-    blankToNull,
-    z.enum(CATALOG_VALUES, { error: "Elegí un catálogo de la lista." }).nullable(),
-  ),
-  catalogOrder: z.preprocess(
-    blankToNumber,
-    z
-      .number({ error: "La página debe ser un número." })
-      .int({ error: "La página debe ser un número entero." })
-      .min(1, { error: "La página debe ser 1 o más." })
-      .max(9999, { error: "La página no puede superar 9999." })
-      .nullable(),
-  ),
-  catalogSection: optionalText("La sección", 60),
-  catalogName: optionalText("El nombre", 120),
-});
-
-export type LookbookInput = z.output<typeof lookbookSchema>;
-
-export function parseLookbook(
-  raw: Record<string, string>,
-):
-  | { success: true; data: LookbookInput }
-  | { success: false; fieldErrors: Record<string, string> } {
-  const result = lookbookSchema.safeParse(raw);
-  if (result.success) return { success: true, data: result.data };
-  return { success: false, fieldErrors: fieldErrors(result.error.issues) };
 }

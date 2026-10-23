@@ -3,18 +3,10 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { type BookCatalog, LookbookBook } from "../../../components/lookbook/book";
 import { CartProvider } from "../../../components/lookbook/cart";
-import { CATALOG_COVERS, OTHER_BRANDS_COVER } from "../../../lib/catalog-covers";
+import { toBookCatalog } from "../../../lib/catalog-covers";
 import { getDb } from "../../../lib/db";
-import {
-  ALL_CATALOGS,
-  CATALOGS,
-  findCatalog,
-  OTHER_BRANDS,
-  PINK_EVENT,
-  pinkPages,
-  withPieces,
-} from "../../../lib/lookbook";
-import { getCatalogSettings, listLookbook, listPinkOnly } from "../../../lib/queries";
+import { ALL_CATALOGS, brandTagline, PINK_EVENT, pinkPages } from "../../../lib/lookbook";
+import { getBrandLookbook, getCatalogSettings, listLookbook } from "../../../lib/queries";
 import { requestOrigin } from "../../../lib/whatsapp";
 
 type Params = Promise<{ slug: string }>;
@@ -26,49 +18,43 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { slug } = await params;
   if (slug === ALL_CATALOGS) return { title: "Catálogos · Átika" };
   if (slug === PINK_EVENT) return { title: "Pink · Átika" };
-  const catalog = findCatalog(slug);
-  return { title: catalog ? `${catalog.name} — ${catalog.tagline} · Átika` : "Átika" };
+  const db = getDb();
+  const brand = await getBrandLookbook(db, await getCatalogSettings(db), slug);
+  return { title: brand ? `${brand.name} — ${brandTagline(brand.slug)} · Átika` : "Átika" };
 }
 
 /**
- * `/catalogos/<slug>`: one lookbook; `/catalogos/todos` chains the three, and
- * `/catalogos/pink` chains only their pink pieces (Pink), plus the Pink pieces placed in no
- * catalog: after their brand's catalog, or under Otras marcas.
+ * `/catalogos/<slug>`: the lookbook of one active brand (the slugs casa-icona, milonga and sordo
+ * are the brands of the same name); `/catalogos/todos` chains every brand with pieces, and
+ * `/catalogos/pink` chains only their pink pieces (Pink). An unknown or inactive brand is a 404.
  */
 export default async function CatalogPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const pink = slug === PINK_EVENT;
-  const all = slug === ALL_CATALOGS || pink;
-  const shown = all ? [...CATALOGS] : CATALOGS.filter((catalog) => catalog.slug === slug);
-  const first = shown[0];
-  if (!first) notFound();
   const db = getDb();
   const settings = await getCatalogSettings(db);
-  const [pages, pinkOnly] = await Promise.all([
-    listLookbook(db, settings),
-    pink ? listPinkOnly(db, settings) : null,
-  ]);
-  const requestHeaders = await headers();
-  const catalogs: BookCatalog[] = shown.map((catalog) => ({
-    ...catalog,
-    cover: CATALOG_COVERS[catalog.slug],
-    pages: pinkOnly
-      ? pinkPages([...pages[catalog.slug], ...pinkOnly[catalog.slug]])
-      : pages[catalog.slug],
-  }));
-  if (pinkOnly) {
-    catalogs.push({
-      ...OTHER_BRANDS,
-      cover: OTHER_BRANDS_COVER,
-      pages: pinkPages(pinkOnly[OTHER_BRANDS.slug]),
-    });
+  const pink = slug === PINK_EVENT;
+  const all = slug === ALL_CATALOGS || pink;
+  let catalogs: BookCatalog[];
+  let title: string;
+  if (all) {
+    const brands = await listLookbook(db, settings);
+    catalogs = brands
+      .map((brand) => toBookCatalog(brand, pink ? pinkPages(brand.pages) : brand.pages))
+      // Pink and "todos" skip the brands without pieces to show
+      .filter((catalog) => catalog.pages.length > 0);
+    title = pink ? "Pink" : "Átika";
+  } else {
+    const brand = await getBrandLookbook(db, settings, slug);
+    if (!brand) notFound();
+    catalogs = [toBookCatalog(brand)];
+    title = brand.name;
   }
+  const requestHeaders = await headers();
   return (
     <CartProvider whatsappNumber={settings.whatsappNumber}>
       <LookbookBook
-        title={pink ? "Pink" : all ? "Átika" : first.name}
-        // Pink and "todos" skip the catalogs without pieces to show
-        catalogs={all ? withPieces(catalogs) : catalogs}
+        title={title}
+        catalogs={catalogs}
         origin={requestOrigin((name) => requestHeaders.get(name))}
         pagePath={`/catalogos/${slug}`}
       />

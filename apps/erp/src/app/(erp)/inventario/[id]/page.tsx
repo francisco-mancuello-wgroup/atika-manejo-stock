@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
+import { DeleteProductButton } from "../../../../components/delete-product-button";
 import { LabelPrinter } from "../../../../components/label-printer";
 import { PageHeader } from "../../../../components/page-header";
 import { ProductForm } from "../../../../components/product-form";
+import { listBrandNames } from "../../../../lib/brands/save";
+import { getDb } from "../../../../lib/db";
+import { deletionBlock } from "../../../../lib/products/delete";
 import { getProductForEdit } from "../../../../lib/queries/products";
 import { sortSizes } from "../../../../lib/sizes";
-import { saveProductAction } from "../actions";
+import { deleteProductAction, saveProductAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +16,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = UUID.test(id) ? await getProductForEdit(id) : null;
+  const [product, brandNames, block] = await Promise.all([
+    UUID.test(id) ? getProductForEdit(id) : null,
+    listBrandNames(getDb()),
+    UUID.test(id) ? deletionBlock(getDb(), id) : null,
+  ]);
   if (!product) notFound();
   return (
     <div className="flex flex-col gap-6">
@@ -22,6 +30,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         lots={[product.lot]}
         lotId={product.lot.id}
         photos={product.photos}
+        brandNames={brandNames}
         initial={{
           name: product.name,
           code: product.code ?? "",
@@ -43,6 +52,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         sizes={sortSizes(product.sizes.map((size) => size.size)).flatMap((size) =>
           product.sizes.filter((candidate) => candidate.size === size),
         )}
+      />
+      <DeleteProductButton
+        productId={product.id}
+        name={product.name}
+        block={block}
+        action={deleteProductAction}
       />
     </div>
   );

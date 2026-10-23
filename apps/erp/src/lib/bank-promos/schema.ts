@@ -108,7 +108,7 @@ export function parseBankPromo(
   const scope = result.success ? result.data.scope : null;
   const lotIds = scope === "lots" ? uniqueIds(lists.lotIds) : [];
   const productIds = scope === "products" ? uniqueIds(lists.productIds) : [];
-  if (scope === "lots" && lotIds.length === 0) errors.lotIds = "Elegí al menos un lote.";
+  if (scope === "lots" && lotIds.length === 0) errors.lotIds = "Elegí al menos una marca.";
   if (scope === "products" && productIds.length === 0) {
     errors.productIds = "Elegí al menos un producto.";
   }

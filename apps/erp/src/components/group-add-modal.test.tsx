@@ -10,7 +10,10 @@ const ok = async (): Promise<FormState> => ({ status: "success", message: "ok" }
 
 const options: GroupOptions = {
   lots: [{ id: "l1", name: "Lote Pink" }],
-  brands: ["Zara"],
+  brands: [
+    { slug: "zara", name: "Zara" },
+    { slug: "otras-marcas", name: "Otras marcas" },
+  ],
 };
 
 const candidate = (
@@ -66,8 +69,9 @@ describe("GroupAddModal", () => {
   it("is a dialog titled with the group", () => {
     setup();
     expect(screen.getByRole("dialog", { name: "Agregar prendas a Pink" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Lote", selected: true })).toBeInTheDocument();
-    for (const name of ["Catálogo", "Categoría", "Marca"]) {
+    expect(screen.getByRole("tab", { name: "Marca", selected: true })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Catálogo" })).not.toBeInTheDocument();
+    for (const name of ["Categoría", "Marca de la prenda"]) {
       expect(screen.getByRole("tab", { name })).toBeInTheDocument();
     }
   });
@@ -81,9 +85,10 @@ describe("GroupAddModal", () => {
 
   it("changes the filter with the criterion", async () => {
     const { listCandidates } = setup();
-    fireEvent.click(screen.getByRole("tab", { name: "Marca" }));
-    fireEvent.change(screen.getByLabelText("Valor"), { target: { value: "Zara" } });
-    await waitFor(() => expect(listCandidates).toHaveBeenCalledWith("g1", { brand: "Zara" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Marca de la prenda" }));
+    expect(screen.getByRole("option", { name: "Otras marcas" })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Valor"), { target: { value: "zara" } });
+    await waitFor(() => expect(listCandidates).toHaveBeenCalledWith("g1", { brand: "zara" }));
   });
 
   it("disables products already in the group and those without free stock", async () => {

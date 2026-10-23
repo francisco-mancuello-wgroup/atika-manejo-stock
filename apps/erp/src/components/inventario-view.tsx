@@ -1,9 +1,11 @@
 import { Button, buttonVariants, cn, Input } from "@atika/ui";
 import Link from "next/link";
+import type { FormState } from "../lib/action-state";
 import type { CurrencyDisplay } from "../lib/currency";
 import { moneyFormatter } from "../lib/format";
 import type { InventoryFilters } from "../lib/inventory-filters";
 import type { InventoryProduct } from "../lib/view-models";
+import { DeleteProductButton } from "./delete-product-button";
 import { Field, Select } from "./form-controls";
 import { PageHeader } from "./page-header";
 import { ProductThumb } from "./product-thumb";
@@ -14,11 +16,17 @@ export function InventarioView({
   lots,
   filters,
   display = { currency: "gs" },
+  notice,
+  deleteAction,
 }: {
   products: InventoryProduct[];
   lots: { id: string; name: string }[];
   filters: InventoryFilters;
   display?: CurrencyDisplay;
+  /** Name of the product just deleted, shown as a confirmation. */
+  notice?: string;
+  /** Deletes a product without sales (server action; redirects back here). */
+  deleteAction: (productId: string) => Promise<FormState>;
 }) {
   const money = moneyFormatter(display.currency, display.exchangeRate);
   const filtered = Boolean(filters.lotId || filters.query);
@@ -34,6 +42,12 @@ export function InventarioView({
         }
       />
 
+      {notice ? (
+        <p role="status" className="border border-line bg-surface px-4 py-3 text-sm text-ink">
+          Producto eliminado: {notice}.
+        </p>
+      ) : null}
+
       <search>
         <form
           method="get"
@@ -41,9 +55,9 @@ export function InventarioView({
           className="flex flex-wrap items-end gap-4 border border-line bg-surface p-4"
         >
           <div className="w-56">
-            <Field label="Lote" htmlFor="lot">
+            <Field label="Marca" htmlFor="lot">
               <Select id="lot" name="lot" defaultValue={filters.lotId ?? ""}>
-                <option value="">Todos los lotes</option>
+                <option value="">Todas las marcas</option>
                 {lots.map((lot) => (
                   <option key={lot.id} value={lot.id}>
                     {lot.name}
@@ -87,10 +101,13 @@ export function InventarioView({
             <thead className={table.head}>
               <tr>
                 <th className={table.th}>Producto</th>
-                <th className={table.th}>Lote</th>
+                <th className={table.th}>Marca</th>
                 <th className={table.th}>Código</th>
                 <th className={table.th}>Stock por talle</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>
+                <th className={table.th}>
+                  <span className="sr-only">Acciones</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -141,6 +158,15 @@ export function InventarioView({
                     </ul>
                   </td>
                   <td className={`${table.td} ${table.num}`}>{money(product.priceGs)}</td>
+                  <td className={cn(table.td, "text-right")}>
+                    <DeleteProductButton
+                      compact
+                      productId={product.id}
+                      name={product.name}
+                      block={product.deletionBlock}
+                      action={deleteAction}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

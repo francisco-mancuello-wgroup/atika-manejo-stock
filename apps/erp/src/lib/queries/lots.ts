@@ -19,8 +19,20 @@ export async function getLotSummaries(): Promise<LotSummary[]> {
   return lots.map(toLotSummary);
 }
 
+/** The detail also shows each product's cover photo; the lot list does not need it. */
+const lotDetailInclude = {
+  ...lotInclude,
+  products: {
+    ...lotInclude.products,
+    include: {
+      variants: true,
+      images: { select: { url: true, position: true }, orderBy: { position: "asc" }, take: 1 },
+    },
+  },
+} as const;
+
 export async function getLotDetail(lotId: string): Promise<LotDetail | null> {
-  const lot = await getDb().lot.findUnique({ where: { id: lotId }, include: lotInclude });
+  const lot = await getDb().lot.findUnique({ where: { id: lotId }, include: lotDetailInclude });
   return lot ? toLotDetail(lot) : null;
 }
 

@@ -17,7 +17,7 @@ type ParamKey = keyof AppSettingsView;
 const FIELDS = [
   {
     name: "exchangeRate",
-    label: "TC del lote (₲ / US$)",
+    label: "TC de la marca (₲ / US$)",
     readOnlyLabel: "Tipo de cambio (₲ / US$)",
   },
   { name: "saleFactor", label: "Factor de venta", readOnlyLabel: "Factor de venta" },
@@ -70,7 +70,7 @@ export function LotPricingPanel({
       className="flex flex-col gap-4 border border-line bg-surface p-5"
     >
       <h2 id="lot-pricing-title" className="font-display text-2xl text-ink">
-        Precios del lote
+        Precios de la marca
       </h2>
 
       <form action={modeFormAction} className="flex flex-col gap-2">

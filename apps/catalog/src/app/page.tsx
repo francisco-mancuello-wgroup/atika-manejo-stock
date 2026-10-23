@@ -1,34 +1,25 @@
 import { headers } from "next/headers";
 import { CatalogShelf, LookbookBook } from "../components/lookbook/book";
 import { CartProvider } from "../components/lookbook/cart";
-import { CATALOG_COVERS } from "../lib/catalog-covers";
+import { toBookCatalog } from "../lib/catalog-covers";
 import { getDb } from "../lib/db";
-import { CATALOGS, hasPinkPieces, withPieces } from "../lib/lookbook";
-import { getCatalogSettings, listLookbook, listPinkOnly } from "../lib/queries";
+import { hasPinkPieces } from "../lib/lookbook";
+import { getCatalogSettings, listLookbook } from "../lib/queries";
 import { requestOrigin } from "../lib/whatsapp";
 
 // Products, stock and settings change from the ERP at any time.
 export const dynamic = "force-dynamic";
 
 /**
- * `/`: the whole lookbook. First the three catalog covers and "Ver todo", then, scrolling down,
- * Casa Icona, Milonga and Sordo one after the other.
+ * `/`: the whole lookbook. First the covers of the active brands and "Ver todo", then, scrolling
+ * down, each brand's catalog one after the other, in the order set in the ERP.
  */
 export default async function HomePage() {
   const db = getDb();
   const settings = await getCatalogSettings(db);
-  const [pages, pinkOnly] = await Promise.all([
-    listLookbook(db, settings),
-    listPinkOnly(db, settings),
-  ]);
+  const brands = await listLookbook(db, settings);
   const requestHeaders = await headers();
-  const catalogs = withPieces(
-    CATALOGS.map((catalog) => ({
-      ...catalog,
-      cover: CATALOG_COVERS[catalog.slug],
-      pages: pages[catalog.slug],
-    })),
-  );
+  const catalogs = brands.map((brand) => toBookCatalog(brand));
   return (
     <CartProvider whatsappNumber={settings.whatsappNumber}>
       <LookbookBook
@@ -37,10 +28,7 @@ export default async function HomePage() {
         origin={requestOrigin((name) => requestHeaders.get(name))}
         pagePath="/"
         intro={
-          <CatalogShelf
-            catalogs={catalogs}
-            pink={hasPinkPieces([...Object.values(pages), ...Object.values(pinkOnly)])}
-          />
+          <CatalogShelf catalogs={catalogs} pink={hasPinkPieces(brands.map((b) => b.pages))} />
         }
       />
     </CartProvider>

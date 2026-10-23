@@ -173,14 +173,14 @@ describe("promoPreview", () => {
     );
     expect(preview?.groups[0]?.headline).toBe("20 % de reintegro · Jueves · Tope ₲ 200.000");
     expect(preview?.note).toBe(
-      "Solo en prendas del lote Casa Icona, los jueves del 01/11 al 30/11.",
+      "Solo en prendas de la marca Casa Icona, los jueves del 01/11 al 30/11.",
     );
   });
 
   it("describes several lots, products and open windows", () => {
     expect(
       promoPreview(draft({ scope: "lots", lotIds: ["l1", "l2"], days: [1, 4] }), banks, lots)?.note,
-    ).toBe("Solo en prendas de los lotes Casa Icona y Verano, los lunes y jueves.");
+    ).toBe("Solo en prendas de las marcas Casa Icona y Verano, los lunes y jueves.");
     expect(promoPreview(draft({ scope: "products", productCount: 1 }), banks, lots)?.note).toBe(
       "Solo en 1 producto elegido, todos los días.",
     );
@@ -197,7 +197,7 @@ describe("promoPreview", () => {
 
   it("describes a lot scope with nothing picked yet", () => {
     expect(promoPreview(draft({ scope: "lots" }), banks, lots)?.note).toBe(
-      "Solo en prendas de los lotes elegidos, todos los días.",
+      "Solo en prendas de las marcas elegidas, todos los días.",
     );
   });
 

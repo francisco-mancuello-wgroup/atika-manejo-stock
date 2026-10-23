@@ -32,8 +32,8 @@ describe("formatPromoScope", () => {
     expect(formatPromoScope({ scope: "all", lotCount: 0, productCount: 0 })).toBe(
       "Todos los productos",
     );
-    expect(formatPromoScope({ scope: "lots", lotCount: 3, productCount: 0 })).toBe("3 lotes");
-    expect(formatPromoScope({ scope: "lots", lotCount: 1, productCount: 0 })).toBe("1 lote");
+    expect(formatPromoScope({ scope: "lots", lotCount: 3, productCount: 0 })).toBe("3 marcas");
+    expect(formatPromoScope({ scope: "lots", lotCount: 1, productCount: 0 })).toBe("1 marca");
     expect(formatPromoScope({ scope: "products", lotCount: 0, productCount: 12 })).toBe(
       "12 productos",
     );

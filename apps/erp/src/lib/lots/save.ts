@@ -11,7 +11,7 @@ export interface TransactionRunner {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const NOT_FOUND = "No se encontró el lote.";
+const NOT_FOUND = "No se encontró la marca.";
 
 /**
  * Validates the form, saves the lot's total shipping (purchase data) and reprices the lot with

@@ -1,9 +1,9 @@
 import { cn } from "@atika/ui";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import pinkPhoto from "../../../public/atika/pink.jpg";
-import { type LookbookPage, PINK_EVENT, pageAnchor } from "../../lib/lookbook";
+import { type BookCover, type LookbookPage, PINK_EVENT, pageAnchor } from "../../lib/lookbook";
 import { searchEntriesOf } from "../../lib/search";
 import { AddToCart } from "./add-to-cart";
 import { ArrowIcon } from "./icons";
@@ -26,7 +26,7 @@ export interface BookCatalog {
   slug: string;
   name: string;
   tagline: string;
-  cover: StaticImageData;
+  cover: BookCover | null;
   pages: LookbookPage[];
 }
 
@@ -82,15 +82,17 @@ function CoverPage({ catalog }: { catalog: BookCatalog }) {
       </div>
       <div className="relative w-full max-w-[34rem] flex-1 py-6">
         <div className="relative size-full">
-          <Image
-            src={catalog.cover}
-            alt={`${catalog.name} — ${catalog.tagline}`}
-            fill
-            priority
-            sizes="(min-width: 1024px) 34rem, 90vw"
-            placeholder="blur"
-            className="object-contain"
-          />
+          {catalog.cover && (
+            <Image
+              src={catalog.cover}
+              alt={`${catalog.name} — ${catalog.tagline}`}
+              fill
+              priority
+              sizes="(min-width: 1024px) 34rem, 90vw"
+              placeholder={typeof catalog.cover === "string" ? undefined : "blur"}
+              className="object-contain"
+            />
+          )}
         </div>
       </div>
       <div className="flex flex-col items-center gap-2">
@@ -252,8 +254,7 @@ function PinkBanner() {
           Pink
         </h2>
         <p className="max-w-[440px] text-[15px] leading-relaxed text-foreground/80 lg:text-[17px]">
-          Casa Icona, Milonga y Sordo, juntas en un solo lugar. Elegí tus piezas favoritas y pagá
-          por WhatsApp.
+          Todas las marcas, juntas en un solo lugar. Elegí tus piezas favoritas y pagá por WhatsApp.
         </p>
         <a
           href={`/catalogos/${PINK_EVENT}`}
@@ -266,7 +267,7 @@ function PinkBanner() {
   );
 }
 
-/** Fewer catalogs (the empty ones are hidden) stay centered at the width of three columns. */
+/** Fewer catalogs stay centered at the width of three columns. */
 const SHELF_COLUMNS: Record<number, string> = {
   1: "max-w-[440px]",
   2: "max-w-[920px] sm:grid-cols-2",
@@ -308,15 +309,17 @@ export function CatalogShelf({ catalogs, pink }: { catalogs: BookCatalog[]; pink
           <li key={catalog.slug}>
             <a href={`#${catalog.slug}`} className="group flex flex-col gap-4">
               <div className="relative aspect-[3/4] overflow-hidden rounded-[4px] bg-surface">
-                <Image
-                  src={catalog.cover}
-                  alt=""
-                  fill
-                  priority
-                  sizes="(min-width: 640px) 33vw, 100vw"
-                  placeholder="blur"
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                />
+                {catalog.cover && (
+                  <Image
+                    src={catalog.cover}
+                    alt=""
+                    fill
+                    priority
+                    sizes="(min-width: 640px) 33vw, 100vw"
+                    placeholder={typeof catalog.cover === "string" ? undefined : "blur"}
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+                )}
               </div>
               <div className="flex flex-col items-center gap-1 text-center">
                 <p className="text-[11px] tracking-[3px] text-fg-muted uppercase">

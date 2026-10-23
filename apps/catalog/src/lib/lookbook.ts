@@ -1,57 +1,56 @@
 import type { PromoGroup } from "@atika/pricing";
+import type { StaticImageData } from "next/image";
 import type { CatalogSettingsView, ProductSource } from "./catalog-view";
 import { type PieceColor, resolveColor } from "./colors";
 import { type Focus, focusOf } from "./focus";
 import { type PriceFields, priceFields } from "./price";
 import { sortSizes } from "./sizes";
 
-/**
- * The three Atika lookbooks, in display order: each one is a vertical catalog like its PDF, a
- * cover and then one piece (or one set) per page. `value` is the Prisma `Catalog` enum value.
- */
-export const CATALOGS = [
-  {
-    slug: "casa-icona",
-    value: "casa_icona",
-    name: "Casa Icona",
-    tagline: "Colección seleccionada",
-  },
-  { slug: "milonga", value: "milonga", name: "Milonga", tagline: "Colección 2026" },
-  { slug: "sordo", value: "sordo", name: "Sordo", tagline: "Aros y earcuffs" },
-] as const;
-
-export type CatalogSlug = (typeof CATALOGS)[number]["slug"];
-export type CatalogValue = (typeof CATALOGS)[number]["value"];
-
-/** `/catalogos/todos` chains the three catalogs. */
+/** `/catalogos/todos` chains every active brand's lookbook. */
 export const ALL_CATALOGS = "todos";
 
-/** `/catalogos/pink`: the Pink selection, the pink pieces of every catalog. */
+/** `/catalogos/pink`: the Pink selection, the pink pieces of every brand. */
 export const PINK_EVENT = "pink";
 
-/** Pink's closing section: event pieces of a brand without its own catalog (Baobab, Zunilda). */
-export const OTHER_BRANDS = {
-  slug: "otras-marcas",
-  name: "Otras marcas",
-  tagline: "Selección Pink",
-} as const;
+/** Cover of a lookbook: a static photo (the original three), or the URL of an uploaded/product photo. */
+export type BookCover = StaticImageData | string;
 
-export type PinkOnlySlug = CatalogSlug | typeof OTHER_BRANDS.slug;
-
-export function findCatalog(slug: string) {
-  return CATALOGS.find((catalog) => catalog.slug === slug) ?? null;
+/**
+ * Cover of a brand's lookbook: the one uploaded in the ERP, else the static cover of the original
+ * three catalogs (Casa Icona, Milonga, Sordo), else the first photo of its first page.
+ */
+export function brandCover(
+  coverUrl: string | null | undefined,
+  staticCover: StaticImageData | undefined,
+  pages: readonly LookbookPage[],
+): BookCover | null {
+  return coverUrl?.trim() || staticCover || pages[0]?.photos[0]?.url || null;
 }
 
-/** Catalogs with at least one piece to show: an empty one isn't offered on the web. */
+const TAGLINES: Record<string, string> = {
+  "casa-icona": "Colección seleccionada",
+  milonga: "Colección 2026",
+  sordo: "Aros y earcuffs",
+  "otras-marcas": "Más marcas",
+};
+
+/** The line under a brand's name on its cover. */
+export function brandTagline(slug: string): string {
+  return TAGLINES[slug] ?? "Colección seleccionada";
+}
+
+/** Brands with at least one piece to show: an empty one isn't offered on the web. */
 export function withPieces<T extends { pages: readonly unknown[] }>(catalogs: readonly T[]): T[] {
   return catalogs.filter((catalog) => catalog.pages.length > 0);
 }
 
 /** What the lookbook reads of a product (the public columns plus its placement). */
 export interface LookbookRow extends ProductSource {
-  catalog: CatalogValue | null;
+  /** Legacy hand-set catalog: only keeps pieces of different old catalogs off the same page. */
+  catalog: string | null;
   catalogOrder: number | null;
   catalogSection: string | null;
+  createdAt: Date;
   /** Holds assigned stock in an active publication group: part of the Pink event. */
   inGroup: boolean;
   /** Event price from the active group (the event workbook's price); null keeps `priceGs`. */
@@ -102,13 +101,18 @@ export interface LookbookPage {
 // The web shows the ERP product name, so a rename in the ERP reaches the lookbook.
 const displayName = (row: LookbookRow) => row.name;
 
+/**
+ * Inside a brand: the pieces with a PDF page first, in page order (parts of a set keep the
+ * workbook order), then the pieces without one, newest first.
+ */
 function byPdfOrder(a: LookbookRow, b: LookbookRow): number {
   const orderA = a.catalogOrder ?? Number.POSITIVE_INFINITY;
   const orderB = b.catalogOrder ?? Number.POSITIVE_INFINITY;
   if (orderA !== orderB) return orderA - orderB;
-  // Parts of one set keep the workbook order (top before bottom)
-  if (a.catalogOrder != null) return a.id.localeCompare(b.id);
-  return displayName(a).localeCompare(displayName(b), "es");
+  if (a.catalogOrder == null) {
+    return b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id);
+  }
+  return (a.catalog ?? "").localeCompare(b.catalog ?? "") || a.id.localeCompare(b.id);
 }
 
 function availableSizes(row: LookbookRow): string[] {
@@ -144,7 +148,7 @@ function groupByName(pieces: LookbookPiece[]): LookbookItem[] {
   return [...items.values()];
 }
 
-/** The pages of one catalog, in PDF order. A piece without stock or photos disappears. */
+/** The pages of one brand, in PDF order. A piece without stock or photos disappears. */
 export function lookbookPages(
   rows: readonly LookbookRow[],
   settings: Pick<CatalogSettingsView, "showPrices">,
@@ -156,8 +160,12 @@ export function lookbookPages(
   const groups: LookbookRow[][] = [];
   for (const row of shown) {
     const last = groups.at(-1);
+    // One page per (old catalog, page number): numbers from different old catalogs never merge
     const samePage =
-      last !== undefined && row.catalogOrder != null && last[0]?.catalogOrder === row.catalogOrder;
+      last !== undefined &&
+      row.catalogOrder != null &&
+      last[0]?.catalogOrder === row.catalogOrder &&
+      last[0]?.catalog === row.catalog;
     if (samePage) last.push(row);
     else groups.push([row]);
   }
@@ -211,18 +219,7 @@ export function pinkPages(pages: readonly LookbookPage[]): LookbookPage[] {
     });
 }
 
-const normalized = (text: string | null | undefined) => text?.trim().toLowerCase() ?? "";
-
-/**
- * Where a Pink piece without a catalog shows on Pink: after the catalog of its brand (Milonga),
- * or under Otras marcas when its brand has none.
- */
-export function pinkOnlySection(row: Pick<LookbookRow, "brand">): PinkOnlySlug {
-  const brand = normalized(row.brand);
-  return CATALOGS.find((catalog) => normalized(catalog.name) === brand)?.slug ?? OTHER_BRANDS.slug;
-}
-
-/** Whether any catalog has something for the Pink event: the home shows its banner only then. */
+/** Whether any brand has something for the Pink event: the home shows its banner only then. */
 export function hasPinkPieces(catalogPages: readonly (readonly LookbookPage[])[]): boolean {
   return catalogPages.some((pages) => pinkPages(pages).length > 0);
 }

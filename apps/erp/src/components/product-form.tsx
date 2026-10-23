@@ -2,7 +2,7 @@
 
 import { CATALOG_CATEGORIES } from "@atika/db/categories";
 import type { LotPricingParams } from "@atika/pricing";
-import { Button, Input } from "@atika/ui";
+import { Button, Input, Switch } from "@atika/ui";
 import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
@@ -55,7 +55,7 @@ export const EMPTY_PRODUCT: ProductFormInitial = {
 const TEXT_FIELDS = [
   { name: "name", label: "Nombre" },
   { name: "code", label: "Código" },
-  { name: "brand", label: "Marca" },
+  { name: "brand", label: "Marca de la prenda" },
   { name: "color", label: "Color" },
 ] as const;
 
@@ -73,6 +73,7 @@ export function ProductForm({
   lotId,
   initial = EMPTY_PRODUCT,
   photos = [],
+  brandNames = [],
   action,
 }: {
   mode: "edit" | "new";
@@ -81,12 +82,16 @@ export function ProductForm({
   lotId?: string;
   initial?: ProductFormInitial;
   photos?: FocusablePhoto[];
+  /** Registered brands, offered while typing so a typo doesn't create a duplicate brand. */
+  brandNames?: string[];
   action: Action;
 }) {
   const [state, formAction, pending] = useActionState(action, IDLE);
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
   const values = state.status === "error" ? (state.values ?? {}) : {};
   const [chosenLot, setChosenLot] = useState(values.lotId ?? lotId ?? "");
+  // New products only: whether it shows on the web right away (off keeps it hidden, as before)
+  const [published, setPublished] = useState(values.isPublished === "true");
   const [original, setOriginal] = useState(initial.originalValueUsd);
   const [nextKey, setNextKey] = useState(initial.sizes.length);
   const [rows, setRows] = useState(initial.sizes.map((row, key) => ({ ...row, key })));
@@ -124,7 +129,7 @@ export function ProductForm({
     <form action={formAction} className="flex flex-col gap-6">
       <section className="grid grid-cols-1 gap-4 border border-line bg-surface p-5 md:grid-cols-2">
         {mode === "new" ? (
-          <Field label="Lote" htmlFor="lotId" error={errors.lotId}>
+          <Field label="Marca" htmlFor="lotId" error={errors.lotId}>
             <Select
               id="lotId"
               name="lotId"
@@ -133,7 +138,7 @@ export function ProductForm({
               aria-invalid={errors.lotId ? true : undefined}
               aria-describedby={errors.lotId ? "lotId-error" : undefined}
             >
-              <option value="">Elegí un lote</option>
+              <option value="">Elegí una marca</option>
               {lots.map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.name}
@@ -143,10 +148,31 @@ export function ProductForm({
           </Field>
         ) : (
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-ink">Lote</span>
+            <span className="text-xs font-medium text-ink">Marca</span>
             <span className="flex h-10 items-center text-sm text-ink">{lot?.name}</span>
           </div>
         )}
+        {mode === "new" ? (
+          <div className="flex flex-col gap-1.5">
+            <span id="isPublished-label" className="text-xs font-medium text-ink">
+              Visible en la web
+            </span>
+            <div className="flex h-10 items-center gap-3">
+              <Switch
+                checked={published}
+                aria-labelledby="isPublished-label"
+                aria-describedby="isPublished-help"
+                onCheckedChange={setPublished}
+              />
+              <input type="hidden" name="isPublished" value={published ? "true" : "false"} />
+              <span id="isPublished-help" className="text-xs text-muted">
+                {published
+                  ? "Se publica al guardar, si tiene stock y foto."
+                  : "Se guarda oculto; lo podés publicar después en Catálogo web."}
+              </span>
+            </div>
+          </div>
+        ) : null}
         {TEXT_FIELDS.map((field) => (
           <Field
             key={field.name}
@@ -154,9 +180,21 @@ export function ProductForm({
             htmlFor={field.name}
             error={errors[field.name]}
           >
-            <Input {...text(field.name)} />
+            <Input
+              {...text(field.name)}
+              {...(field.name === "brand" && brandNames.length > 0
+                ? { list: "brand-suggestions", autoComplete: "off" }
+                : {})}
+            />
           </Field>
         ))}
+        {brandNames.length > 0 ? (
+          <datalist id="brand-suggestions">
+            {brandNames.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
+        ) : null}
         <Field label="Categoría" htmlFor="category" error={errors.category}>
           <Select id="category" name="category" defaultValue={values.category ?? initial.category}>
             <option value="">Sin categoría</option>

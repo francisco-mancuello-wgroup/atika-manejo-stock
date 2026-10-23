@@ -1,3 +1,4 @@
+import { ensureBrand } from "@atika/db/brands";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   createProducts,
@@ -129,6 +130,28 @@ describe.skipIf(!hasDatabase)("createOrder (database)", () => {
       if (!result.ok) throw new Error(result.reason);
       const items = await tx.orderItem.findMany({ where: { orderId: result.id } });
       expect(items.map((item) => item.quantity)).toEqual([4]);
+    });
+  });
+
+  it("rejects pieces of an inactive brand like hidden ones", async () => {
+    await withRollback(async (tx) => {
+      const gone = await ensureBrand(tx, "Order Gone Brand");
+      await tx.brand.update({ where: { id: gone.id }, data: { isActive: false } });
+      const [live, off] = await createProducts(tx, [
+        { name: "Live", variants: [["M", 3]] },
+        { name: "Off brand", brand: "order gone brand", variants: [["M", 3]] },
+      ]);
+      const before = await tx.order.count();
+      const result = await createOrder(
+        tx,
+        [
+          { productId: live ?? "", size: "M", quantity: 1 },
+          { productId: off ?? "", size: "M", quantity: 1 },
+        ],
+        NOW,
+      );
+      expect(result).toEqual({ ok: false, reason: "unavailable" });
+      expect(await tx.order.count()).toBe(before);
     });
   });
 

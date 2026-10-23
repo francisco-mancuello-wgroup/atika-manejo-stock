@@ -1,4 +1,5 @@
 import type { Prisma } from "@atika/db";
+import { brandProductWhere } from "../brands/filter";
 import { type GroupStatus, groupStatus } from "../catalog-groups/format";
 import { groupFreeStock, type ProductFilter } from "../catalog-groups/groups";
 import { activeGroupWhere, freeInventory, maxAllocation, remaining } from "../catalog-groups/stock";
@@ -9,7 +10,7 @@ import { sortSizes } from "../sizes";
 /** Any Prisma client or transaction (lets tests read inside a rolled back transaction). */
 type Reader = Pick<
   Prisma.TransactionClient,
-  "publicationGroup" | "productVariant" | "product" | "lot" | "groupAllocation"
+  "publicationGroup" | "productVariant" | "product" | "lot" | "groupAllocation" | "brand"
 >;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -66,7 +67,8 @@ export interface GroupDetail {
 
 export interface GroupOptions {
   lots: { id: string; name: string }[];
-  brands: string[];
+  /** Every brand in display order, Otras marcas last; the slug is the filter value. */
+  brands: { slug: string; name: string }[];
 }
 
 const isoOrNull = (date: Date | null) => (date ? toIsoDate(date) : null);
@@ -191,17 +193,12 @@ export async function getGroupDetail(
 export async function getGroupOptions(db: Reader): Promise<GroupOptions> {
   const [lots, brands] = await Promise.all([
     db.lot.findMany({ orderBy: { purchasedAt: "desc" }, select: { id: true, name: true } }),
-    db.product.findMany({
-      where: { brand: { not: null } },
-      distinct: ["brand"],
-      orderBy: { brand: "asc" },
-      select: { brand: true },
+    db.brand.findMany({
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+      select: { slug: true, name: true },
     }),
   ]);
-  return {
-    lots,
-    brands: brands.flatMap((row) => (row.brand ? [row.brand] : [])),
-  };
+  return { lots, brands };
 }
 
 /** Names of the groups active right now (switch on, inside the window), alphabetically. */
@@ -254,20 +251,21 @@ export async function getGroupCandidates(
   filter: ProductFilter,
   now: Date = new Date(),
 ): Promise<GroupCandidate[]> {
-  const { lotId, catalog, category, brand } = filter;
-  if (!UUID.test(groupId) || (!lotId && !catalog && !category && !brand)) return [];
+  const { lotId, category, brand } = filter;
+  if (!UUID.test(groupId) || (!lotId && !category && !brand)) return [];
   if (lotId && !UUID.test(lotId)) return [];
   const group = await db.publicationGroup.findUnique({
     where: { id: groupId },
     select: { id: true, isActive: true },
   });
   if (!group) return [];
+  const brandWhere = brand ? await brandProductWhere(db, brand) : {};
+  if (!brandWhere) return [];
   const products = await db.product.findMany({
     where: {
       ...(lotId ? { lotId } : {}),
-      ...(catalog ? { catalog } : {}),
       ...(category ? { category } : {}),
-      ...(brand ? { brand } : {}),
+      ...brandWhere,
     },
     orderBy: { name: "asc" },
     select: {

@@ -103,11 +103,11 @@ describe("DiscountForm", () => {
 
     fireEvent.change(screen.getByLabelText("Buscar producto"), { target: { value: "vestido" } });
     expect(names()).toBe(2);
-    fireEvent.change(screen.getByLabelText("Lote"), { target: { value: "l2" } });
+    fireEvent.change(screen.getByLabelText("Marca"), { target: { value: "l2" } });
     expect(names()).toBe(1);
     expect(within(picker()).getByLabelText(/Vestido Seda/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Buscar producto"), { target: { value: "" } });
-    fireEvent.change(screen.getByLabelText("Lote"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("Marca"), { target: { value: "" } });
     fireEvent.change(screen.getByLabelText("Categoría"), { target: { value: "tops" } });
     expect(names()).toBe(1);
     expect(within(picker()).getByLabelText(/Top Satén/)).toBeInTheDocument();

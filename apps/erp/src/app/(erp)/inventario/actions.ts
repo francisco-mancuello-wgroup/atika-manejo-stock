@@ -6,6 +6,7 @@ import { type FormState, formValues } from "../../../lib/action-state";
 import { requireSession } from "../../../lib/auth/session";
 import { notifyCatalogChanged } from "../../../lib/catalog-live";
 import { getDb } from "../../../lib/db";
+import { deleteProduct } from "../../../lib/products/delete";
 import { readPhotoFields } from "../../../lib/products/form-data";
 import { createProduct, updateProduct } from "../../../lib/products/save";
 import { productPhotoStorage } from "../../../lib/products/storage";
@@ -74,4 +75,23 @@ export async function createProductAction(
     return { ...FAILED, values };
   }
   redirect(`/inventario/${productId}`);
+}
+
+/**
+ * "Eliminar producto" on the edit page: only products that never sold. A refusal comes back as
+ * form state; on success it goes to the inventory with the product name in the notice.
+ */
+export async function deleteProductAction(productId: string): Promise<FormState> {
+  await requireSession();
+  let name: string;
+  try {
+    const result = await deleteProduct(getDb(), productId, productPhotoStorage());
+    if (result.status !== "success") return result;
+    name = result.name;
+    revalidateProduct(productId);
+  } catch (error) {
+    console.error("deleteProductAction failed", error);
+    return { status: "error", message: "No se pudo eliminar. Intentá de nuevo en unos segundos." };
+  }
+  redirect(`/inventario?eliminado=${encodeURIComponent(name)}`);
 }

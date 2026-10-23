@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Input } from "@atika/ui";
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useEffect, useId, useRef, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
 import type { CurrencyDisplay } from "../lib/currency";
 import { countOf } from "../lib/format";
@@ -20,7 +20,7 @@ const FIELDS = [
 ] as const satisfies readonly { name: string; label: string; key: keyof AppSettingsView }[];
 
 const FORMULA_STEPS = [
-  { label: "Envío por unidad", formula: "Envío total del lote ÷ unidades compradas" },
+  { label: "Envío por unidad", formula: "Envío total de la marca ÷ unidades compradas" },
   { label: "Costo unitario", formula: "Valor original × % costo + envío por unidad" },
   {
     label: "Precio de venta",
@@ -45,6 +45,18 @@ export function SettingsForm({
     Object.fromEntries(FIELDS.map((field) => [field.name, String(settings[field.key])])),
   );
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
+  // The submitted values wait here until the owner confirms which lots are repriced
+  const [confirming, setConfirming] = useState<FormData | null>(null);
+  const titleId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (confirming) cancelRef.current?.focus();
+  }, [confirming]);
+  const apply = () => {
+    const data = confirming;
+    setConfirming(null);
+    if (data) startTransition(() => formAction(data));
+  };
 
   // Lots with their own parameters are not repriced by this form, so they stay out of the preview.
   const globalLots = lots.filter((lot) => lot.pricingMode === "global");
@@ -52,13 +64,20 @@ export function SettingsForm({
   const products = globalLots.reduce((sum, lot) => sum + lot.products.length, 0);
   const lotsSummary =
     customLots.length === 0
-      ? countOf(globalLots.length, "lote", "lotes")
-      : `${globalLots.length} de ${countOf(lots.length, "lote", "lotes")}`;
+      ? countOf(globalLots.length, "marca", "marcas")
+      : `${globalLots.length} de ${countOf(lots.length, "marca", "marcas")}`;
 
   return (
     <div className="flex max-w-5xl flex-col gap-6">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <form action={formAction} className="flex flex-col gap-4 border border-line bg-surface p-5">
+        <form
+          action={formAction}
+          onSubmit={(event) => {
+            event.preventDefault();
+            setConfirming(new FormData(event.currentTarget));
+          }}
+          className="flex flex-col gap-4 border border-line bg-surface p-5"
+        >
           <h2 className="font-display text-2xl text-ink">Valores por defecto</h2>
           {FIELDS.map((field) => (
             <Field
@@ -88,7 +107,7 @@ export function SettingsForm({
           </p>
           {customLots.length > 0 ? (
             <p className="text-sm text-muted">
-              {`${countOf(customLots.length, "lote con parámetros propios no se modifica", "lotes con parámetros propios no se modifican")}: ${customLots.map((lot) => lot.name).join(", ")}.`}
+              {`${countOf(customLots.length, "marca con parámetros propios no se modifica", "marcas con parámetros propios no se modifican")}: ${customLots.map((lot) => lot.name).join(", ")}.`}
             </p>
           ) : null}
           <Button type="submit" disabled={pending}>
@@ -96,6 +115,40 @@ export function SettingsForm({
           </Button>
           <FormMessage state={state} />
         </form>
+
+        {confirming ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setConfirming(null);
+              }}
+              className="flex w-full max-w-md flex-col gap-4 border border-line bg-bg p-6 shadow-lg"
+            >
+              <h2 id={titleId} className="font-display text-xl text-ink">
+                ¿Aplicar los parámetros?
+              </h2>
+              <p className="text-sm text-ink">
+                {globalLots.length > 0
+                  ? `Se recalculan (modo Global): ${globalLots.map((lot) => lot.name).join(", ")}.`
+                  : "No hay marcas en modo Global: solo se guardan los valores por defecto."}
+              </p>
+              {customLots.length > 0 ? (
+                <p className="text-sm text-muted">
+                  {`No se modifican (parámetros propios): ${customLots.map((lot) => lot.name).join(", ")}.`}
+                </p>
+              ) : null}
+              <div className="flex justify-end gap-3">
+                <Button ref={cancelRef} variant="secondary" onClick={() => setConfirming(null)}>
+                  Cancelar
+                </Button>
+                <Button onClick={apply}>Aplicar</Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <section className="flex flex-col gap-4 self-start border border-line bg-surface p-5">
           <h2 id="formula-title" className="font-display text-2xl text-ink">
@@ -118,8 +171,8 @@ export function SettingsForm({
             ))}
           </ol>
           <p className="text-xs text-muted">
-            Al guardar, los lotes en modo Global toman de acá el TC, el factor, el IVA y el % de
-            costo, y conservan su propio envío. Los lotes con parámetros propios no cambian.
+            Al guardar, las marcas en modo Global toman de acá el TC, el factor, el IVA y el % de
+            costo, y conservan su propio envío. Las marcas con parámetros propios no cambian.
           </p>
         </section>
       </div>

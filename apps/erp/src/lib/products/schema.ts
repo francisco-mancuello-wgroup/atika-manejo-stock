@@ -52,7 +52,7 @@ const productFields = {
       .min(1, { error: "Ingresá el nombre." })
       .max(120, { error: "El nombre no puede superar 120 caracteres." }),
   ),
-  brand: optionalText("La marca", 60),
+  brand: optionalText("La marca de la prenda", 60),
   color: optionalText("El color", 60),
   category: z.preprocess(
     blankToNull,
@@ -87,8 +87,13 @@ const productFields = {
 
 export const productSchema = z.object(productFields);
 export const newProductSchema = z.object({
-  lotId: z.string({ error: "Elegí un lote." }).regex(UUID, { error: "Elegí un lote." }),
+  lotId: z.string({ error: "Elegí una marca." }).regex(UUID, { error: "Elegí una marca." }),
   ...productFields,
+  // The "Visible en la web" switch; anything but "true" keeps the new product hidden.
+  isPublished: z
+    .string()
+    .optional()
+    .transform((value) => value === "true"),
 });
 
 export type ProductInput = z.output<typeof productSchema>;

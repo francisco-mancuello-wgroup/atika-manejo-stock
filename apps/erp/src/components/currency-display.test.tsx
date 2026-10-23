@@ -64,12 +64,14 @@ describe("views in US$", () => {
       sizes: [{ size: "M", stock: 1 }],
       totalStock: 1,
       imageUrl: null,
+      deletionBlock: null,
     };
     render(
       <InventarioView
         products={[product]}
         lots={[{ id: "lot-1", name: "Lote Uno" }]}
         filters={{}}
+        deleteAction={async () => ({ status: "idle" })}
         display={usd}
       />,
     );
@@ -86,10 +88,6 @@ describe("views in US$", () => {
       isPublished: true,
       sizes: ["S"],
       imageUrl: null,
-      catalog: null,
-      catalogOrder: null,
-      catalogSection: null,
-      catalogName: null,
       groupName: null,
     };
     const idle = async (): Promise<FormState> => ({ status: "idle" });
@@ -112,7 +110,6 @@ describe("views in US$", () => {
           setVisibilityMany: idle,
           publishAll: idle,
           saveSettings: idle,
-          saveLookbook: idle,
         }}
       />,
     );
@@ -171,6 +168,7 @@ describe("views in US$", () => {
           unitCostUsd: 52,
           priceGs: 1_230_000,
           cells: { M: { stock: 1, bought: 2 } },
+          imageUrl: null,
         },
       ],
       summary,
@@ -201,6 +199,7 @@ describe("views in US$", () => {
         unitCostUsd: 52,
         priceGs: 1_000_000,
         cells: {},
+        imageUrl: null,
       },
     ];
     const { rerender } = render(<LotGrid sizes={[]} rows={rows} display={usd} />);

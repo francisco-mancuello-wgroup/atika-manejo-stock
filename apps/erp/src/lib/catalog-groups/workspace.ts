@@ -1,4 +1,4 @@
-export type CatalogTab = "prendas" | "grupos";
+export type CatalogTab = "prendas" | "grupos" | "marcas";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -17,9 +17,10 @@ function first(value: string | string[] | undefined): string | undefined {
   return text ? text : undefined;
 }
 
-/** `?tab=grupos` is the Grupos tab; anything else is the Prendas tab. */
+/** `?tab=grupos` and `?tab=marcas` are those tabs; anything else is the Prendas tab. */
 export function parseCatalogTab(searchParams: SearchParams): CatalogTab {
-  return first(searchParams.tab) === "grupos" ? "grupos" : "prendas";
+  const tab = first(searchParams.tab);
+  return tab === "grupos" || tab === "marcas" ? tab : "prendas";
 }
 
 /** Old `?tab=grupos&grupo=<id|nuevo>` links to the group page that replaced the side panel. */

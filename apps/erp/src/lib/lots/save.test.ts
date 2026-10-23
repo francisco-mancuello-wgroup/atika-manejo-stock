@@ -66,7 +66,7 @@ describe.skipIf(!hasDatabase)("saveLotShipping (database)", () => {
     async (id) => {
       await withRollback(async (tx) => {
         const state = await saveLotShipping(dbOver(tx), id, { totalShippingUsd: "10" });
-        expect(state).toMatchObject({ status: "error", message: "No se encontró el lote." });
+        expect(state).toMatchObject({ status: "error", message: "No se encontró la marca." });
       });
     },
   );

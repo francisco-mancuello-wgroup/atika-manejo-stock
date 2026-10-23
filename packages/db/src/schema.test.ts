@@ -12,6 +12,7 @@ describe("schema", () => {
       "BankPromoBank",
       "BankPromoLot",
       "BankPromoProduct",
+      "Brand",
       "CatalogSettings",
       "CatalogVersion",
       "Discount",

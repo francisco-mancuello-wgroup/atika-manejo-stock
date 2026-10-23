@@ -154,7 +154,7 @@ describe("parseBankPromo", () => {
   it("needs lots for the 'lots' scope and products for the 'products' scope", () => {
     expect(parseBankPromo({ ...valid, scope: "lots" }, lists())).toEqual({
       success: false,
-      fieldErrors: { lotIds: "Elegí al menos un lote." },
+      fieldErrors: { lotIds: "Elegí al menos una marca." },
     });
     expect(parseBankPromo({ ...valid, scope: "products" }, lists())).toEqual({
       success: false,
