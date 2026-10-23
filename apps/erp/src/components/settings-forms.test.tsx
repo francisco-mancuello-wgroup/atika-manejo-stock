@@ -36,6 +36,13 @@ const lots: PreviewLot[] = [
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 const idle: Action = async () => ({ status: "idle" });
 
+const submit = () =>
+  fireEvent.submit(
+    screen.getAllByRole("button", { name: "Aplicar" })[0]?.closest("form") as HTMLFormElement,
+  );
+const confirm = () =>
+  fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Aplicar" }));
+
 function renderForm(
   action: Action = idle,
   formLots: PreviewLot[] = lots,
@@ -111,9 +118,8 @@ describe("SettingsForm", () => {
     );
     renderForm(action);
     fireEvent.change(screen.getByLabelText("IVA (%)"), { target: { value: "5" } });
-    fireEvent.submit(
-      screen.getByRole("button", { name: "Aplicar" }).closest("form") as HTMLFormElement,
-    );
+    submit();
+    confirm();
     expect(await screen.findByRole("status")).toHaveTextContent("Se actualizaron 2 lotes");
     const data = action.mock.calls[0]?.[1] as FormData;
     expect(data.get("vatPercent")).toBe("5");
@@ -129,9 +135,8 @@ describe("SettingsForm", () => {
       values: { vatPercent: "250" },
     });
     renderForm(action);
-    fireEvent.submit(
-      screen.getByRole("button", { name: "Aplicar" }).closest("form") as HTMLFormElement,
-    );
+    submit();
+    confirm();
     expect(await screen.findByText("El IVA no puede superar 100.")).toBeInTheDocument();
     expect(screen.getByLabelText("IVA (%)")).toHaveAttribute("aria-invalid", "true");
   });
@@ -286,5 +291,34 @@ describe("SettingsForm", () => {
       expect(screen.getByText("Todavía no hay lotes.")).toBeInTheDocument();
       expect(screen.queryByLabelText("Lote")).not.toBeInTheDocument();
     });
+  });
+
+  it("asks before applying, naming the lots that are repriced and the ones that are not", () => {
+    const action = vi.fn(idle);
+    const own: PreviewLot = {
+      ...(lots[1] as PreviewLot),
+      id: "lot-c",
+      name: "Lote C",
+      pricingMode: "custom",
+    };
+    renderForm(action, [lots[0] as PreviewLot, own]);
+    submit();
+    const dialog = screen.getByRole("dialog", { name: "¿Aplicar los parámetros?" });
+    expect(within(dialog).getByText("Se recalculan (modo Global): Lote A.")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("No se modifican (parámetros propios): Lote C."),
+    ).toBeInTheDocument();
+    expect(action).not.toHaveBeenCalled();
+    confirm();
+    expect(action).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies nothing when the confirmation is cancelled", () => {
+    const action = vi.fn(idle);
+    renderForm(action);
+    submit();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(action).not.toHaveBeenCalled();
   });
 });
