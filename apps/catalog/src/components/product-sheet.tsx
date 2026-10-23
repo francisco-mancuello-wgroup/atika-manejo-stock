@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CatalogProductDetail } from "../lib/catalog-view";
+import { objectPosition } from "../lib/focus";
 import { discountedPriceLabel } from "../lib/price";
 import { buildWhatsappUrl } from "../lib/whatsapp";
 import { BankPromosBlock } from "./bank-promos-block";
@@ -124,14 +125,26 @@ export function ProductSheet({
                     )}
                   >
                     {/* biome-ignore lint/performance/noImgElement: tiny fixed-size thumbnail */}
-                    <img src={image.url} alt="" className="size-full object-cover" />
+                    <img
+                      src={image.url}
+                      alt=""
+                      className="size-full object-cover"
+                      style={{ objectPosition: objectPosition(image) }}
+                    />
                   </button>
                 </li>
               ))}
             </ul>
           ) : null}
           <div className="w-[225px] max-w-full shrink-0 pr-2 pb-2">
-            <ProductPhoto src={current} alt={product.name} sizes="225px" size="sheet" priority />
+            <ProductPhoto
+              src={current}
+              alt={product.name}
+              focus={product.images[photo] ?? product.imageFocus}
+              sizes="225px"
+              size="sheet"
+              priority
+            />
           </div>
         </div>
 

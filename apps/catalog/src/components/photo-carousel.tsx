@@ -3,11 +3,14 @@
 import { cn } from "@atika/ui";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { objectPosition } from "../lib/focus";
 import { CloseIcon } from "./icons";
 
 interface Photo {
   url: string;
   alt: string;
+  focusX?: number;
+  focusY?: number;
 }
 
 /**
@@ -79,8 +82,9 @@ export function PhotoCarousel({
                 fill
                 sizes="(min-width: 1024px) 55vw, 100vw"
                 priority={priority && index === 0}
-                // Every photo fills the same frame; the zoom shows it uncropped
+                // Every photo fills the same frame around its focal point; the zoom shows it uncropped
                 className="object-cover"
+                style={{ objectPosition: objectPosition(photo) }}
               />
             </button>
           </div>

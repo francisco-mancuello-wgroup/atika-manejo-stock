@@ -1,6 +1,7 @@
 import type { PromoGroup } from "@atika/pricing";
 import type { CatalogSettingsView, ProductSource } from "./catalog-view";
 import { type PieceColor, resolveColor } from "./colors";
+import { type Focus, focusOf } from "./focus";
 import { type PriceFields, priceFields } from "./price";
 import { sortSizes } from "./sizes";
 
@@ -93,7 +94,7 @@ export interface LookbookPage {
   /** The pieces grouped by name, so each garment shows once with its colors. */
   items: LookbookItem[];
   /** `pieceId` is the product the photo belongs to, so choosing a color can show its photo. */
-  photos: { url: string; alt: string; pieceId: string }[];
+  photos: (Focus & { url: string; alt: string; pieceId: string })[];
   /** 1-based position in the catalog, after hiding pieces without stock or photos. */
   page: number;
 }
@@ -167,7 +168,12 @@ export function lookbookPages(
       .flatMap((row) =>
         [...row.images]
           .sort((a, b) => a.position - b.position)
-          .map((image) => ({ url: image.url, alt: displayName(row), pieceId: row.id })),
+          .map((image) => ({
+            url: image.url,
+            alt: displayName(row),
+            pieceId: row.id,
+            ...focusOf(image),
+          })),
       )
       .filter((photo) => !seen.has(photo.url) && Boolean(seen.add(photo.url)));
     const first = group[0];

@@ -1,4 +1,5 @@
 import type { PromoGroup } from "@atika/pricing";
+import { type Focus, focusOf } from "./focus";
 import { type PriceFields, priceFields } from "./price";
 import { sortSizes } from "./sizes";
 
@@ -42,6 +43,8 @@ export interface CatalogProduct extends PriceFields {
   inStock: boolean;
   /** URL of the cover photo. */
   imageUrl: string | null;
+  /** Focal point of the cover photo. */
+  imageFocus: Focus;
   /** One line under the name: color and the start of the description. */
   detail: string | null;
 }
@@ -51,7 +54,7 @@ export interface CatalogProductDetail extends CatalogProduct {
   color: string | null;
   description: string | null;
   /** Photos in display order, named after the product (the ERP alt text is not published). */
-  images: { url: string; alt: string }[];
+  images: (Focus & { url: string; alt: string })[];
   /** Bank promotions that cover this product today, grouped for display; none when absent. */
   bankPromos?: PromoGroup[];
 }
@@ -66,7 +69,7 @@ export interface ProductSource {
   /** Percent off that applies now (computed on the server from the active discounts). */
   discountPercent?: number | null;
   variants: readonly { size: string; stock: number }[];
-  images: readonly { url: string; position: number }[];
+  images: readonly (Partial<Focus> & { url: string; position: number })[];
   color?: string | null;
   description?: string | null;
   /** Bank promotions covering the product now (computed on the server from the live promos). */
@@ -106,6 +109,7 @@ export function toCatalogProduct(
     sizes: settings.showSoldOutSizes ? sizes : available,
     inStock: available.length > 0,
     imageUrl: cover?.url ?? null,
+    imageFocus: focusOf(cover ?? {}),
     detail: detailLine(clean(product.color), clean(product.description)),
   };
 }
@@ -120,7 +124,7 @@ export function toCatalogProductDetail(
     description: clean(product.description),
     images: [...product.images]
       .sort((a, b) => a.position - b.position)
-      .map((image) => ({ url: image.url, alt: product.name })),
+      .map((image) => ({ url: image.url, alt: product.name, ...focusOf(image) })),
     bankPromos: product.bankPromos ?? [],
   };
 }

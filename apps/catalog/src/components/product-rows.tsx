@@ -47,7 +47,13 @@ export function ProductRows({
           )}
         >
           <div className="w-[72px] shrink-0 md:w-[84px]">
-            <ProductPhoto src={product.imageUrl} alt={product.name} sizes="84px" size="row" />
+            <ProductPhoto
+              src={product.imageUrl}
+              alt={product.name}
+              focus={product.imageFocus}
+              sizes="84px"
+              size="row"
+            />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">

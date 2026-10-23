@@ -29,6 +29,7 @@ const product: CatalogProduct = {
   ],
   inStock: true,
   imageUrl: null,
+  imageFocus: { focusX: 50, focusY: 50 },
   detail: null,
   brand: null,
 };

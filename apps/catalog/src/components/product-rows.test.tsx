@@ -16,6 +16,7 @@ const product: CatalogProduct = {
   ],
   inStock: true,
   imageUrl: null,
+  imageFocus: { focusX: 50, focusY: 50 },
   detail: "Verde · Lino fresco",
   brand: "Casa Icona",
 };
@@ -143,6 +144,18 @@ describe("ProductRows", () => {
     );
     expect(photo).toHaveClass("object-cover");
     expect(photo.parentElement?.className).toContain("var(--color-sand)");
+  });
+
+  it("crops the cover around its focal point", () => {
+    renderRows([
+      {
+        ...product,
+        imageUrl: "/media/products/a.webp",
+        imageFocus: { focusX: 40, focusY: 10 },
+      },
+    ]);
+    const photo = screen.getByRole("img", { name: "Vestido Lino" });
+    expect(photo.getAttribute("style")).toContain("object-position: 40% 10%");
   });
 
   it("shows an empty subtle placeholder with the offset when there is no photo", () => {

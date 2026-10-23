@@ -25,6 +25,7 @@ const products: CatalogProduct[] = [
     sizes: [{ size: "M", available: true }],
     inStock: true,
     imageUrl: null,
+    imageFocus: { focusX: 50, focusY: 50 },
     detail: null,
     brand: "Átika",
   },

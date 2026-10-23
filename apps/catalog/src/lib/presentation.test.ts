@@ -14,8 +14,8 @@ const row = {
     { size: "XS", stock: 1 },
   ],
   images: [
-    { url: "/media/products/b.webp", position: 1 },
-    { url: "/media/products/a.webp", position: 0 },
+    { url: "/media/products/b.webp", position: 1, focusX: 10, focusY: 90 },
+    { url: "/media/products/a.webp", position: 0, focusX: 50, focusY: 20 },
   ],
 };
 const open = { showPrices: true, showSoldOutSizes: false };
@@ -43,8 +43,8 @@ describe("toPresentationPiece", () => {
         { size: "M", available: true },
       ],
       photos: [
-        { url: "/media/products/a.webp", alt: "COSTA VINO" },
-        { url: "/media/products/b.webp", alt: "COSTA VINO" },
+        { url: "/media/products/a.webp", alt: "COSTA VINO", focusX: 50, focusY: 20 },
+        { url: "/media/products/b.webp", alt: "COSTA VINO", focusX: 10, focusY: 90 },
       ],
       color: { label: "Vino", hex: expect.stringMatching(/^#/) },
       description: "Prenda corta en tono vino",
@@ -113,7 +113,8 @@ describe("toPresentationPiece", () => {
       "sizes",
     ]);
     for (const size of piece.sizes) expect(Object.keys(size).sort()).toEqual(["available", "size"]);
-    for (const photo of piece.photos) expect(Object.keys(photo).sort()).toEqual(["alt", "url"]);
+    for (const photo of piece.photos)
+      expect(Object.keys(photo).sort()).toEqual(["alt", "focusX", "focusY", "url"]);
     const json = JSON.stringify(piece);
     for (const secret of [
       "77.77",

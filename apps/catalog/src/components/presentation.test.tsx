@@ -17,8 +17,8 @@ const collection: PresentationCollection = {
         { size: "S", available: true },
       ],
       photos: [
-        { url: "/media/a.webp", alt: "COSTA VINO" },
-        { url: "/media/b.webp", alt: "COSTA VINO" },
+        { url: "/media/a.webp", alt: "COSTA VINO", focusX: 50, focusY: 50 },
+        { url: "/media/b.webp", alt: "COSTA VINO", focusX: 50, focusY: 50 },
       ],
       color: { label: "Vino", hex: "#6d1f2c" },
       description: "Prenda corta en tono vino",

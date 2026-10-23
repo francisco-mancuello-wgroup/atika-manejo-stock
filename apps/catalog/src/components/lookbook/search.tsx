@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
+import { objectPosition } from "../../lib/focus";
 import { type SearchEntry, searchEntries } from "../../lib/search";
 import { CloseIcon, SearchIcon } from "./icons";
 
@@ -86,6 +87,7 @@ export function LookbookSearch({ entries }: { entries: SearchEntry[] }) {
                             fill
                             sizes="64px"
                             className="object-cover"
+                            style={{ objectPosition: objectPosition(entry.photoFocus) }}
                           />
                         )}
                       </span>

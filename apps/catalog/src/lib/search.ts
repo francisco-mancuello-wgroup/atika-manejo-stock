@@ -1,3 +1,4 @@
+import { type Focus, focusOf } from "./focus";
 import { type LookbookPage, pageAnchor } from "./lookbook";
 
 /** One lookbook page as the search box sees it. */
@@ -8,6 +9,7 @@ export interface SearchEntry {
   section: string | null;
   colors: string[];
   photo: string | null;
+  photoFocus: Focus;
   /** Everything a shopper may type, already normalized. */
   text: string;
 }
@@ -43,6 +45,7 @@ export function searchEntriesOf(
       section: page.section,
       colors,
       photo: page.photos[0]?.url ?? null,
+      photoFocus: focusOf(page.photos[0] ?? {}),
       text: normalize(words.filter(Boolean).join(" ")),
     };
   });

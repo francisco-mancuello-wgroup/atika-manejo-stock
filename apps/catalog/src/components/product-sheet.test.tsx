@@ -20,12 +20,13 @@ const product: CatalogProductDetail = {
   ],
   inStock: true,
   imageUrl: "/media/products/a.webp",
+  imageFocus: { focusX: 50, focusY: 50 },
   detail: "Verde · Lino fresco",
   color: "Verde",
   description: "Lino fresco con cierre lateral.",
   images: [
-    { url: "/media/products/a.webp", alt: "Vestido Lino" },
-    { url: "/media/products/b.webp", alt: "Vestido Lino" },
+    { url: "/media/products/a.webp", alt: "Vestido Lino", focusX: 50, focusY: 20 },
+    { url: "/media/products/b.webp", alt: "Vestido Lino", focusX: 10, focusY: 90 },
   ],
 };
 
@@ -155,6 +156,16 @@ describe("ProductSheet", () => {
     fireEvent.click(thumbs[1] as HTMLElement);
     expect(thumbs[1]).toHaveAttribute("aria-pressed", "true");
     expect(photo()?.getAttribute("src")).toContain(encodeURIComponent("/media/products/b.webp"));
+  });
+
+  it("crops the photo and its thumbnail around the focal point of the one shown", () => {
+    const { container } = renderSheet({ imageFocus: { focusX: 50, focusY: 20 } });
+    const photo = () => screen.getAllByRole("img", { name: "Vestido Lino" })[0];
+    expect(photo()?.getAttribute("style")).toContain("object-position: 50% 20%");
+    const thumbs = container.querySelectorAll("button[aria-label^='Ver foto'] img");
+    expect(thumbs[1]?.getAttribute("style")).toContain("object-position: 10% 90%");
+    fireEvent.click(screen.getAllByRole("button", { name: /Ver foto/ })[1] as HTMLElement);
+    expect(photo()?.getAttribute("style")).toContain("object-position: 10% 90%");
   });
 
   it("omits the thumbnails with a single photo and keeps an empty placeholder without photos", () => {

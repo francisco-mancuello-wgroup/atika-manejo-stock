@@ -27,6 +27,25 @@ describe("PiecePhotos", () => {
     }
   });
 
+  it("keeps each photo's focal point in the frame, and shows the whole photo when zoomed", () => {
+    const focused = [
+      { url: "/media/a.webp", alt: "Costa Coco", focusX: 50, focusY: 20 },
+      { url: "/media/b.webp", alt: "Costa Coco" },
+    ];
+    render(<PiecePhotos photos={focused} label="Fotos de Costa Coco" priority={false} />);
+    const list = screen.getByRole("list", { name: "Fotos de Costa Coco" });
+    const [first, second] = within(list).getAllByRole("img");
+    expect(first?.getAttribute("style")).toContain("object-position: 50% 20%");
+    expect(second?.getAttribute("style")).toContain("object-position: 50% 50%");
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Ver en grande: Costa Coco" })[0] as HTMLElement,
+    );
+    const dialog = screen.getByRole("dialog", { hidden: true });
+    expect(within(dialog).getByRole("img", { hidden: true }).getAttribute("style")).not.toContain(
+      "object-position",
+    );
+  });
+
   it("keeps the photo frame the same height on every page, whatever the text below it", () => {
     render(<PiecePhotos photos={photos} label="Fotos de Costa Coco" priority={false} />);
     const list = screen.getByRole("list", { name: "Fotos de Costa Coco" });

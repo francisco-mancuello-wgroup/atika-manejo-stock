@@ -5,6 +5,7 @@ import {
   toCatalogProduct,
 } from "./catalog-view";
 import { type PieceColor, resolveColor } from "./colors";
+import { type Focus, focusOf } from "./focus";
 import { findLookDescription, LOOKS, LOOKS_SUPPLIER, type Look } from "./looks";
 import type { PriceFields } from "./price";
 
@@ -17,7 +18,7 @@ export interface PresentationPiece extends PriceFields {
   name: string;
   sizes: CatalogSize[];
   /** Photos in display order, named after the product. */
-  photos: { url: string; alt: string }[];
+  photos: (Focus & { url: string; alt: string })[];
   color: PieceColor | null;
   description: string | null;
 }
@@ -67,7 +68,7 @@ export function toPresentationPiece(
     sizes: base.sizes,
     photos: [...product.images]
       .sort((a, b) => a.position - b.position)
-      .map((image) => ({ url: image.url, alt: product.name })),
+      .map((image) => ({ url: image.url, alt: product.name, ...focusOf(image) })),
     color: resolveColor(product.color, product.name),
     description: stored || fromLook,
   };

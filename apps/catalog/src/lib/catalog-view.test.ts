@@ -14,8 +14,8 @@ const row = {
     { size: "XS", stock: 1 },
   ],
   images: [
-    { url: "/media/products/b.webp", position: 1 },
-    { url: "/media/products/a.webp", position: 0 },
+    { url: "/media/products/b.webp", position: 1, focusX: 10, focusY: 90 },
+    { url: "/media/products/a.webp", position: 0, focusX: 50, focusY: 20 },
   ],
 };
 const open = { showPrices: true, showSoldOutSizes: false };
@@ -36,6 +36,7 @@ describe("toCatalogProduct", () => {
       ],
       inStock: true,
       imageUrl: "/media/products/a.webp",
+      imageFocus: { focusX: 50, focusY: 20 },
       detail: null,
     });
   });
@@ -77,6 +78,12 @@ describe("toCatalogProduct", () => {
   it("uses the cover (lowest position) as the image, or null without photos", () => {
     expect(toCatalogProduct(row, open).imageUrl).toBe("/media/products/a.webp");
     expect(toCatalogProduct({ ...row, images: [] }, open).imageUrl).toBeNull();
+  });
+
+  it("carries the focal point of the cover, centered when there is none", () => {
+    expect(toCatalogProduct(row, open).imageFocus).toEqual({ focusX: 50, focusY: 20 });
+    const bare = { ...row, images: [{ url: "/media/products/a.webp", position: 0 }] };
+    expect(toCatalogProduct(bare, open).imageFocus).toEqual({ focusX: 50, focusY: 50 });
   });
 
   it("includes sold-out sizes (marked unavailable) only when the setting allows it", () => {
@@ -126,6 +133,7 @@ describe("toCatalogProduct", () => {
       "discountPercent",
       "discountedPriceGs",
       "id",
+      "imageFocus",
       "imageUrl",
       "inStock",
       "name",
@@ -157,8 +165,8 @@ describe("toCatalogProduct", () => {
       { ...open, showSoldOutSizes: true },
     );
     expect(detail.images).toEqual([
-      { url: "/media/products/a.webp", alt: "Vestido Lino" },
-      { url: "/media/products/b.webp", alt: "Vestido Lino" },
+      { url: "/media/products/a.webp", alt: "Vestido Lino", focusX: 50, focusY: 20 },
+      { url: "/media/products/b.webp", alt: "Vestido Lino", focusX: 10, focusY: 90 },
     ]);
     expect(detail.color).toBe("Verde");
     expect(detail.description).toBe("Lino fresco");
@@ -184,6 +192,7 @@ describe("toCatalogProduct", () => {
       "discountPercent",
       "discountedPriceGs",
       "id",
+      "imageFocus",
       "imageUrl",
       "images",
       "inStock",

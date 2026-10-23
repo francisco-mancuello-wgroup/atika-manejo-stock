@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { objectPosition } from "../../lib/focus";
 import { CloseIcon } from "./icons";
 
-type Photo = { url: string; alt: string; pieceId?: string };
+type Photo = { url: string; alt: string; pieceId?: string; focusX?: number; focusY?: number };
 
 /**
  * The photos of a lookbook page: swipe sideways when there are several, tap one to see it full
@@ -60,8 +61,9 @@ export function PiecePhotos({
                 fill
                 priority={priority && index === 0}
                 sizes="(orientation: landscape) and (min-width: 1024px) 55vw, 100vw"
-                // Every photo fills the same frame; the zoom below shows it uncropped
+                // Every photo fills the same frame around its focal point; the zoom below shows it uncropped
                 className="object-cover"
+                style={{ objectPosition: objectPosition(photo) }}
               />
             </button>
           </li>
