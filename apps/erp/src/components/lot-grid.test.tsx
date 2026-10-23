@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { LotDetail } from "../lib/view-models";
 import { LotGrid } from "./lot-grid";
 
@@ -13,6 +13,17 @@ const detail: Pick<LotDetail, "sizes" | "rows"> = {
       unitCostUsd: 52,
       priceGs: 1_000_000,
       cells: { S: { stock: 0, bought: 2 }, M: { stock: 3, bought: 3 } },
+      imageUrl: "/media/products/vestido-lino.webp",
+    },
+    {
+      id: "p2",
+      name: "Pantalón Ámbar",
+      code: "B7",
+      originalValueUsd: 50,
+      unitCostUsd: 30,
+      priceGs: 500_000,
+      cells: { U: { stock: 1, bought: 1 } },
+      imageUrl: null,
     },
   ],
 };
@@ -52,5 +63,26 @@ describe("LotGrid", () => {
     expect(screen.getByText("US$ 100,00")).toBeInTheDocument();
     expect(screen.getByText("US$ 52,00")).toBeInTheDocument();
     expect(screen.getByText("₲ 1.000.000")).toBeInTheDocument();
+  });
+
+  it("shows each model's photo next to its name", () => {
+    render(<LotGrid sizes={detail.sizes} rows={detail.rows} />);
+    expect(screen.getByRole("img", { name: "Vestido Lino" })).toHaveAttribute(
+      "src",
+      expect.stringContaining("vestido-lino.webp"),
+    );
+  });
+
+  it("filters the models by name or code, ignoring case and accents", () => {
+    render(<LotGrid sizes={detail.sizes} rows={detail.rows} />);
+    const search = screen.getByRole("searchbox", { name: "Buscar en la compra" });
+    fireEvent.change(search, { target: { value: "ambar" } });
+    expect(screen.queryByText("Vestido Lino")).not.toBeInTheDocument();
+    expect(screen.getByText("Pantalón Ámbar")).toBeInTheDocument();
+    expect(screen.getByText("1 de 2 modelos")).toBeInTheDocument();
+    fireEvent.change(search, { target: { value: "a1" } });
+    expect(screen.getByText("Vestido Lino")).toBeInTheDocument();
+    fireEvent.change(search, { target: { value: "zzz" } });
+    expect(screen.getByText("Ningún modelo coincide con la búsqueda.")).toBeInTheDocument();
   });
 });

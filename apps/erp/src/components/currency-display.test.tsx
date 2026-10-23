@@ -168,6 +168,7 @@ describe("views in US$", () => {
           unitCostUsd: 52,
           priceGs: 1_230_000,
           cells: { M: { stock: 1, bought: 2 } },
+          imageUrl: null,
         },
       ],
       summary,
@@ -198,6 +199,7 @@ describe("views in US$", () => {
         unitCostUsd: 52,
         priceGs: 1_000_000,
         cells: {},
+        imageUrl: null,
       },
     ];
     const { rerender } = render(<LotGrid sizes={[]} rows={rows} display={usd} />);

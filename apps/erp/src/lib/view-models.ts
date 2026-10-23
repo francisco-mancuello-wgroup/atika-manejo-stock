@@ -189,6 +189,8 @@ export interface LotGridRow {
   unitCostUsd: number;
   priceGs: number;
   cells: Record<string, GridCell>;
+  /** Cover photo, or null without photos. */
+  imageUrl: string | null;
 }
 
 export interface LotDetail {
@@ -240,6 +242,7 @@ export function toLotDetail(lot: LotRow): LotDetail {
         cells: Object.fromEntries(
           product.variants.map((v) => [v.size, { stock: v.stock, bought: v.unitsBought }]),
         ),
+        imageUrl: coverUrl(product.images),
       };
     }),
     summary: toLotSummary(lot),
