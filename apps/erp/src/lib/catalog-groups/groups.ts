@@ -1,5 +1,6 @@
-import type { Catalog, Prisma } from "@atika/db";
+import type { Prisma } from "@atika/db";
 import type { FormState } from "../action-state";
+import { brandProductWhere } from "../brands/filter";
 import type { TransactionRunner } from "../lots/save";
 import { parseGroup } from "./schema";
 import {
@@ -170,8 +171,8 @@ export async function setGroupAllocations(
 export interface ProductFilter {
   productIds?: string[];
   lotId?: string;
-  catalog?: Catalog;
   category?: string;
+  /** Brand slug: a registered brand, or Otras marcas for the rest. */
   brand?: string;
 }
 
@@ -225,9 +226,9 @@ export async function addProductsToGroup(
   proposal: Proposal = "all",
 ): Promise<FormState> {
   if (!UUID.test(groupId)) return NOT_FOUND;
-  const { productIds, lotId, catalog, category, brand } = filter;
-  if (!productIds?.length && !lotId && !catalog && !category && !brand) {
-    return error("Elegí un lote, catálogo, categoría o marca.");
+  const { productIds, lotId, category, brand } = filter;
+  if (!productIds?.length && !lotId && !category && !brand) {
+    return error("Elegí un lote, categoría o marca.");
   }
   if (lotId && !UUID.test(lotId)) return error("No se encontró el lote.");
   if (productIds?.some((id) => !UUID.test(id))) return error("Ese producto ya no existe.");
@@ -235,15 +236,16 @@ export async function addProductsToGroup(
   return db.$transaction(async (tx): Promise<FormState> => {
     const group = await tx.publicationGroup.findUnique({ where: { id: groupId } });
     if (!group) return NOT_FOUND;
+    const brandWhere = brand ? await brandProductWhere(tx, brand) : {};
+    if (!brandWhere) return error("No se encontró la marca.");
     const variants = await tx.productVariant.findMany({
       where: {
         stock: { gt: 0 },
         product: {
           ...(productIds?.length ? { id: { in: productIds } } : {}),
           ...(lotId ? { lotId } : {}),
-          ...(catalog ? { catalog } : {}),
           ...(category ? { category } : {}),
-          ...(brand ? { brand } : {}),
+          ...brandWhere,
         },
       },
       select: { id: true, stock: true, productId: true },

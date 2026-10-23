@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogSettings, parseCategory, parseLookbook } from "./schema";
+import { parseCatalogSettings, parseCategory } from "./schema";
 
 const form = {
   whatsappNumber: "+595 981 123 456",
@@ -47,58 +47,5 @@ describe("parseCategory", () => {
     expect(parseCategory("tops")).toEqual({ success: true, data: "tops" });
     expect(parseCategory("")).toEqual({ success: true, data: null });
     expect(parseCategory("zapatos")).toEqual({ success: false });
-  });
-});
-
-describe("parseLookbook", () => {
-  const filled = {
-    catalogOrder: "12",
-    catalogSection: " Vestidos ",
-    catalogName: " Vestido Lino ",
-  };
-
-  it("parses the lookbook placement, trimming text", () => {
-    expect(parseLookbook(filled)).toEqual({
-      success: true,
-      data: {
-        catalogOrder: 12,
-        catalogSection: "Vestidos",
-        catalogName: "Vestido Lino",
-      },
-    });
-  });
-
-  it("stores blank or missing fields as null (not in the lookbook)", () => {
-    const empty = {
-      catalogOrder: " ",
-      catalogSection: "",
-      catalogName: "  ",
-    };
-    const expected = {
-      success: true,
-      data: {
-        catalogOrder: null,
-        catalogSection: null,
-        catalogName: null,
-      },
-    };
-    expect(parseLookbook(empty)).toEqual(expected);
-    expect(parseLookbook({})).toEqual(expected);
-  });
-
-  it("no longer reads a catalog: the lookbook is built by brand", () => {
-    const result = parseLookbook({ ...filled, catalog: "verano" });
-    expect(result).toEqual({
-      success: true,
-      data: expect.not.objectContaining({ catalog: expect.anything() }),
-    });
-  });
-
-  it("requires the page to be a positive whole number", () => {
-    for (const catalogOrder of ["0", "-3", "1.5", "abc"]) {
-      const result = parseLookbook({ ...filled, catalogOrder });
-      expect(result.success).toBe(false);
-      if (!result.success) expect(Object.keys(result.fieldErrors)).toEqual(["catalogOrder"]);
-    }
   });
 });

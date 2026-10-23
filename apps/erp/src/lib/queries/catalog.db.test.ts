@@ -1,7 +1,8 @@
+import { ensureBrand } from "@atika/db/brands";
 import { afterAll, describe, expect, it } from "vitest";
 import { createFixtureLot, disconnectTestDb, hasDatabase, withRollback } from "../../test/db";
 import { getDb } from "../db";
-import { getCatalogProducts, getCatalogSettings } from "./catalog";
+import { getCatalogBrandFilters, getCatalogProducts, getCatalogSettings } from "./catalog";
 
 // Read-only checks against the local seeded database.
 describe.skipIf(!hasDatabase)("catalog management queries (database)", () => {
@@ -53,6 +54,51 @@ describe.skipIf(!hasDatabase)("catalog management queries (database)", () => {
         ["Grouped q-hint", "Verano hint"],
         ["Plain q-hint", null],
       ]);
+    });
+  });
+
+  it("filters by brand slug, with the fallback taking pieces without a registered brand", async () => {
+    await withRollback(async (tx) => {
+      const brand = await ensureBrand(tx, "Zq Brand");
+      const fallback = await ensureBrand(tx, null);
+      const { products } = await createFixtureLot(tx, [
+        { name: "Branded q-brand", originalValueUsd: 10, variants: [["S", 5, 5]] },
+        { name: "Loose q-brand", originalValueUsd: 10, variants: [["S", 5, 5]] },
+        { name: "Unknown q-brand", originalValueUsd: 10, variants: [["S", 5, 5]] },
+      ]);
+      const [branded, loose, unknown] = products.map((p) => p.id);
+      await tx.product.update({ where: { id: branded ?? "" }, data: { brand: "zq brand" } });
+      await tx.product.update({ where: { id: loose ?? "" }, data: { brand: null } });
+      await tx.product.update({ where: { id: unknown ?? "" }, data: { brand: "Nadie" } });
+      const names = async (slug?: string) =>
+        (await getCatalogProducts({ status: "todos", query: "q-brand", brand: slug }, tx))
+          .map((p) => p.name)
+          .sort();
+      expect(await names()).toHaveLength(3);
+      expect(await names(brand.slug)).toEqual(["Branded q-brand"]);
+      expect(await names(fallback.slug)).toEqual(["Loose q-brand", "Unknown q-brand"]);
+      // An unknown slug (an old bookmark) filters nothing
+      expect(await names("no-such-brand")).toHaveLength(3);
+    });
+  });
+
+  it("offers a filter link per brand with its product count", async () => {
+    await withRollback(async (tx) => {
+      const brand = await ensureBrand(tx, "Zq Count");
+      const { products } = await createFixtureLot(tx, [
+        { name: "Counted", originalValueUsd: 10, variants: [["S", 5, 5]] },
+      ]);
+      await tx.product.update({
+        where: { id: products[0]?.id ?? "" },
+        data: { brand: "Zq Count" },
+      });
+      const links = await getCatalogBrandFilters(tx);
+      expect(links.find((link) => link.slug === brand.slug)).toEqual({
+        slug: brand.slug,
+        name: "Zq Count",
+        count: 1,
+      });
+      expect(links.at(-1)?.slug).toBe("otras-marcas");
     });
   });
 });

@@ -24,23 +24,23 @@ describe("parseCatalogFilters", () => {
     expect(parseCatalogFilters({ q: "   " })).toEqual({ status: "todos" });
   });
 
-  it("reads the lookbook filter and ignores unknown catalogs", () => {
-    expect(parseCatalogFilters({ catalogo: "casa-icona" })).toEqual({
+  it("reads the brand slug and ignores the old lookbook param", () => {
+    expect(parseCatalogFilters({ marca: "casa-icona" })).toEqual({
       status: "todos",
-      catalog: "casa-icona",
+      brand: "casa-icona",
     });
-    expect(parseCatalogFilters({ catalogo: "ninguno" })).toEqual({
+    expect(parseCatalogFilters({ marca: ["milonga", "sordo"] })).toEqual({
       status: "todos",
-      catalog: "ninguno",
+      brand: "milonga",
     });
-    expect(parseCatalogFilters({ catalogo: "verano" })).toEqual({ status: "todos" });
+    expect(parseCatalogFilters({ catalogo: "casa-icona" })).toEqual({ status: "todos" });
   });
 });
 
 describe("catalogHref", () => {
-  it("keeps the lookbook filter next to the status and search", () => {
-    expect(catalogHref({ status: "visibles", query: "top", catalog: "sordo" })).toBe(
-      "/catalogo-web?estado=visibles&catalogo=sordo&q=top",
+  it("keeps the brand filter next to the status and search", () => {
+    expect(catalogHref({ status: "visibles", query: "top", brand: "sordo" })).toBe(
+      "/catalogo-web?estado=visibles&marca=sordo&q=top",
     );
     expect(catalogHref({ status: "todos" })).toBe("/catalogo-web");
   });

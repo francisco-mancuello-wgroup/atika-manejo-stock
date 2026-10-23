@@ -1,4 +1,5 @@
 import type { Prisma } from "@atika/db";
+import { ensureBrand } from "@atika/db/brands";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   createFixtureLot,
@@ -338,19 +339,17 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
       });
     });
 
-    it("filters by catalog, category and brand", async () => {
+    it("filters by brand and category", async () => {
       await withRollback(async (tx) => {
         const { lot, a, b } = await fixture(tx);
+        const brand = await ensureBrand(tx, "Zz Brand");
         await tx.product.update({
           where: { id: a.id },
-          data: { brand: "Zz Brand", category: "remeras" },
+          data: { brand: "zz brand", category: "remeras" },
         });
-        await tx.product.update({
-          where: { id: b.id },
-          data: { brand: "Zz Other", catalog: "milonga" },
-        });
+        await tx.product.update({ where: { id: b.id }, data: { brand: "Zz Other" } });
         const byBrand = await newGroup(tx, "brand");
-        await addProductsToGroup(dbOver(tx), byBrand, { brand: "Zz Brand" }, NOW);
+        await addProductsToGroup(dbOver(tx), byBrand, { brand: brand.slug }, NOW);
         expect(await tx.groupAllocation.count({ where: { groupId: byBrand } })).toBe(2);
         const byLotAndCategory = await newGroup(tx, "cat");
         await addProductsToGroup(
@@ -360,10 +359,26 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
           NOW,
         );
         expect(await tx.groupAllocation.count({ where: { groupId: byLotAndCategory } })).toBe(2);
-        const byCatalog = await newGroup(tx, "catalog");
+        // "Zz Other" is not registered: it falls into Otras marcas
+        const byFallback = await newGroup(tx, "fallback");
         await tx.productVariant.updateMany({ where: { productId: b.id }, data: { stock: 2 } });
-        await addProductsToGroup(dbOver(tx), byCatalog, { lotId: lot.id, catalog: "milonga" }, NOW);
-        expect(await tx.groupAllocation.count({ where: { groupId: byCatalog } })).toBe(1);
+        await addProductsToGroup(
+          dbOver(tx),
+          byFallback,
+          { lotId: lot.id, brand: "otras-marcas" },
+          NOW,
+        );
+        expect(await tx.groupAllocation.count({ where: { groupId: byFallback } })).toBe(1);
+      });
+    });
+
+    it("adds nothing for an unknown brand", async () => {
+      await withRollback(async (tx) => {
+        const id = await newGroup(tx);
+        expect(await addProductsToGroup(dbOver(tx), id, { brand: "no-such-brand" }, NOW)).toEqual({
+          status: "error",
+          message: "No se encontró la marca.",
+        });
       });
     });
 
@@ -373,7 +388,7 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
         const state = await addProductsToGroup(dbOver(tx), id, {}, NOW);
         expect(state).toEqual({
           status: "error",
-          message: "Elegí un lote, catálogo, categoría o marca.",
+          message: "Elegí un lote, categoría o marca.",
         });
       });
     });
@@ -382,8 +397,9 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
       await withRollback(async (tx) => {
         const { b } = await fixture(tx);
         const id = await newGroup(tx);
+        const brand = await ensureBrand(tx, "Zz Empty");
         await tx.product.update({ where: { id: b.id }, data: { brand: "Zz Empty" } });
-        const state = await addProductsToGroup(dbOver(tx), id, { brand: "Zz Empty" }, NOW);
+        const state = await addProductsToGroup(dbOver(tx), id, { brand: brand.slug }, NOW);
         expect(state).toMatchObject({
           status: "error",
           message: expect.stringContaining("stock libre"),

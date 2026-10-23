@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { vi } from "vitest";
 import type { FormState } from "../lib/action-state";
 import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog";
@@ -14,10 +14,6 @@ const products: CatalogProduct[] = [
     isPublished: true,
     sizes: ["S", "M"],
     imageUrl: "/media/products/casa-icona/vestido-lino.webp",
-    catalog: "casa_icona",
-    catalogOrder: 4,
-    catalogSection: "Vestidos",
-    catalogName: "Vestido Lino Icona",
     groupName: null,
   },
   {
@@ -29,10 +25,6 @@ const products: CatalogProduct[] = [
     isPublished: false,
     sizes: [],
     imageUrl: null,
-    catalog: null,
-    catalogOrder: null,
-    catalogSection: null,
-    catalogName: null,
     groupName: null,
   },
 ];
@@ -46,6 +38,12 @@ const settings: CatalogSettingsView = {
   hideOutOfStock: true,
 };
 
+const brands = [
+  { slug: "casa-icona", name: "Casa Icona", count: 3 },
+  { slug: "milonga", name: "Milonga", count: 5 },
+  { slug: "otras-marcas", name: "Otras marcas", count: 0 },
+];
+
 const idleAction = async (): Promise<FormState> => ({ status: "idle" });
 const actions = {
   setVisibility: vi.fn(idleAction),
@@ -53,7 +51,6 @@ const actions = {
   setVisibilityMany: vi.fn(idleAction),
   publishAll: idleAction,
   saveSettings: idleAction,
-  saveLookbook: idleAction,
 };
 
 describe("CatalogoWebView", () => {
@@ -212,7 +209,7 @@ describe("CatalogoWebView", () => {
     expect(actions.setVisibilityMany).toHaveBeenCalledWith(["p1", "p2"], true);
   });
 
-  it("shows each product's lookbook placement on a compact button next to the switch", () => {
+  it("has no per-product lookbook button or form any more", () => {
     render(
       <CatalogoWebView
         products={products}
@@ -221,103 +218,57 @@ describe("CatalogoWebView", () => {
         actions={actions}
       />,
     );
-    const rows = screen.getAllByRole("row").slice(1);
-    const first = within(rows[0] as HTMLElement);
-    expect(first.queryByLabelText("Catálogo")).not.toBeInTheDocument();
-    expect(first.getByRole("button", { name: "Lookbook: Vestido Lino" })).toHaveTextContent(
-      "Página 4 · Vestidos",
-    );
-    const second = within(rows[1] as HTMLElement);
-    expect(second.getByRole("button", { name: "Lookbook: Top Seda" })).toHaveTextContent(
-      "Sin página",
-    );
+    expect(screen.queryByRole("button", { name: /Lookbook/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("opens the lookbook form in a modal with the current placement", () => {
+  it("filters by brand with links that keep the other filters", () => {
     render(
       <CatalogoWebView
         products={products}
         settings={settings}
-        filters={{ status: "todos" }}
+        filters={{ status: "visibles", brand: "milonga" }}
+        brands={brands}
         actions={actions}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Lookbook: Vestido Lino" }));
-    const dialog = within(screen.getByRole("dialog", { name: "Lookbook · Vestido Lino" }));
-    // The lookbook is built by brand: no catalog to choose here
-    expect(dialog.queryByLabelText("Catálogo")).not.toBeInTheDocument();
-    expect(dialog.getByLabelText("Página")).toHaveValue("4");
-    expect(dialog.getByLabelText("Sección")).toHaveValue("Vestidos");
-    expect(dialog.getByLabelText("Nombre en el lookbook")).toHaveValue("Vestido Lino Icona");
-    expect(dialog.queryByRole("checkbox", { name: /Pink/ })).not.toBeInTheDocument();
-    fireEvent.click(dialog.getByRole("button", { name: "Cerrar" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("closes the modal with Escape", () => {
-    render(
-      <CatalogoWebView
-        products={products}
-        settings={settings}
-        filters={{ status: "todos" }}
-        actions={actions}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Lookbook: Top Seda" }));
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("submits the lookbook fields from the modal and closes it on success", async () => {
-    const saveLookbook = vi.fn(
-      async (_p: FormState, _d: FormData): Promise<FormState> => ({
-        status: "success",
-        message: "Lookbook guardado.",
-      }),
-    );
-    render(
-      <CatalogoWebView
-        products={products}
-        settings={settings}
-        filters={{ status: "todos" }}
-        actions={{ ...actions, saveLookbook }}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Lookbook: Top Seda" }));
-    const dialog = within(screen.getByRole("dialog", { name: "Lookbook · Top Seda" }));
-    fireEvent.change(dialog.getByLabelText("Página"), { target: { value: "2" } });
-    fireEvent.click(dialog.getByRole("button", { name: "Guardar lookbook: Top Seda" }));
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    const data = saveLookbook.mock.calls[0]?.[1] as FormData;
-    expect(data.get("productId")).toBe("p2");
-    expect(data.has("catalog")).toBe(false);
-    expect(data.get("catalogOrder")).toBe("2");
-    expect(data.get("catalogSection")).toBe("");
-  });
-
-  it("filters by lookbook with links that keep the other filters", () => {
-    render(
-      <CatalogoWebView
-        products={products}
-        settings={settings}
-        filters={{ status: "visibles", catalog: "milonga" }}
-        actions={actions}
-      />,
-    );
-    const nav = screen.getByRole("navigation", { name: "Filtro por lookbook" });
+    expect(
+      screen.queryByRole("navigation", { name: "Filtro por lookbook" }),
+    ).not.toBeInTheDocument();
+    const nav = screen.getByRole("navigation", { name: "Filtro por marca" });
     expect(
       within(nav)
         .getAllByRole("link")
         .map((l) => l.textContent),
-    ).toEqual(["Todos", "Casa Icona", "Milonga", "Sordo", "Fuera del lookbook"]);
-    expect(within(nav).getByRole("link", { name: "Milonga" })).toHaveAttribute(
+    ).toEqual(["Todas", "Casa Icona (3)", "Milonga (5)", "Otras marcas (0)"]);
+    expect(within(nav).getByRole("link", { name: "Milonga (5)" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(within(nav).getByRole("link", { name: "Sordo" })).toHaveAttribute(
+    expect(within(nav).getByRole("link", { name: "Casa Icona (3)" })).toHaveAttribute(
       "href",
-      "/catalogo-web?estado=visibles&catalogo=sordo",
+      "/catalogo-web?estado=visibles&marca=casa-icona",
+    );
+    expect(within(nav).getByRole("link", { name: "Todas" })).toHaveAttribute(
+      "href",
+      "/catalogo-web?estado=visibles",
+    );
+  });
+
+  it("marks Todas as current without a brand filter", () => {
+    render(
+      <CatalogoWebView
+        products={products}
+        settings={settings}
+        filters={{ status: "todos" }}
+        brands={brands}
+        actions={actions}
+      />,
+    );
+    const nav = screen.getByRole("navigation", { name: "Filtro por marca" });
+    expect(within(nav).getByRole("link", { name: "Todas" })).toHaveAttribute(
+      "aria-current",
+      "page",
     );
   });
 

@@ -1,6 +1,6 @@
 import type { FormState } from "../action-state";
 import type { TransactionRunner } from "../lots/save";
-import { parseCatalogSettings, parseCategory, parseLookbook } from "./schema";
+import { parseCatalogSettings, parseCategory } from "./schema";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NOT_FOUND_MESSAGE = "No se encontró el producto.";
@@ -90,27 +90,4 @@ export async function setProductsVisibility(
     ? `Se hicieron visibles ${result.count} ${noun}.`
     : `Se ocultaron ${result.count} ${noun}.`;
   return { status: "success", message };
-}
-
-/** Saves one product's lookbook placement (catalog, page, section and name). */
-export async function saveProductLookbook(
-  db: TransactionRunner,
-  raw: Record<string, string>,
-): Promise<FormState> {
-  const productId = raw.productId ?? "";
-  if (!UUID.test(productId)) return { status: "error", message: NOT_FOUND_MESSAGE, values: raw };
-  const parsed = parseLookbook(raw);
-  if (!parsed.success) {
-    return {
-      status: "error",
-      message: "Revisá los campos marcados.",
-      fieldErrors: parsed.fieldErrors,
-      values: raw,
-    };
-  }
-  const result = await db.$transaction((tx) =>
-    tx.product.updateMany({ where: { id: productId }, data: parsed.data }),
-  );
-  if (result.count === 0) return { status: "error", message: NOT_FOUND_MESSAGE, values: raw };
-  return { status: "success", message: "Guardado." };
 }

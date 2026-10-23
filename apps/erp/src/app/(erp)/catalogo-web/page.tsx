@@ -7,12 +7,15 @@ import { parseCatalogFilters } from "../../../lib/catalog/filters";
 import { legacyGroupRedirect, parseCatalogTab } from "../../../lib/catalog-groups/workspace";
 import { getDb } from "../../../lib/db";
 import { getCurrencyDisplay } from "../../../lib/display-currency";
-import { getCatalogProducts, getCatalogSettings } from "../../../lib/queries/catalog";
+import {
+  getCatalogBrandFilters,
+  getCatalogProducts,
+  getCatalogSettings,
+} from "../../../lib/queries/catalog";
 import { getActiveGroupNames, getGroupList } from "../../../lib/queries/catalog-groups";
 import {
   publishAllAction,
   saveCatalogSettingsAction,
-  saveLookbookAction,
   setCategoryAction,
   setGroupActiveAction,
   setVisibilityAction,
@@ -39,8 +42,9 @@ export default async function CatalogoWebPage({
   if (tab === "grupos") return <GroupsTab />;
   if (tab === "marcas") return <BrandsTab />;
   const filters = parseCatalogFilters(params);
-  const [products, settings, display, activeGroupNames] = await Promise.all([
+  const [products, brands, settings, display, activeGroupNames] = await Promise.all([
     getCatalogProducts(filters),
+    getCatalogBrandFilters(),
     getCatalogSettings(),
     getCurrencyDisplay(),
     getActiveGroupNames(getDb()),
@@ -50,6 +54,7 @@ export default async function CatalogoWebPage({
       products={products}
       settings={settings}
       filters={filters}
+      brands={brands}
       display={display}
       activeGroupNames={activeGroupNames}
       actions={{
@@ -58,7 +63,6 @@ export default async function CatalogoWebPage({
         setVisibilityMany: setVisibilityManyAction,
         publishAll: publishAllAction,
         saveSettings: saveCatalogSettingsAction,
-        saveLookbook: saveLookbookAction,
       }}
     />
   );

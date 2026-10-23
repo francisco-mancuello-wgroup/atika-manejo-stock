@@ -1,5 +1,6 @@
 import "server-only";
-import type { Catalog, Prisma } from "@atika/db";
+import type { Prisma } from "@atika/db";
+import { brandProductWhere, listBrandFilters } from "../brands/filter";
 import type { CatalogFilters } from "../catalog/filters";
 import { coverUrl } from "../cover";
 import { getDb } from "../db";
@@ -17,12 +18,6 @@ export interface CatalogProduct {
   sizes: string[];
   /** Cover photo URL, or null. */
   imageUrl: string | null;
-  /** Lookbook placement; null catalog = not shown in any lookbook. */
-  catalog: Catalog | null;
-  catalogOrder: number | null;
-  catalogSection: string | null;
-  catalogName: string | null;
-  /** In the Pink selection on the store's home. */
   /** Name of the active publication group the product sits in, or null. */
   groupName: string | null;
 }
@@ -36,7 +31,10 @@ export interface CatalogSettingsView {
   hideOutOfStock: boolean;
 }
 
-function whereFor(filters: CatalogFilters): Prisma.ProductWhereInput {
+async function whereFor(
+  filters: CatalogFilters,
+  db: Pick<Prisma.TransactionClient, "brand">,
+): Promise<Prisma.ProductWhereInput> {
   const query = filters.query?.trim();
   const status: Prisma.ProductWhereInput =
     filters.status === "visibles"
@@ -46,15 +44,14 @@ function whereFor(filters: CatalogFilters): Prisma.ProductWhereInput {
         : filters.status === "sin-stock"
           ? { variants: { none: { stock: { gt: 0 } } } }
           : {};
-  const lookbook: Prisma.ProductWhereInput =
-    filters.catalog === "ninguno"
-      ? { catalog: null }
-      : filters.catalog
-        ? { catalog: filters.catalog === "casa-icona" ? "casa_icona" : filters.catalog }
-        : {};
+  // An unknown slug (an old bookmark) filters nothing
+  const brand: Prisma.ProductWhereInput = filters.brand
+    ? ((await brandProductWhere(db, filters.brand)) ?? {})
+    : {};
   return {
     ...status,
-    ...lookbook,
+    // AND keeps the brand's own OR apart from the text search below
+    AND: [brand],
     ...(query
       ? {
           OR: [
@@ -70,15 +67,12 @@ function whereFor(filters: CatalogFilters): Prisma.ProductWhereInput {
 
 export async function getCatalogProducts(
   filters: CatalogFilters,
-  db: Pick<Prisma.TransactionClient, "product" | "groupAllocation"> = getDb(),
+  db: Pick<Prisma.TransactionClient, "product" | "groupAllocation" | "brand"> = getDb(),
   now: Date = new Date(),
 ): Promise<CatalogProduct[]> {
   const products = await db.product.findMany({
-    where: whereFor(filters),
-    orderBy:
-      filters.catalog && filters.catalog !== "ninguno"
-        ? [{ catalogOrder: { sort: "asc", nulls: "last" } }, { name: "asc" }]
-        : [{ name: "asc" }],
+    where: await whereFor(filters, db),
+    orderBy: { name: "asc" },
     include: {
       lot: { select: { name: true } },
       variants: true,
@@ -99,12 +93,15 @@ export async function getCatalogProducts(
     isPublished: product.isPublished,
     sizes: sortSizes(product.variants.filter((v) => v.stock > 0).map((v) => v.size)),
     imageUrl: coverUrl(product.images),
-    catalog: product.catalog,
-    catalogOrder: product.catalogOrder,
-    catalogSection: product.catalogSection,
-    catalogName: product.catalogName,
     groupName: groupNames.get(product.id) ?? null,
   }));
+}
+
+/** The Prendas brand filter: every brand in display order with its product count. */
+export async function getCatalogBrandFilters(
+  db: Pick<Prisma.TransactionClient, "brand" | "product"> = getDb(),
+) {
+  return listBrandFilters(db);
 }
 
 const DEFAULT_SETTINGS: CatalogSettingsView = {

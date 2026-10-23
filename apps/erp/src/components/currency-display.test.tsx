@@ -86,10 +86,6 @@ describe("views in US$", () => {
       isPublished: true,
       sizes: ["S"],
       imageUrl: null,
-      catalog: null,
-      catalogOrder: null,
-      catalogSection: null,
-      catalogName: null,
       groupName: null,
     };
     const idle = async (): Promise<FormState> => ({ status: "idle" });
@@ -112,7 +108,6 @@ describe("views in US$", () => {
           setVisibilityMany: idle,
           publishAll: idle,
           saveSettings: idle,
-          saveLookbook: idle,
         }}
       />,
     );

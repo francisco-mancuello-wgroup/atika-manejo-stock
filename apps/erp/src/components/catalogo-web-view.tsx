@@ -1,12 +1,8 @@
 import { Button, cn, Input } from "@atika/ui";
 import Link from "next/link";
 import type { FormState } from "../lib/action-state";
-import {
-  CATALOG_STATUSES,
-  type CatalogFilters,
-  catalogHref,
-  LOOKBOOK_FILTERS,
-} from "../lib/catalog/filters";
+import type { BrandFilter } from "../lib/brands/filter";
+import { CATALOG_STATUSES, type CatalogFilters, catalogHref } from "../lib/catalog/filters";
 import type { CurrencyDisplay } from "../lib/currency";
 import { moneyFormatter } from "../lib/format";
 import type { CatalogProduct, CatalogSettingsView } from "../lib/queries/catalog";
@@ -14,7 +10,6 @@ import { BulkVisibilitySwitch } from "./bulk-visibility-switch";
 import { CatalogSettingsForm } from "./catalog-settings-form";
 import { CatalogTabs } from "./catalog-tabs";
 import { Field } from "./form-controls";
-import { LookbookButton } from "./lookbook-form";
 import { PageHeader } from "./page-header";
 import { CategorySelect, VisibilitySwitch } from "./product-controls";
 import { ProductThumb } from "./product-thumb";
@@ -29,7 +24,6 @@ export interface CatalogActions {
   setVisibilityMany: (productIds: string[], isPublished: boolean) => Promise<FormState>;
   publishAll: FormAction;
   saveSettings: FormAction;
-  saveLookbook: FormAction;
 }
 
 const STATUS_LABELS = {
@@ -37,13 +31,6 @@ const STATUS_LABELS = {
   visibles: "Visibles",
   ocultos: "Ocultos",
   "sin-stock": "Sin stock",
-} as const;
-
-const LOOKBOOK_LABELS = {
-  "casa-icona": "Casa Icona",
-  milonga: "Milonga",
-  sordo: "Sordo",
-  ninguno: "Fuera del lookbook",
 } as const;
 
 const filterLink = (active: boolean) =>
@@ -56,6 +43,7 @@ export function CatalogoWebView({
   products,
   settings,
   filters,
+  brands = [],
   actions,
   display = { currency: "gs" },
   activeGroupNames = [],
@@ -63,6 +51,8 @@ export function CatalogoWebView({
   products: CatalogProduct[];
   settings: CatalogSettingsView;
   filters: CatalogFilters;
+  /** Brand links of the filter, in display order. */
+  brands?: BrandFilter[];
   actions: CatalogActions;
   display?: CurrencyDisplay;
   /** Names of the groups active now: while any is, the web ignores the manual publication. */
@@ -73,7 +63,7 @@ export function CatalogoWebView({
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Catálogo web"
-        description="Elegí qué prendas se ven en el catálogo público, en qué lookbook y página. Los cambios se aplican al instante."
+        description="Elegí qué prendas se ven en el catálogo público. Los cambios se aplican al instante."
         actions={<PublishAllForm action={actions.publishAll} />}
       />
       <CatalogTabs active="prendas" />
@@ -107,18 +97,18 @@ export function CatalogoWebView({
             );
           })}
         </nav>
-        <nav aria-label="Filtro por lookbook" className="flex flex-wrap gap-1">
-          {[undefined, ...LOOKBOOK_FILTERS].map((catalog) => {
-            const active = filters.catalog === catalog;
-            const { catalog: _omit, ...rest } = filters;
+        <nav aria-label="Filtro por marca" className="flex flex-wrap gap-1">
+          {[undefined, ...brands].map((brand) => {
+            const active = brand ? filters.brand === brand.slug : !filters.brand;
+            const { brand: _omit, ...rest } = filters;
             return (
               <Link
-                key={catalog ?? "todos"}
-                href={catalogHref(catalog ? { ...rest, catalog } : rest)}
+                key={brand?.slug ?? "todas"}
+                href={catalogHref(brand ? { ...rest, brand: brand.slug } : rest)}
                 aria-current={active ? "page" : undefined}
                 className={filterLink(active)}
               >
-                {catalog ? LOOKBOOK_LABELS[catalog] : "Todos"}
+                {brand ? `${brand.name} (${brand.count})` : "Todas"}
               </Link>
             );
           })}
@@ -128,9 +118,7 @@ export function CatalogoWebView({
             {filters.status !== "todos" ? (
               <input type="hidden" name="estado" value={filters.status} />
             ) : null}
-            {filters.catalog ? (
-              <input type="hidden" name="catalogo" value={filters.catalog} />
-            ) : null}
+            {filters.brand ? <input type="hidden" name="marca" value={filters.brand} /> : null}
             <div className="w-64">
               <Field label="Buscar" htmlFor="q">
                 <Input
@@ -211,15 +199,12 @@ export function CatalogoWebView({
                     />
                   </td>
                   <td className={table.td}>
-                    <div className="flex items-center gap-3">
-                      <VisibilitySwitch
-                        productId={product.id}
-                        name={product.name}
-                        isPublished={product.isPublished}
-                        action={actions.setVisibility}
-                      />
-                      <LookbookButton product={product} action={actions.saveLookbook} />
-                    </div>
+                    <VisibilitySwitch
+                      productId={product.id}
+                      name={product.name}
+                      isPublished={product.isPublished}
+                      action={actions.setVisibility}
+                    />
                   </td>
                 </tr>
               ))}

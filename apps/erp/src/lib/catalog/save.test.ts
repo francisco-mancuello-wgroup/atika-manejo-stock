@@ -9,7 +9,6 @@ import {
 import {
   publishAllInStock,
   saveCatalogSettings,
-  saveProductLookbook,
   setProductCategory,
   setProductsVisibility,
   setProductVisibility,
@@ -136,52 +135,6 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
       expect(await setProductsVisibility(dbOver(tx), ["nope"], true)).toMatchObject({
         status: "error",
       });
-    });
-  });
-
-  it("saves the lookbook placement without touching the formula price", async () => {
-    await withRollback(async (tx) => {
-      const { products } = await createFixtureLot(tx, [
-        { name: "A", originalValueUsd: 10, priceGs: 12_000, variants: [["M", 1, 1]] },
-      ]);
-      const id = products[0]?.id ?? "";
-      // A legacy hand-set catalog is kept as is: the form no longer edits it
-      await tx.product.update({ where: { id }, data: { catalog: "milonga" } });
-      const state = await saveProductLookbook(dbOver(tx), {
-        productId: id,
-        catalog: "sordo",
-        catalogOrder: "3",
-        catalogSection: "Aros",
-        catalogName: "Cubagua",
-      });
-      expect(state).toMatchObject({ status: "success", message: "Guardado." });
-      const stored = await tx.product.findUniqueOrThrow({ where: { id } });
-      expect(stored).toMatchObject({
-        catalog: "milonga",
-        catalogOrder: 3,
-        catalogSection: "Aros",
-        catalogName: "Cubagua",
-        name: "A",
-        priceGs: 12_000,
-      });
-    });
-  });
-
-  it("rejects invalid lookbook fields and unknown products without writing", async () => {
-    await withRollback(async (tx) => {
-      const { products } = await createFixtureLot(tx, [
-        { name: "A", originalValueUsd: 10, variants: [["M", 1, 1]] },
-      ]);
-      const id = products[0]?.id ?? "";
-      expect(
-        await saveProductLookbook(dbOver(tx), { productId: id, catalogOrder: "0" }),
-      ).toMatchObject({ status: "error", fieldErrors: { catalogOrder: expect.any(String) } });
-      expect((await tx.product.findUniqueOrThrow({ where: { id } })).catalogOrder).toBeNull();
-      expect(
-        await saveProductLookbook(dbOver(tx), {
-          productId: "00000000-0000-7000-8000-000000000000",
-        }),
-      ).toMatchObject({ status: "error" });
     });
   });
 });

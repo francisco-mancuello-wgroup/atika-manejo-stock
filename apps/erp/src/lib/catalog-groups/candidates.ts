@@ -1,4 +1,3 @@
-import type { Catalog } from "@atika/db";
 import { CATALOG_CATEGORIES } from "@atika/db/categories";
 import type { GroupCandidate, GroupOptions } from "../queries/catalog-groups";
 import type { ProductFilter } from "./groups";
@@ -33,19 +32,12 @@ export function proposedUnits(
     .reduce((total, size) => total + proposedAllocation(size.free, proposal), 0);
 }
 
-export type Criterion = "lote" | "catalogo" | "categoria" | "marca";
+export type Criterion = "lote" | "categoria" | "marca";
 
 export const CRITERIA: readonly [Criterion, string][] = [
   ["lote", "Lote"],
-  ["catalogo", "Catálogo"],
   ["categoria", "Categoría"],
   ["marca", "Marca"],
-];
-
-const LOOKBOOKS: readonly [Catalog, string][] = [
-  ["casa_icona", "Casa Icona"],
-  ["milonga", "Milonga"],
-  ["sordo", "Sordo"],
 ];
 
 /** The bulk-add filter for a criterion and one of its values. */
@@ -53,8 +45,6 @@ export function criterionFilter(criterion: Criterion, value: string): ProductFil
   switch (criterion) {
     case "lote":
       return { lotId: value };
-    case "catalogo":
-      return { catalog: value as Catalog };
     case "categoria":
       return { category: value };
     case "marca":
@@ -67,11 +57,9 @@ export function criterionOptions(criterion: Criterion, options: GroupOptions): [
   switch (criterion) {
     case "lote":
       return options.lots.map((lot) => [lot.id, lot.name]);
-    case "catalogo":
-      return LOOKBOOKS.map(([value, label]) => [value, label]);
     case "categoria":
       return CATALOG_CATEGORIES.map((category) => [category.slug, category.label]);
     case "marca":
-      return options.brands.map((brand) => [brand, brand]);
+      return options.brands.map((brand) => [brand.slug, brand.name]);
   }
 }

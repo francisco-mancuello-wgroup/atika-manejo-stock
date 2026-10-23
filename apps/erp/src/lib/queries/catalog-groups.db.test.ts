@@ -1,3 +1,4 @@
+import { ensureBrand } from "@atika/db/brands";
 import { afterAll, describe, expect, it } from "vitest";
 import { createFixtureLot, disconnectTestDb, hasDatabase, withRollback } from "../../test/db";
 import {
@@ -146,10 +147,12 @@ describe.skipIf(!hasDatabase)("catalog group queries (database)", () => {
   it("offers lots and brands for the bulk add", async () => {
     await withRollback(async (tx) => {
       const { lot, vestido } = await fixture(tx);
+      const brand = await ensureBrand(tx, "Zeta q-opt");
       await tx.product.update({ where: { id: vestido.id }, data: { brand: "Zeta q-opt" } });
       const options = await getGroupOptions(tx);
       expect(options.lots).toContainEqual({ id: lot.id, name: lot.name });
-      expect(options.brands).toContain("Zeta q-opt");
+      expect(options.brands).toContainEqual({ slug: brand.slug, name: "Zeta q-opt" });
+      expect(options.brands.at(-1)).toEqual({ slug: "otras-marcas", name: "Otras marcas" });
     });
   });
 
@@ -253,18 +256,24 @@ describe.skipIf(!hasDatabase)("catalog group queries (database)", () => {
 
     it("filters by brand and category and returns nothing without a filter", async () => {
       await withRollback(async (tx) => {
-        const { vestido } = await fixture(tx);
+        const { vestido, top } = await fixture(tx);
+        const brand = await ensureBrand(tx, "Zz Cand");
         await tx.product.update({
           where: { id: vestido.id },
-          data: { brand: "Zz Cand", category: "remeras" },
+          data: { brand: "zz cand", category: "remeras" },
         });
+        await tx.product.update({ where: { id: top.id }, data: { brand: null } });
         const group = await tx.publicationGroup.create({ data: { name: "Destino" } });
-        const byBrand = await getGroupCandidates(tx, group.id, { brand: "Zz Cand" }, NOW);
+        const byBrand = await getGroupCandidates(tx, group.id, { brand: brand.slug }, NOW);
         expect(byBrand.map((candidate) => candidate.id)).toEqual([vestido.id]);
+        const loose = await getGroupCandidates(tx, group.id, { brand: "otras-marcas" }, NOW);
+        expect(loose.map((candidate) => candidate.id)).toContain(top.id);
+        expect(loose.map((candidate) => candidate.id)).not.toContain(vestido.id);
+        expect(await getGroupCandidates(tx, group.id, { brand: "no-such-brand" }, NOW)).toEqual([]);
         const byCategory = await getGroupCandidates(tx, group.id, { category: "remeras" }, NOW);
         expect(byCategory.map((candidate) => candidate.id)).toContain(vestido.id);
         expect(await getGroupCandidates(tx, group.id, {}, NOW)).toEqual([]);
-        expect(await getGroupCandidates(tx, "nope", { brand: "Zz Cand" }, NOW)).toEqual([]);
+        expect(await getGroupCandidates(tx, "nope", { brand: brand.slug }, NOW)).toEqual([]);
       });
     });
   });
