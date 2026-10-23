@@ -28,8 +28,8 @@ User request 2026-10-23: "quiero tener todo en hostinger y mis datos de BD tambi
 - [x] T2 — PostgreSQL on the VPS (localhost), DB + role for the apps.
 - [x] T3 — Copy data from Supabase to the VPS DB and verify row counts. (First copy; repeat right before cut-over, T6.)
 - [x] T4a — Media on VPS disk: uploads go to `MEDIA_DIR` (branch `feat/vps-media-storage`).
-- [ ] T4 — Deploy ERP + catalog (build, systemd services, env files).
-- [ ] T5 — Domain + Caddy HTTPS (needs a domain from the user).
+- [x] T4 — Deploy ERP + catalog (build, systemd services, env files).
+- [x] T5 — Test hostnames + Caddy HTTPS (sslip.io for testing; final domain later).
 - [ ] T6 — Cut-over and retire Vercel/Supabase (user decision).
 
 ## Progress / evidence
@@ -43,6 +43,10 @@ User request 2026-10-23: "quiero tener todo en hostinger y mis datos de BD tambi
 - Photos (2026-10-23, user: "movelas también a Hostinger"): VPS DB had 109 seed photos (`/media/products/...` from `data/`) and 28 Vercel Blob uploads; bank logos only seed (`/media/banks/seed/...`) or null. Created `/var/lib/atika/media` (atika:atika); downloaded the 28 Blob files to `/var/lib/atika/media/products/uploads/<id>/<file>` (all WebP, 2.2 MB, 0 failures); rewrote those 28 `product_images.url` in the VPS DB to `/media/products/uploads/...`; 0 files missing on disk. Supabase and Blob untouched. Repeat at cut-over (T6) after the final data copy.
 - T4a (2026-10-23): `MEDIA_DIR` is the folder behind the `/media` URL prefix (`/media/x/y` -> `${MEDIA_DIR}/x/y`). Precedence for photos and logos: MEDIA_DIR > Blob token > dev `public/` dirs. Blob URLs left in the DB are a no-op on delete under MEDIA_DIR. With MEDIA_DIR at build time both apps set `images.unoptimized`; the prebuild `copy-media.mjs` also copies seed media into `$MEDIA_DIR/products` and `$MEDIA_DIR/banks/seed` and never removes uploads. RED: 10 failed / 10 passed in 4 new/changed test files; GREEN: 20 passed. Prebuild simulated on a temp dir: 178 product files + bank logos arrived, `keep.txt` files survived. `.env.example` entry could not be written by the agent (permission denied): add `# MEDIA_DIR=/var/lib/atika/media` manually.
 
+- T4 (2026-10-23): branch `feat/vps-media-storage` pushed; cloned to `/home/atika/app` (public repo, HTTPS) as `atika`; `/etc/atika/app.env` (NODE_ENV, MEDIA_DIR=/var/lib/atika/media, SITE_URL/STORE_URL test URL, telemetry off); `pnpm install --frozen-lockfile`, prisma generate, `pnpm --filter @atika/erp --filter @atika/catalog build` ok (sudo needs `PATH=/usr/local/bin:...` for pnpm); prebuild seeded media → 212 files. `prisma migrate status` on VPS DB: up to date (15). systemd `atika-catalog` (127.0.0.1:3000) and `atika-erp` (127.0.0.1:3001), ExecStart `apps/<app>/node_modules/.bin/next start`, EnvironmentFile app.env + db.env, UMask=0022, enabled; both 200 locally. Media files were 640 → `chmod -R a+rX /var/lib/atika/media` (repeat after each deploy).
+- T5 (2026-10-23, user: free domain only for later; test first): sslip.io hostnames `atika.200-141-25-190.sslip.io` (catalog) and `erp.200-141-25-190.sslip.io` (ERP); `/etc/caddy/Caddyfile` with `/media/*` file_server from `/var/lib/atika/media`, reverse_proxy, 60 MB body limit on ERP; Let's Encrypt certificates obtained for both. Public checks: `/` 200, `/login` 200, seed logo and an uploaded photo 200 image/webp, `/api/catalog-version` {"version":2}, catalog page renders `/media/...` images and prices from the VPS DB.
+- Data note: VPS copy reflects Supabase at copy time — all 4 lots were already `custom` there (Casa Icona fx 6300, Zunilda 6500, Milonga ×3), edited in the ERP on 2026-10-23.
+
 ## Next step
 
-T4 deploy apps (build on the VPS, systemd, env files). Before T4: decide photo storage (keep Vercel Blob token vs VPS disk).
+User tests the VPS apps. Then T6: final data + photo re-copy, final domain, cut-over, retire Vercel/Supabase/Blob (user + Francisco decide). Pending: fix/product-save-form not deployed; `.env.example` MEDIA_DIR line.
