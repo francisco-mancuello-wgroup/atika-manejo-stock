@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./categories": "./src/categories.ts",
+    "./brands": "./src/brands.ts",
     "./password": "./src/password.ts"
   },
   "scripts": {

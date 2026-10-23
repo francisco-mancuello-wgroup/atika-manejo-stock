@@ -84,7 +84,31 @@ model Product {
   @@map("products")
 }
 
-/// The three lookbooks shown on the public catalog, in display order.
+/// A brand of the shop: each active one is a lookbook on the public catalog. `Product.brand` stays the
+/// free text typed in the ERP and is matched to `key`; a missing or unknown brand lands on the fallback.
+model Brand {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  /// Display spelling.
+  name       String
+  /// lower(trim(name)): the case-insensitive identity of the brand.
+  key        String   @unique
+  /// Accent-free kebab slug of `/catalogos/<slug>`.
+  slug       String   @unique
+  /// An inactive brand disappears from the whole web (lookbook, Ver todo, product page, search, Pink, orders).
+  isActive   Boolean  @default(true)
+  /// Display order on the home; the fallback is always last.
+  position   Int
+  /// Uploaded cover; null falls back to the static cover of the original three, then to the first photo.
+  coverUrl   String?
+  /// "Otras marcas": where pieces without a brand (or with an unknown one) go. Exactly one row.
+  isFallback Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("brands")
+}
+
+/// Legacy hand-set lookbooks. No longer read by the catalog (the lookbook is built by brand); kept so no data is lost.
 enum Catalog {
   casa_icona @map("casa-icona")
   milonga

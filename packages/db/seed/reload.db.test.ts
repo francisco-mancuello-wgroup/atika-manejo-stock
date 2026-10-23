@@ -120,6 +120,22 @@ describe.skipIf(!hasDatabase)("importLot images (database)", () => {
     });
   });
 
+  it("registers the brand of every imported product (the supplier when the sheet has none)", async () => {
+    const branded: ParsedLot = {
+      ...lot,
+      supplier: "Seed Supplier Test",
+      products: lot.products.map((product, index) => ({
+        ...product,
+        brand: index === 0 ? "Seed Brand Test" : null,
+      })),
+    };
+    await withRollback(async (tx) => {
+      await importLot(tx, branded, images);
+      const keys = (await tx.brand.findMany({ select: { key: true } })).map((row) => row.key);
+      expect(keys).toEqual(expect.arrayContaining(["seed brand test", "seed supplier test"]));
+    });
+  });
+
   it("stores the publication state and category chosen for each product", async () => {
     const choices: ChoicePlan = {
       get: (_lotName, index) =>

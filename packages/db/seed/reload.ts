@@ -1,4 +1,5 @@
 import { priceLot } from "@atika/pricing";
+import { ensureBrand } from "../src/brands";
 import type { Prisma } from "../src/index";
 import type { ChoicePlan } from "./categories/choices";
 import type { ParsedLot } from "./excel/parse";
@@ -84,6 +85,7 @@ export async function importLot(
     if (price === undefined) throw new Error(`${parsed.lotName}: no price for product ${index}`);
     prices.push(price);
     const choice = choices?.get(parsed.lotName, index);
+    await ensureBrand(tx, product.brand ?? parsed.supplier);
     const created = await tx.product.create({
       data: {
         lotId: lot.id,

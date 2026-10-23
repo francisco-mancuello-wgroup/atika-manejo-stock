@@ -32,14 +32,16 @@ User decision 2026-10-23 ("adelante") on this design:
 
 ## Tasks
 
-- [ ] T1 — Data: `Brand` model + migration (backfill from products + "Otras marcas"), brand ensured on product save, tests.
+- [x] T1 — Data: `Brand` model + migration (backfill from products + "Otras marcas"), brand ensured on product save, tests.
 - [ ] T2 — Catalog: lookbook and Pink-only sections by brand, ordering rule, covers, old slugs, inactive brands hidden everywhere, tests.
 - [ ] T3 — ERP: "Marcas" page (switch, order, cover), nav, lookbook form without "Catálogo", tests.
 
 ## Progress / evidence
 
 - Branch `feat/brand-lookbook` from main c4d71e4.
+- T1 done. RED: `brands.test.ts` failed (module missing), `save.test.ts` 2 brand tests failed, `reload.db.test.ts` brand test failed; GREEN: `@atika/db` 39 files / 271 tests, `save.test.ts` 19/19. Migration `20261023210000_brands` (table + partial unique index for the single fallback + backfill) applied locally; `prisma migrate diff` shows no drift.
+  - Decisions: `Brand.key` = lower(trim(name)) is the identity; `Product.brand` stays text and is saved with the brand's stored spelling ("milonga" -> "Milonga"); `ensureBrand` (`@atika/db/brands`) creates new brands before the fallback; seed reload also registers brands; reserved slugs (`todos`, `pink`) get `-marca`; the seed's `clearImported` does not touch brands, so activation survives a re-seed.
 
 ## Next step
 
-T1.
+T2.

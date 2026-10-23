@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "@atika/db";
+import { ensureBrand } from "@atika/db/brands";
 import type { FormState } from "../action-state";
 import { formatGs } from "../format";
 import { recalculateLot } from "../lots/recalculate";
@@ -58,12 +59,23 @@ function needStorage(options: SaveOptions): PhotoStorage {
   return options.storage;
 }
 
+/**
+ * Registers a typed brand (so it reaches the web) and returns its stored spelling: "milonga" is
+ * saved as "Milonga". No brand stays null, which the web shows under Otras marcas.
+ */
+async function brandName(
+  tx: Prisma.TransactionClient,
+  typed: string | null,
+): Promise<string | null> {
+  return typed ? (await ensureBrand(tx, typed)).name : null;
+}
+
 /** Product columns shared by create and update (no lot, no publication state). */
-function productData(input: ProductInput) {
+function productData(input: ProductInput, brand: string | null) {
   return {
     code: input.code,
     name: input.name,
-    brand: input.brand,
+    brand,
     color: input.color,
     category: input.category,
     description: input.description,
@@ -202,7 +214,10 @@ export async function updateProduct(
         if (sold > 0) return invalid({ sizes: SOLD_SIZE }, raw);
       }
 
-      await tx.product.update({ where: { id: productId }, data: productData(input) });
+      await tx.product.update({
+        where: { id: productId },
+        data: productData(input, await brandName(tx, input.brand)),
+      });
       if (removed.length > 0) {
         await tx.productVariant.deleteMany({ where: { id: { in: removed.map((v) => v.id) } } });
       }
@@ -270,7 +285,7 @@ export async function createProduct(
         data: {
           id: productId,
           lotId: input.lotId,
-          ...productData(input),
+          ...productData(input, await brandName(tx, input.brand)),
           priceGs: 0,
           isPublished: false,
           variants: { create: input.sizes },
