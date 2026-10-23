@@ -33,7 +33,7 @@ User decision 2026-10-23 ("adelante") on this design:
 ## Tasks
 
 - [x] T1 — Data: `Brand` model + migration (backfill from products + "Otras marcas"), brand ensured on product save, tests.
-- [ ] T2 — Catalog: lookbook and Pink-only sections by brand, ordering rule, covers, old slugs, inactive brands hidden everywhere, tests.
+- [x] T2 — Catalog: lookbook and Pink-only sections by brand, ordering rule, covers, old slugs, inactive brands hidden everywhere, tests.
 - [ ] T3 — ERP: "Marcas" page (switch, order, cover), nav, lookbook form without "Catálogo", tests.
 
 ## Progress / evidence
@@ -41,7 +41,9 @@ User decision 2026-10-23 ("adelante") on this design:
 - Branch `feat/brand-lookbook` from main c4d71e4.
 - T1 done. RED: `brands.test.ts` failed (module missing), `save.test.ts` 2 brand tests failed, `reload.db.test.ts` brand test failed; GREEN: `@atika/db` 39 files / 271 tests, `save.test.ts` 19/19. Migration `20261023210000_brands` (table + partial unique index for the single fallback + backfill) applied locally; `prisma migrate diff` shows no drift.
   - Decisions: `Brand.key` = lower(trim(name)) is the identity; `Product.brand` stays text and is saved with the brand's stored spelling ("milonga" -> "Milonga"); `ensureBrand` (`@atika/db/brands`) creates new brands before the fallback; seed reload also registers brands; reserved slugs (`todos`, `pink`) get `-marca`; the seed's `clearImported` does not touch brands, so activation survives a re-seed.
+- T1 commit 40ca204.
+- T2 done. RED: `lookbook.test.ts` 7 failing (order, brandCover), `queries.db.test.ts` 18 failing (listLookbook shape/brand); GREEN: catalog 42 files / 350 tests. Rules: lookbook = active brands in `position` order with >= 1 page; pieces with `catalogOrder` first (page = brand + old catalog + number, so numbers of different old catalogs never merge), then the rest newest first; cover = `Brand.coverUrl` > static cover (casa-icona/milonga/sordo/otras-marcas) > first photo of first page; `/catalogos/<brand slug>` (old slugs equal the backfilled brand slugs, no redirect needed); one brand condition (`brandGateOf`) inside `visibleWhere` and the lookbook read, so lists, counts, product page, orders, collections and Pink all follow it. `listPinkOnly`/`pinkOnlySection`/`OTHER_BRANDS` removed: every piece now belongs to a brand lookbook, so Pink is the pink pages of each brand.
 
 ## Next step
 
-T2.
+T3.

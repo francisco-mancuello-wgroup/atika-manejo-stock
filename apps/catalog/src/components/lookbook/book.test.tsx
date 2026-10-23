@@ -68,3 +68,23 @@ describe("LookbookBook bar", () => {
     expect(screen.getByText("Milonga", { selector: "span" })).toBeInTheDocument();
   });
 });
+
+describe("brand covers", () => {
+  const brand = (cover: BookCatalog["cover"]): BookCatalog[] => [
+    { slug: "zeta", name: "Zeta", tagline: "Colección seleccionada", cover, pages: [] },
+  ];
+
+  it("renders an uploaded or product photo given by URL", () => {
+    render(<CatalogShelf catalogs={brand("/media/brands/uploads/b/c.webp")} pink={false} />);
+    const image = document.querySelector(
+      "img[src*='media%2Fbrands%2Fuploads%2Fb%2Fc.webp'], img[src='/media/brands/uploads/b/c.webp']",
+    );
+    expect(image).not.toBeNull();
+  });
+
+  it("renders a brand without any photo without breaking", () => {
+    render(<CatalogShelf catalogs={brand(null)} pink={false} />);
+    expect(screen.getByRole("heading", { name: "Zeta" })).toBeInTheDocument();
+    expect(document.querySelector('img[alt=""]')).toBeNull();
+  });
+});

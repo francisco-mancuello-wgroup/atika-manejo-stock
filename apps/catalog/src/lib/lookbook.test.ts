@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  CATALOGS,
+  brandCover,
   hasPinkPieces,
   type LookbookRow,
   lookbookPages,
-  OTHER_BRANDS,
-  pinkOnlySection,
   pinkPages,
   withPieces,
 } from "./lookbook";
@@ -25,6 +23,7 @@ function row(id: number, overrides: Partial<LookbookRow> = {}): LookbookRow {
     catalog: "milonga",
     catalogOrder: id,
     catalogSection: "Vestidos",
+    createdAt: new Date(Date.UTC(2030, 0, 1, 0, 0, id)),
     inGroup: false,
     variants: [
       { size: "M", stock: 1 },
@@ -38,14 +37,8 @@ function row(id: number, overrides: Partial<LookbookRow> = {}): LookbookRow {
   };
 }
 
-describe("CATALOGS", () => {
-  it("shows Casa Icona, Milonga and Sordo, in that order", () => {
-    expect(CATALOGS.map((catalog) => catalog.slug)).toEqual(["casa-icona", "milonga", "sordo"]);
-  });
-});
-
 describe("withPieces", () => {
-  it("leaves out the catalogs with 0 pieces, keeping the order", () => {
+  it("leaves out the brands with 0 pieces, keeping the order", () => {
     const catalogs = [
       { slug: "casa-icona", pages: [{ id: 1 }] },
       { slug: "milonga", pages: [] },
@@ -225,18 +218,6 @@ describe("pinkPages", () => {
   });
 });
 
-describe("pinkOnlySection", () => {
-  it("files a piece without a catalog under the catalog of its brand", () => {
-    expect(pinkOnlySection(row(1, { catalog: null, brand: "Milonga" }))).toBe("milonga");
-    expect(pinkOnlySection(row(1, { catalog: null, brand: " casa icona " }))).toBe("casa-icona");
-  });
-
-  it("files the other brands under Otras marcas", () => {
-    expect(pinkOnlySection(row(1, { catalog: null, brand: "Baobab" }))).toBe(OTHER_BRANDS.slug);
-    expect(pinkOnlySection(row(1, { catalog: null, brand: null }))).toBe(OTHER_BRANDS.slug);
-  });
-});
-
 describe("hasPinkPieces", () => {
   const pagesOf = (...rows: LookbookRow[]) => lookbookPages(rows, settings);
 
@@ -246,5 +227,61 @@ describe("hasPinkPieces", () => {
 
   it("is false when no piece is in a group", () => {
     expect(hasPinkPieces([pagesOf(row(1)), []])).toBe(false);
+  });
+});
+
+describe("lookbookPages order inside a brand", () => {
+  const ids = (rows: LookbookRow[]) =>
+    lookbookPages(rows, settings).map((page) => page.pieces.map((piece) => piece.id));
+
+  it("puts the pieces with a PDF page first, then the rest newest first", () => {
+    expect(
+      ids([
+        row(1, { catalogOrder: null }),
+        row(2, { catalogOrder: 7 }),
+        row(3, { catalogOrder: null }),
+        row(4, { catalogOrder: 2 }),
+      ]),
+    ).toEqual([["p4"], ["p2"], ["p3"], ["p1"]]);
+  });
+
+  it("never shares a page between pieces that had no page", () => {
+    expect(ids([row(1, { catalogOrder: null }), row(2, { catalogOrder: null })])).toEqual([
+      ["p2"],
+      ["p1"],
+    ]);
+  });
+
+  it("does not merge pieces that only share a page number across old catalogs", () => {
+    expect(
+      ids([
+        row(1, { catalogOrder: 3, catalog: "casa_icona" }),
+        row(2, { catalogOrder: 3, catalog: "milonga" }),
+        row(3, { catalogOrder: 3, catalog: "milonga" }),
+      ]),
+    ).toEqual([["p1"], ["p2", "p3"]]);
+  });
+});
+
+describe("brandCover", () => {
+  const staticCover = { src: "/static.jpg", width: 3, height: 4 };
+  const pages = lookbookPages([row(1)], settings);
+
+  it("prefers the cover uploaded in the ERP", () => {
+    expect(brandCover(" /media/brands/uploads/x/c.webp ", staticCover, pages)).toBe(
+      "/media/brands/uploads/x/c.webp",
+    );
+  });
+
+  it("then the static cover of the original catalogs", () => {
+    expect(brandCover(null, staticCover, pages)).toBe(staticCover);
+  });
+
+  it("then the first photo of the first page", () => {
+    expect(brandCover(null, undefined, pages)).toBe("/media/products/p1.webp");
+  });
+
+  it("is null when the brand has nothing to show", () => {
+    expect(brandCover("  ", undefined, [])).toBeNull();
   });
 });

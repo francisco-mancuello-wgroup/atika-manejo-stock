@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     // image optimizer fetches `/media/...` from Next itself, which only knows the `public/` files
     // present at build time (uploads would 404). They are already shrunk to webp before upload.
     unoptimized: Boolean(process.env.MEDIA_DIR?.trim()),
-    remotePatterns: ["products", "banks"].map((folder) => ({
+    remotePatterns: ["products", "banks", "brands"].map((folder) => ({
       protocol: "https" as const,
       hostname: "*.public.blob.vercel-storage.com",
       pathname: `/${folder}/uploads/**`,

@@ -1,5 +1,6 @@
 import "server-only";
-import type { Prisma, PrismaClient } from "@atika/db";
+import type { Brand, Prisma, PrismaClient } from "@atika/db";
+import { resolveBrand } from "@atika/db/brands";
 import {
   type BankPromoRule,
   type DiscountRule,
@@ -21,15 +22,7 @@ import {
   toCatalogProductDetail,
 } from "./catalog-view";
 import { CATEGORIES } from "./categories";
-import {
-  CATALOGS,
-  type CatalogSlug,
-  type LookbookPage,
-  lookbookPages,
-  OTHER_BRANDS,
-  type PinkOnlySlug,
-  pinkOnlySection,
-} from "./lookbook";
+import { type LookbookPage, lookbookPages, withPieces } from "./lookbook";
 import {
   type CollectionSummary,
   collectionSlug,
@@ -41,7 +34,7 @@ import { activeGroupWhere, hasActiveGroupStock, toWebVariants, type WebVariant }
 /** The slice of the Prisma client the catalog reads (a rolled back transaction works too). */
 export type CatalogDb = Pick<
   PrismaClient,
-  "product" | "catalogSettings" | "discount" | "bankPromo" | "paymentDetails"
+  "product" | "brand" | "catalogSettings" | "discount" | "bankPromo" | "paymentDetails"
 >;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -254,17 +247,48 @@ type ListFilters = Pick<CatalogFilters, "talle" | "q" | "orden">;
 
 const NO_FILTERS: ListFilters = { talle: null, q: null, orden: "recientes" };
 
+type GateBrand = Pick<Brand, "name" | "isActive" | "isFallback">;
+
 /**
- * Rows that can be on the web: published, or holding units in an active group. The remainder
- * (`allocated - sold > 0`) compares two columns, which Prisma can't express, so the database only
- * narrows (physical stock is an upper bound of web stock) and `withWebStock` decides in memory.
+ * The brand switch, as the one condition every public query shares. `Product.brand` is free text
+ * matched to `Brand.name` without case, so the condition lists names: an inactive brand's pieces
+ * drop out; when "Otras marcas" is off, only registered active brands remain (a missing or
+ * unregistered brand is "Otras marcas"). A brand typed with stray spaces is trimmed on save.
  */
-function visibleWhere(
+export function brandGateOf(brands: readonly GateBrand[]): Prisma.ProductWhereInput {
+  const named = (list: readonly GateBrand[]) =>
+    list.map(({ name }) => ({ brand: { equals: name, mode: "insensitive" as const } }));
+  const registered = brands.filter((brand) => !brand.isFallback);
+  const fallbackOn = brands.find((brand) => brand.isFallback)?.isActive ?? true;
+  if (fallbackOn) {
+    const off = registered.filter((brand) => !brand.isActive);
+    // `brand: null` is written out: SQL's NOT over a null would drop the pieces without brand
+    return off.length === 0 ? {} : { OR: [{ brand: null }, { NOT: { OR: named(off) } }] };
+  }
+  const on = registered.filter((brand) => brand.isActive);
+  return on.length === 0 ? { id: { in: [] } } : { OR: named(on) };
+}
+
+export async function brandGate(db: Pick<CatalogDb, "brand">): Promise<Prisma.ProductWhereInput> {
+  return brandGateOf(
+    await db.brand.findMany({ select: { name: true, isActive: true, isFallback: true } }),
+  );
+}
+
+/**
+ * Rows that can be on the web: published, or holding units in an active group, of an active
+ * brand. The remainder (`allocated - sold > 0`) compares two columns, which Prisma can't express,
+ * so the database only narrows (physical stock is an upper bound of web stock) and `withWebStock`
+ * decides in memory.
+ */
+async function visibleWhere(
+  db: CatalogDb,
   settings: VisibilitySettings,
   now: Date,
   filters: Pick<ListFilters, "talle" | "q"> = NO_FILTERS,
-): Prisma.ProductWhereInput {
+): Promise<Prisma.ProductWhereInput> {
   const and: Prisma.ProductWhereInput[] = [
+    await brandGate(db),
     {
       OR: [
         { isPublished: true },
@@ -326,7 +350,10 @@ export async function listProducts(
   now: Date = new Date(),
 ): Promise<CatalogProduct[]> {
   const rows = await db.product.findMany({
-    where: { ...visibleWhere(settings, now, filters), ...(category ? { category } : {}) },
+    where: {
+      ...(await visibleWhere(db, settings, now, filters)),
+      ...(category ? { category } : {}),
+    },
     orderBy: orderBy(settings, filters.orden),
     select: productSelect(now),
   });
@@ -348,7 +375,7 @@ export async function countProductsByCategory(
 ): Promise<Record<string, number>> {
   // Counted in memory over the same rows `listProducts` reads, so numbers and lists always agree.
   const rows = await db.product.findMany({
-    where: visibleWhere(settings, now, filters),
+    where: await visibleWhere(db, settings, now, filters),
     select: { category: true, ...stockSelect(now) },
   });
   const counts: Record<string, number> = Object.fromEntries(
@@ -371,7 +398,7 @@ export async function getProduct(
 ): Promise<CatalogProduct | null> {
   if (!UUID.test(id)) return null;
   const row = await db.product.findFirst({
-    where: { id, ...visibleWhere(settings, now) },
+    where: { id, ...(await visibleWhere(db, settings, now)) },
     select: productSelect(now),
   });
   const [shown] = row ? withWebStock([row], settings) : [];
@@ -389,7 +416,7 @@ export async function getProductDetail(
 ): Promise<CatalogProductDetail | null> {
   if (!UUID.test(id)) return null;
   const row = await db.product.findFirst({
-    where: { id, ...visibleWhere(settings, now) },
+    where: { id, ...(await visibleWhere(db, settings, now)) },
     select: detailSelect(now),
   });
   const [shown] = row ? withWebStock([row], settings) : [];
@@ -413,7 +440,7 @@ export async function listCollections(
   now: Date = new Date(),
 ): Promise<CollectionSummary[]> {
   const rows = await db.product.findMany({
-    where: visibleWhere(settings, now),
+    where: await visibleWhere(db, settings, now),
     orderBy: importOrder,
     select: {
       lot: { select: { supplier: { select: { name: true } } } },
@@ -443,7 +470,10 @@ export async function getCollectionPresentation(
   const collection = (await listCollections(db, settings, now)).find((item) => item.slug === slug);
   if (!collection) return null;
   const rows = await db.product.findMany({
-    where: { ...visibleWhere(settings, now), lot: { supplier: { name: collection.name } } },
+    where: {
+      ...(await visibleWhere(db, settings, now)),
+      lot: { supplier: { name: collection.name } },
+    },
     orderBy: importOrder,
     select: detailSelect(now),
   });
@@ -464,6 +494,7 @@ const lookbookSelect = (now: Date) =>
     catalog: true,
     catalogOrder: true,
     catalogSection: true,
+    createdAt: true,
   }) satisfies Prisma.ProductSelect;
 
 /** Lookbook rows matching `where`, with web stock, discounts, bank promos and their Pink fields. */
@@ -502,50 +533,61 @@ const inActiveGroup = (now: Date): Prisma.ProductWhereInput => ({
   variants: { some: { allocations: { some: { group: activeGroupWhere(now) } } } },
 });
 
+/** One brand's lookbook: its cover (uploaded one or null) and its pages. */
+export interface LookbookBrand {
+  slug: string;
+  name: string;
+  coverUrl: string | null;
+  pages: LookbookPage[];
+}
+
 /**
- * The pages of every lookbook catalog (Casa Icona, Milonga, Sordo), in display order. Only
- * products on the web (published or in an active group) placed in a catalog are read; pieces
- * without stock or photos drop out in `lookbookPages`.
+ * The lookbook of every active brand, in the order set in the ERP, empty ones included. A piece
+ * belongs to the brand its `brand` text names; a missing or unregistered one belongs to "Otras
+ * marcas". Products on the web (published or in an active group) are read; pieces without stock
+ * or photos drop out in `lookbookPages`.
  */
+async function readBrandLookbooks(
+  db: CatalogDb,
+  settings: Pick<CatalogSettingsView, "showPrices">,
+  now: Date,
+): Promise<LookbookBrand[]> {
+  const brands = await db.brand.findMany({ orderBy: [{ position: "asc" }, { name: "asc" }] });
+  const rows = await readLookbookRows(db, settings, now, {
+    AND: [brandGateOf(brands), { OR: [{ isPublished: true }, inActiveGroup(now)] }],
+  });
+  const byBrand = new Map<string, typeof rows>();
+  for (const row of rows) {
+    // Resolved against every brand: a piece of an inactive brand never lands on the fallback
+    const brand = resolveBrand(row.brand, brands);
+    if (!brand?.isActive) continue;
+    byBrand.set(brand.id, [...(byBrand.get(brand.id) ?? []), row]);
+  }
+  return brands
+    .filter((brand) => brand.isActive)
+    .map((brand) => ({
+      slug: brand.slug,
+      name: brand.name,
+      coverUrl: brand.coverUrl,
+      pages: lookbookPages(byBrand.get(brand.id) ?? [], settings),
+    }));
+}
+
+/** The lookbook catalogs of the home: active brands with something to show, in brand order. */
 export async function listLookbook(
   db: CatalogDb,
   settings: Pick<CatalogSettingsView, "showPrices">,
   now: Date = new Date(),
-): Promise<Record<CatalogSlug, LookbookPage[]>> {
-  const rows = await readLookbookRows(db, settings, now, {
-    catalog: { not: null },
-    OR: [{ isPublished: true }, inActiveGroup(now)],
-  });
-  const byCatalog = Object.fromEntries(
-    CATALOGS.map(({ slug, value }) => [
-      slug,
-      lookbookPages(
-        rows.filter((row) => row.catalog === value),
-        settings,
-      ),
-    ]),
-  );
-  return byCatalog as Record<CatalogSlug, LookbookPage[]>;
+): Promise<LookbookBrand[]> {
+  return withPieces(await readBrandLookbooks(db, settings, now));
 }
 
-/**
- * Pink pieces placed in no catalog: they show on Pink only, after the catalog of their brand or
- * under Otras marcas (`pinkOnlySection`).
- */
-export async function listPinkOnly(
+/** One active brand's lookbook by slug (also when empty), or null for an unknown or inactive one. */
+export async function getBrandLookbook(
   db: CatalogDb,
   settings: Pick<CatalogSettingsView, "showPrices">,
+  slug: string,
   now: Date = new Date(),
-): Promise<Record<PinkOnlySlug, LookbookPage[]>> {
-  const rows = await readLookbookRows(db, settings, now, { catalog: null, ...inActiveGroup(now) });
-  const slugs: PinkOnlySlug[] = [...CATALOGS.map((catalog) => catalog.slug), OTHER_BRANDS.slug];
-  return Object.fromEntries(
-    slugs.map((slug) => [
-      slug,
-      lookbookPages(
-        rows.filter((row) => pinkOnlySection(row) === slug),
-        settings,
-      ),
-    ]),
-  ) as Record<PinkOnlySlug, LookbookPage[]>;
+): Promise<LookbookBrand | null> {
+  return (await readBrandLookbooks(db, settings, now)).find((brand) => brand.slug === slug) ?? null;
 }

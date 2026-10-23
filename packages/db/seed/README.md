@@ -219,12 +219,17 @@ inference; a product never seen before is hidden.
 
 ## Lookbook
 
-The public catalog shows only the three brand PDFs: Casa Icona (lot "Casa Icona", 18 looks), Milonga
-(lot "Milonga", pages of the editorial PDF; the pieces of one set share a page) and Sordo (Sordo pieces of
-the Átika lot). `data/catalogs/lookbook.json` places each piece: `lot`, `code` and `name` (the workbook
-name, used only to find the product), `catalog` (`casa_icona` | `milonga` | `sordo`), `order` (look
-number, PDF page or piece), `section`, `catalogName` (the lookbook display name; `Product.name` never
-changes) and `cover`. Prices always come from the lot formula; there is no fixed price.
+The public catalog is built by brand: every active `Brand` (table `brands`, filled by its migration from the
+distinct `products.brand` plus the fallback "Otras marcas", and kept up to date by the ERP product form and
+`importLot`) is one lookbook with its published (or active-group) pieces. Brands are turned on or off, ordered
+and given a cover in the ERP ("Marcas"); a re-seed never touches them. `Product.catalog` is no longer read
+by the web and is kept only so no data is lost.
+
+Inside a brand, pieces with `catalogOrder` keep their PDF page (pieces that share a number and an old catalog
+form one page) and the rest follow, newest first. `data/catalogs/lookbook.json` still places the seeded pieces:
+`lot`, `code` and `name` (the workbook name, used only to find the product), `catalog` (`casa_icona` |
+`milonga` | `sordo`), `order` (look number, PDF page or piece), `section`, `catalogName` (no longer shown;
+the web shows `Product.name`) and `cover`. Prices always come from the lot formula; there is no fixed price.
 
 `categories/lookbook.ts` matches a row by lot + code, then exact name, then normalized name (case, accents,
 punctuation); a row matching no product or several products is printed by the seed and never guessed.

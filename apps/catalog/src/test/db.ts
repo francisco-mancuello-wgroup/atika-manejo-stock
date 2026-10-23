@@ -42,6 +42,7 @@ export async function createProducts(
   tx: Prisma.TransactionClient,
   products: {
     name: string;
+    brand?: string;
     isPublished?: boolean;
     category?: string;
     priceGs?: number;
@@ -75,6 +76,7 @@ export async function createProducts(
       data: {
         lotId: lot.id,
         name: product.name,
+        brand: product.brand ?? null,
         category: product.category ?? null,
         originalValueUsd: 77.77,
         priceGs: product.priceGs ?? 100_000,
