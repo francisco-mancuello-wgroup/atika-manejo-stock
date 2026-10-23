@@ -41,8 +41,9 @@ export function BankPromosBlock({ groups }: { groups: readonly PromoGroup[] }) {
       </p>
       <ul className="flex flex-col gap-3">
         {merged.map((group) => (
-          <li key={group.headline} className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-foreground">{group.headline}</p>
+          <li key={`${group.name ?? ""}|${group.headline}`} className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">{group.name ?? group.headline}</p>
+            {group.name ? <p className="text-xs text-fg-muted">{group.headline}</p> : null}
             <div className="flex flex-wrap items-center gap-2">
               {group.banks.map((bank) => (
                 <BankBadge key={bank.id} bank={bank} />

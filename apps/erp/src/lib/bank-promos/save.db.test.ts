@@ -8,7 +8,7 @@ import {
 } from "../../test/db";
 import { deleteBankPromo, saveBankPromo, setBankPromoActive } from "./save";
 
-const base = { kind: "refund", value: "20", scope: "all", isActive: "on" };
+const base = { name: "Itaú jueves", kind: "refund", value: "20", scope: "all", isActive: "on" };
 
 async function bank(tx: Parameters<Parameters<typeof withRollback>[0]>[0], name: string) {
   return (await tx.bank.create({ data: { name } })).id;
@@ -40,6 +40,7 @@ describe.skipIf(!hasDatabase)("bank promo management (database)", () => {
         include: { banks: true, lots: true, products: true },
       });
       expect(row).toMatchObject({
+        name: "Itaú jueves",
         kind: "refund",
         value: 20,
         days: [1, 4],
@@ -53,6 +54,24 @@ describe.skipIf(!hasDatabase)("bank promo management (database)", () => {
       expect(row.banks.map((b) => b.bankId)).toEqual([itau]);
       expect(row.lots).toEqual([]);
       expect(row.products).toEqual([]);
+    });
+  });
+
+  it("rejects a promo without a name and writes nothing", async () => {
+    await withRollback(async (tx) => {
+      const itau = await bank(tx, "Itaú sin nombre");
+      const before = await tx.bankPromo.count();
+      const state = await saveBankPromo(
+        dbOver(tx),
+        null,
+        { ...base, name: "  " },
+        { bankIds: [itau], days: [], lotIds: [], productIds: [] },
+      );
+      expect(state).toMatchObject({
+        status: "error",
+        fieldErrors: { name: "Poné un nombre para la promo." },
+      });
+      expect(await tx.bankPromo.count()).toBe(before);
     });
   });
 
@@ -103,7 +122,14 @@ describe.skipIf(!hasDatabase)("bank promo management (database)", () => {
       const edited = await saveBankPromo(
         dbOver(tx),
         id,
-        { ...base, kind: "installments", value: "6", scope: "products", capGs: "" },
+        {
+          ...base,
+          name: "Cuotas renombradas",
+          kind: "installments",
+          value: "6",
+          scope: "products",
+          capGs: "",
+        },
         { bankIds: [b1, b2], days: [], lotIds: [], productIds: [products[0]?.id ?? ""] },
       );
       expect(edited).toMatchObject({ status: "success", message: "Promoción guardada." });
@@ -111,7 +137,13 @@ describe.skipIf(!hasDatabase)("bank promo management (database)", () => {
         where: { id },
         include: { banks: true, lots: true, products: true },
       });
-      expect(row).toMatchObject({ kind: "installments", value: 6, days: [], capGs: null });
+      expect(row).toMatchObject({
+        name: "Cuotas renombradas",
+        kind: "installments",
+        value: 6,
+        days: [],
+        capGs: null,
+      });
       expect(row.banks.map((b) => b.bankId).sort()).toEqual([b1, b2].sort());
       expect(row.lots).toEqual([]);
       expect(row.products.map((p) => p.productId)).toEqual([products[0]?.id]);

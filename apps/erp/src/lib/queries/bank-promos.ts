@@ -14,6 +14,8 @@ export interface PromoBankRef {
 
 export interface BankPromoSummary {
   id: string;
+  /** Null on promos created before they had a name. */
+  name: string | null;
   kind: "installments" | "refund" | "discount";
   value: number;
   /** ISO weekdays; empty = every day. */
@@ -55,6 +57,7 @@ export async function getBankPromoList(db: Pick<Reader, "bankPromo">): Promise<B
   });
   return rows.map((row) => ({
     id: row.id,
+    name: row.name,
     kind: row.kind,
     value: row.value,
     days: row.days,
@@ -83,6 +86,7 @@ export async function getBankPromoForEdit(
   if (!row) return null;
   return {
     id: row.id,
+    name: row.name,
     kind: row.kind,
     value: row.value,
     days: row.days,

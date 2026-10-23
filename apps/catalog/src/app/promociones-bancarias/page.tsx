@@ -39,7 +39,12 @@ export default async function PromosBancariasPage() {
               key={promo.id}
               className="flex flex-col gap-4 border border-border bg-surface p-5"
             >
-              <h2 className="font-heading text-2xl leading-tight">{promo.headline}</h2>
+              <div className="flex flex-col gap-1">
+                <h2 className="font-heading text-2xl leading-tight">
+                  {promo.name ?? promo.headline}
+                </h2>
+                {promo.name ? <p className="text-sm text-fg-muted">{promo.headline}</p> : null}
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 {promo.banks.map((bank) => (
                   <BankBadge key={bank.id} bank={bank} />

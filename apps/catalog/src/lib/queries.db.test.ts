@@ -633,6 +633,7 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
       const { a, itau, conti } = await setup(tx);
       await tx.bankPromo.create({
         data: {
+          name: "Reintegro Itaú",
           kind: "refund",
           value: 20,
           days: [3],
@@ -663,11 +664,13 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
         },
       });
       const promos = await listPublicBankPromos(tx, open, now);
+      expect(promos[0]?.name).toBeNull();
       expect(promos.map((p) => p.headline)).toEqual([
         "Hasta 12 cuotas sin intereses",
         "20 % de reintegro · Miércoles · Tope ₲ 200.000",
       ]);
       expect(promos[1]).toMatchObject({
+        name: "Reintegro Itaú",
         kind: "refund",
         terms: "Bases del reintegro.",
         startsAt: "2026-10-01",
@@ -679,7 +682,17 @@ describe.skipIf(!hasDatabase)("catalog bank promos (database)", () => {
         ],
       });
       expect(Object.keys(promos[1] ?? {}).sort()).toEqual(
-        ["appliesTo", "banks", "endsAt", "headline", "id", "kind", "startsAt", "terms"].sort(),
+        [
+          "appliesTo",
+          "banks",
+          "endsAt",
+          "headline",
+          "id",
+          "kind",
+          "name",
+          "startsAt",
+          "terms",
+        ].sort(),
       );
       expect(await listPublicBankPromos(tx, { ...open, showPrices: false }, now)).toEqual([]);
     });

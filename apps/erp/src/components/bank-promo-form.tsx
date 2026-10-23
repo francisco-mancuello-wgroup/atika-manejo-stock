@@ -19,6 +19,7 @@ type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 type Scope = "all" | "lots" | "products";
 
 export interface BankPromoFormInitial {
+  name: string;
   kind: BankPromoKind;
   value: string;
   capGs: string;
@@ -35,6 +36,7 @@ export interface BankPromoFormInitial {
 }
 
 export const EMPTY_BANK_PROMO: BankPromoFormInitial = {
+  name: "",
   kind: "installments",
   value: "",
   capGs: "",
@@ -107,6 +109,7 @@ export function BankPromoForm({
   const [state, formAction, pending] = useActionState(action, IDLE);
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
 
+  const [name, setName] = useState(initial.name);
   const [kind, setKind] = useState(initial.kind);
   const [value, setValue] = useState(initial.value);
   const [capGs, setCapGs] = useState(initial.capGs);
@@ -191,6 +194,18 @@ export function BankPromoForm({
 
       <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="flex min-w-0 flex-col gap-6">
+          <Field label="Nombre" htmlFor="name" error={errors.name}>
+            <Input
+              id="name"
+              name="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Ej.: Itaú 20% fines de semana"
+              maxLength={80}
+              {...invalid("name")}
+            />
+          </Field>
+
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-ink">Tipo</span>
             <SegmentedButtons label="Tipo" options={KIND_OPTIONS} value={kind} onChange={setKind} />

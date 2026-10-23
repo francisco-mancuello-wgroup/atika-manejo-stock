@@ -15,6 +15,7 @@ const settings: CatalogSettingsView = {
 const promos: PublicBankPromo[] = [
   {
     id: "p1",
+    name: "Cuotas Itaú y Continental",
     headline: "Hasta 12 cuotas sin intereses",
     kind: "installments",
     banks: [
@@ -28,6 +29,7 @@ const promos: PublicBankPromo[] = [
   },
   {
     id: "p2",
+    name: null,
     headline: "20 % de reintegro · Jueves · Tope ₲ 200.000",
     kind: "refund",
     banks: [{ id: "b1", name: "Itaú", logoUrl: null }],
@@ -57,7 +59,8 @@ describe("bank promotions page", () => {
     expect(articles).toHaveLength(2);
 
     const first = within(articles[0] as HTMLElement);
-    expect(first.getByRole("heading", { name: "Hasta 12 cuotas sin intereses" })).toBeVisible();
+    expect(first.getByRole("heading", { name: "Cuotas Itaú y Continental" })).toBeVisible();
+    expect(first.getByText("Hasta 12 cuotas sin intereses")).toBeVisible();
     expect(first.getByRole("img", { name: "Itaú" })).toBeInTheDocument();
     expect(first.getByText("Continental")).toBeInTheDocument();
     expect(first.getByText("Hasta el 31/12/2026")).toBeInTheDocument();
@@ -65,6 +68,10 @@ describe("bank promotions page", () => {
     expect(first.getByText(/Válido con tarjetas de crédito\./)).toHaveClass("whitespace-pre-line");
 
     const second = within(articles[1] as HTMLElement);
+    expect(
+      second.getByRole("heading", { name: "20 % de reintegro · Jueves · Tope ₲ 200.000" }),
+    ).toBeVisible();
+    expect(second.getAllByText(/20 % de reintegro/)).toHaveLength(1);
     expect(second.getByText("Del 01/11/2026 al 30/11/2026")).toBeInTheDocument();
     expect(second.getByText("Productos seleccionados")).toBeInTheDocument();
     expect(second.queryByText(/bases/i)).not.toBeInTheDocument();

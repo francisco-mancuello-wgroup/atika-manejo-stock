@@ -156,6 +156,7 @@ async function loadBankPromoRules(
     where: { isActive: true },
     select: {
       id: true,
+      name: true,
       kind: true,
       value: true,
       days: true,
@@ -172,6 +173,7 @@ async function loadBankPromoRules(
   });
   return rows.map((row) => ({
     id: row.id,
+    name: row.name,
     kind: row.kind,
     value: row.value,
     days: row.days,

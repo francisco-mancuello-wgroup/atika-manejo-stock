@@ -28,6 +28,11 @@ const optionalTerms = z.preprocess(
 
 export const bankPromoSchema = z
   .object({
+    name: z
+      .string({ error: "Poné un nombre para la promo." })
+      .trim()
+      .min(1, { error: "Poné un nombre para la promo." })
+      .max(80, { error: "El nombre no puede superar 80 caracteres." }),
     kind: z.enum(BANK_PROMO_KINDS, { error: "Elegí el tipo de promoción." }),
     value: numberField("El valor").pipe(
       z.number().int({ error: "El valor debe ser un número entero." }),

@@ -6,6 +6,8 @@ import { type BankPromoRule, type PromoBank, promoHeadline } from "@atika/pricin
  */
 export interface PublicBankPromo {
   id: string;
+  /** Name given in the ERP; null for promos without one (the page falls back to the headline). */
+  name: string | null;
   headline: string;
   kind: BankPromoRule["kind"];
   banks: PromoBank[];
@@ -21,6 +23,7 @@ const isoDay = (date: Date | null) => (date ? date.toISOString().slice(0, 10) : 
 export function toPublicPromo(promo: BankPromoRule & { id: string }): PublicBankPromo {
   return {
     id: promo.id,
+    name: promo.name ?? null,
     headline: promoHeadline(promo),
     kind: promo.kind,
     banks: [...promo.banks]

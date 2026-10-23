@@ -78,6 +78,10 @@ export function matchesSearch(query: string, texts: readonly string[]): boolean 
 }
 
 export interface PromoRow {
+  /** Main text of the row: the promo name, or the benefit when it has none. */
+  title: string;
+  /** Secondary text: the benefit and details when named, else just the details. */
+  subtitle: string;
   benefit: string;
   /** "Sudameris, BNF · Jueves · tope ₲ 200.000". */
   detail: string;
@@ -85,7 +89,7 @@ export interface PromoRow {
   searchText: string;
 }
 
-/** One line of the promos list: the benefit on top, banks with days and cap below. */
+/** One line of the promos list: the name (or the benefit) on top, banks with days and cap below. */
 export function promoRow(promo: BankPromoSummary, today: string): PromoRow {
   const headline = promoHeadline(promo);
   const benefit = promoHeadline({ ...promo, days: [], capGs: null });
@@ -95,11 +99,15 @@ export function promoRow(promo: BankPromoSummary, today: string): PromoRow {
     .filter(Boolean)
     .map((part) => part.replace(/^Tope/, "tope"));
   const names = promo.banks.map((bank) => bank.name);
+  const detail = [names.join(", "), ...extras].join(" · ");
+  const name = promo.name?.trim() || null;
   return {
+    title: name ?? benefit,
+    subtitle: name ? `${benefit} · ${detail}` : detail,
     benefit,
-    detail: [names.join(", "), ...extras].join(" · "),
+    detail,
     status: promoStatus(promo, today),
-    searchText: [headline, ...names].join(" "),
+    searchText: [...(name ? [name] : []), headline, ...names].join(" "),
   };
 }
 

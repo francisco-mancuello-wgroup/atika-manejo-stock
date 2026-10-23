@@ -85,6 +85,7 @@ describe("matchesSearch", () => {
 
 const promo = (overrides: Partial<BankPromoSummary> = {}): BankPromoSummary => ({
   id: "p1",
+  name: null,
   kind: "refund",
   value: 20,
   days: [4],
@@ -103,8 +104,25 @@ const promo = (overrides: Partial<BankPromoSummary> = {}): BankPromoSummary => (
 });
 
 describe("promoRow", () => {
+  it("leads with the name and keeps the benefit with its details as secondary text", () => {
+    const row = promoRow(promo({ name: "Itaú jueves" }), "2026-10-22");
+    expect(row.title).toBe("Itaú jueves");
+    expect(row.benefit).toBe("20 % de reintegro");
+    expect(row.detail).toBe("Sudameris, BNF · Jueves · tope ₲ 200.000");
+    expect(row.subtitle).toBe("20 % de reintegro · Sudameris, BNF · Jueves · tope ₲ 200.000");
+    expect(row.searchText).toContain("Itaú jueves");
+  });
+
+  it("falls back to the benefit as the title when the promo has no name", () => {
+    const row = promoRow(promo(), "2026-10-22");
+    expect(row.title).toBe("20 % de reintegro");
+    expect(row.subtitle).toBe("Sudameris, BNF · Jueves · tope ₲ 200.000");
+  });
+
   it("splits the benefit from banks, days and cap", () => {
     expect(promoRow(promo(), "2026-10-22")).toEqual({
+      title: "20 % de reintegro",
+      subtitle: "Sudameris, BNF · Jueves · tope ₲ 200.000",
       benefit: "20 % de reintegro",
       detail: "Sudameris, BNF · Jueves · tope ₲ 200.000",
       status: "Vigente",

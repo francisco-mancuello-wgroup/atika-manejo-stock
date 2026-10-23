@@ -93,6 +93,30 @@ describe("BankPromoForm", () => {
     expect(screen.getByRole("button", { name: "Eliminar: 20 % de reintegro" })).toBeInTheDocument();
   });
 
+  it("starts with an empty Nombre field, first in the form, with an example placeholder", () => {
+    const { container } = renderForm();
+    const name = screen.getByLabelText("Nombre");
+    expect(name).toHaveValue("");
+    expect(name).toHaveAttribute("name", "name");
+    expect(name).toHaveAttribute("placeholder", "Ej.: Itaú 20% fines de semana");
+    expect(container.querySelector("input[name]:not([type=hidden])")).toBe(name);
+  });
+
+  it("shows the name error under the field", async () => {
+    const action = vi.fn(
+      async (): Promise<FormState> => ({
+        status: "error",
+        message: "Revisá los campos marcados.",
+        fieldErrors: { name: "Poné un nombre para la promo." },
+        values: {},
+      }),
+    );
+    renderForm({ action });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(await screen.findByText("Poné un nombre para la promo.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nombre")).toHaveAttribute("aria-invalid", "true");
+  });
+
   it("labels the value as installments or percent depending on the kind", () => {
     renderForm();
     fireEvent.click(pressed("Reintegro"));
@@ -109,6 +133,7 @@ describe("BankPromoForm", () => {
       promoId: "p9",
       savedHeadline: "20 % de reintegro",
       initial: {
+        name: "Continental jueves",
         kind: "refund",
         value: "20",
         capGs: "200000",
@@ -123,6 +148,7 @@ describe("BankPromoForm", () => {
         productIds: [],
       },
     });
+    expect(screen.getByLabelText("Nombre")).toHaveValue("Continental jueves");
     expect(pressed("Reintegro")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByLabelText("Porcentaje")).toHaveValue("20");
     expect(screen.getByLabelText("Tope (₲)")).toHaveValue("200000");

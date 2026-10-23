@@ -6,7 +6,13 @@ const B2 = "0190f3a0-0000-7000-8000-000000000002";
 const L1 = "0190f3a0-0000-7000-8000-0000000000a1";
 const P1 = "0190f3a0-0000-7000-8000-0000000000b1";
 
-const valid = { kind: "installments", value: "12", scope: "all", isActive: "on" };
+const valid = {
+  name: "Itaú 20% fines de semana",
+  kind: "installments",
+  value: "12",
+  scope: "all",
+  isActive: "on",
+};
 const lists = (overrides: Partial<Parameters<typeof parseBankPromo>[1]> = {}) => ({
   bankIds: [B1],
   days: [],
@@ -20,6 +26,7 @@ describe("parseBankPromo", () => {
     expect(parseBankPromo(valid, lists())).toEqual({
       success: true,
       data: {
+        name: "Itaú 20% fines de semana",
         kind: "installments",
         value: 12,
         capGs: null,
@@ -33,6 +40,23 @@ describe("parseBankPromo", () => {
         lotIds: [],
         productIds: [],
       },
+    });
+  });
+
+  it("trims the name and requires it, up to 80 characters", () => {
+    expect(parseBankPromo({ ...valid, name: "  Cuotas Itaú  " }, lists())).toMatchObject({
+      success: true,
+      data: { name: "Cuotas Itaú" },
+    });
+    const required = { success: false, fieldErrors: { name: "Poné un nombre para la promo." } };
+    expect(parseBankPromo({ ...valid, name: "   " }, lists())).toMatchObject(required);
+    expect(parseBankPromo({ ...valid, name: undefined as never }, lists())).toMatchObject(required);
+    expect(parseBankPromo({ ...valid, name: "x".repeat(80) }, lists())).toMatchObject({
+      success: true,
+    });
+    expect(parseBankPromo({ ...valid, name: "x".repeat(81) }, lists())).toMatchObject({
+      success: false,
+      fieldErrors: { name: "El nombre no puede superar 80 caracteres." },
     });
   });
 
