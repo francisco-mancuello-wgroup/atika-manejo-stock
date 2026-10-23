@@ -227,6 +227,40 @@ describe("ProductForm (edit)", () => {
     expect([field("img-1"), field("img-2")]).toEqual(["30,70", "55,50"]);
   });
 
+  it("saves each photo's zoom and keeps it after the form resets", async () => {
+    const action = vi.fn(
+      async (_p: FormState, _d: FormData): Promise<FormState> => ({
+        status: "success",
+        message: "Guardado",
+      }),
+    );
+    render(
+      <ProductForm
+        mode="edit"
+        lots={[lots[0] as LotContext]}
+        lotId="lot-1"
+        initial={initial}
+        photos={[
+          { ...(photos[0] as (typeof photos)[number]), fit: 20 },
+          photos[1] as (typeof photos)[number],
+        ]}
+        action={action}
+      />,
+    );
+    fireEvent.change(screen.getByRole("slider", { name: "Zoom de la foto 2" }), {
+      target: { value: "75" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Guardado");
+    const data = action.mock.calls[0]?.[1] as FormData;
+    expect(data.get("fit.img-1")).toBe("20");
+    expect(data.get("fit.img-2")).toBe("75");
+    expect(screen.getByRole("slider", { name: "Zoom de la foto 2" })).toHaveValue("75");
+    const field = (id: string) =>
+      document.querySelector<HTMLInputElement>(`input[name='fit.${id}']`)?.value;
+    expect([field("img-1"), field("img-2")]).toEqual(["20", "75"]);
+  });
+
   it("shows field and row errors and keeps what was typed", async () => {
     const action = async (): Promise<FormState> => ({
       status: "error",

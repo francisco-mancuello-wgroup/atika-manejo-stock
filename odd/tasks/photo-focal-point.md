@@ -30,7 +30,7 @@ User request 2026-10-23: lookbook photos now fill a fixed-height frame with `obj
 - [x] T2 — Catalog: queries return the focal point; photo components use it as `object-position`.
 - [x] T3 — ERP: focal point picker in the product form, previews, saved by `updateProduct`, tests.
 - [x] T4 — Data + catalog: per-photo zoom `fit` (0 = whole photo, 100 = fill the frame; null = auto: landscape photos whole, others fill), applied by one shared framed-photo renderer in every cropped catalog view. User 2026-10-23: photos "muy cortadas"; wants zoom handled in the ERP, keeping every frame the same size.
-- [ ] T5 — ERP: zoom slider next to the focal point, live in the Celular/Escritorio previews, saved by `updateProduct`.
+- [x] T5 — ERP: zoom slider next to the focal point, live in the Celular/Escritorio previews, saved by `updateProduct`.
 
 ## Acceptance
 
@@ -49,6 +49,8 @@ User request 2026-10-23: lookbook photos now fill a fixed-height frame with `obj
 - Tablet frame (515476e): portrait 3:4 frame on `sm` portrait screens; measured 12 pages: phone 390x405, tablet 505x673, desktop 762x900. Photo shapes (177 in public/media/products): 50 ~3:4, 46 ~2:3, 33 ~square, 24 taller than 2:3, 24 landscape (landscape lose 36–50% width under cover).
 
 - T4 done. RED: db fit tests 3 failed (`fit` unknown), ui `frame-layout.test.ts` no module, catalog `framed-photo.test.tsx` no module, focus.test 3 + queries.db 1 failed. GREEN: db 37 files / 254 passed; ui frame-layout 8 passed; catalog 42 files / 331 passed; typecheck 6/6. Migration `20261023194500_product_image_fit` (ADD COLUMN fit INTEGER NULL + CHECK fit IS NULL OR 0-100). `frameLayout`/`autoFit` live in `packages/ui/src/lib/frame-layout.ts` (exported from `@atika/ui`): s = sContain + fit/100*(sCover-sContain); axis bigger than the frame is offset by the focus (never a gap), smaller is centered. Auto (fit null): landscape (w>h) -> 0, else 100, resolved on the client after `onLoad`. `FramedPhoto` (catalog `components/framed-photo.tsx`, ResizeObserver + natural size, falls back to object-cover + object-position before measuring) used by piece-photos, photo-carousel, ProductPhoto (rows/page/sheet), product-sheet thumbnails, lookbook search thumbnails. Commit: `feat(catalog): per-photo zoom inside the fixed frame`.
+
+- T5 done. RED: 10 failed (picker zoom x6, product-form zoom save, `parseFitFields` x2, save.test zoom). GREEN: erp components+lib/products 46 files / 338 passed. UX: per photo "Zoom" range (step 5, labelled "Zoom de la foto N", ends Completa/Llenar, value as %), "Automático" checkbox (null) and helper "Bajá el zoom para ver la foto completa en la web."; Celular/Escritorio previews use `frameLayout` from `@atika/ui` in percent of the frame. Hidden `fit.<imageId>` = integer 0-100 or empty (auto); `updateProduct` saves it with the focus in the same transaction, only this product's remaining photos, invalid ignored, missing keeps the stored value; `getProductForEdit` loads `fit`. Commit: `feat(erp): zoom slider for each product photo`.
 
 ## Next step
 

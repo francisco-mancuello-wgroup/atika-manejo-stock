@@ -22,3 +22,24 @@ export function parseFocusFields(raw: Record<string, string>): Record<string, Fo
   }
   return points;
 }
+
+const WHOLE_PERCENT = /^\d{1,3}$/;
+
+/**
+ * The `fit.<imageId>` fields of the product form: the zoom of a photo in whole percent (0 shows the
+ * whole photo, 100 fills the frame) or empty for automatic (`null`). Anything else, or a zoom
+ * outside 0-100, is ignored, so the stored value stays.
+ */
+export function parseFitFields(raw: Record<string, string>): Record<string, number | null> {
+  const zooms: Record<string, number | null> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (!key.startsWith("fit.")) continue;
+    if (value === "") {
+      zooms[key.slice("fit.".length)] = null;
+      continue;
+    }
+    if (!WHOLE_PERCENT.test(value) || Number(value) > 100) continue;
+    zooms[key.slice("fit.".length)] = Number(value);
+  }
+  return zooms;
+}

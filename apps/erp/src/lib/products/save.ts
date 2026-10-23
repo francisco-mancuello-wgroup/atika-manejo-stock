@@ -4,7 +4,7 @@ import type { FormState } from "../action-state";
 import { formatGs } from "../format";
 import { recalculateLot } from "../lots/recalculate";
 import type { TransactionRunner } from "../lots/save";
-import { type FocalPoint, parseFocusFields } from "./focus";
+import { type FocalPoint, parseFitFields, parseFocusFields } from "./focus";
 import { isUploadedPhoto, type PhotoStorage } from "./photo-storage";
 import { arrangePhotos, type PhotoUpload, prepareUpload } from "./photos";
 import {
@@ -79,6 +79,7 @@ async function applyPhotos(
   options: SaveOptions,
   cover: string | null,
   focus: Record<string, FocalPoint> = {},
+  fit: Record<string, number | null> = {},
 ): Promise<string[]> {
   const remove = options.removePhotoIds ?? [];
   const existing = await tx.productImage.findMany({
@@ -92,9 +93,14 @@ async function applyPhotos(
   }
   // Only this product's photos that stay: the ids come from the form, so never trust them
   for (const image of existing) {
+    if (remove.includes(image.id)) continue;
     const point = focus[image.id];
-    if (point && !remove.includes(image.id)) {
-      await tx.productImage.update({ where: { id: image.id }, data: point });
+    const zoom = fit[image.id];
+    if (point || zoom !== undefined) {
+      await tx.productImage.update({
+        where: { id: image.id },
+        data: { ...point, ...(zoom !== undefined && { fit: zoom }) },
+      });
     }
   }
   const created: Record<string, string> = {};
@@ -214,6 +220,7 @@ export async function updateProduct(
         options,
         raw.cover ?? null,
         parseFocusFields(raw),
+        parseFitFields(raw),
       );
       await repriceLot(tx, product.lotId);
       const { priceGs } = await tx.product.findUniqueOrThrow({

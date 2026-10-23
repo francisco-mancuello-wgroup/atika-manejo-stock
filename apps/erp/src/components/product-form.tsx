@@ -319,8 +319,8 @@ export function ProductForm({
           <ul key={photos.map((photo) => photo.id).join()} className="flex flex-wrap gap-4">
             {photos.map((photo, index) => (
               <li
-                // A new saved point remounts the picker so it shows what is stored
-                key={`${photo.id}:${photo.focusX ?? 50},${photo.focusY ?? 50}`}
+                // A new saved point or zoom remounts the picker so it shows what is stored
+                key={`${photo.id}:${photo.focusX ?? 50},${photo.focusY ?? 50}:${photo.fit ?? "auto"}`}
                 className="flex w-48 flex-col gap-2 border border-line bg-surface p-2"
               >
                 <FocalPointPicker photo={photo} index={index} />

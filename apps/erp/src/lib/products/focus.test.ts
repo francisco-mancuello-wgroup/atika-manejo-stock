@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseFocusFields } from "./focus";
+import { parseFitFields, parseFocusFields } from "./focus";
 
 describe("parseFocusFields", () => {
   it("reads every focus.<imageId> field as an integer point", () => {
@@ -18,6 +18,31 @@ describe("parseFocusFields", () => {
         "focus.d": "10.5,20",
         "focus.e": "-1,20",
         "focus.f": "",
+      }),
+    ).toEqual({});
+  });
+});
+
+describe("parseFitFields", () => {
+  it("reads fit.<imageId> as a whole percent, or null when automatic (empty)", () => {
+    expect(
+      parseFitFields({ name: "x", "fit.a": "0", "fit.b": "100", "fit.c": "35", "fit.d": "" }),
+    ).toEqual({
+      a: 0,
+      b: 100,
+      c: 35,
+      d: null,
+    });
+  });
+
+  it("ignores malformed values and zooms outside 0-100", () => {
+    expect(
+      parseFitFields({
+        "fit.a": "101",
+        "fit.b": "-1",
+        "fit.c": "10.5",
+        "fit.d": "abc",
+        "fit.e": " ",
       }),
     ).toEqual({});
   });
