@@ -423,3 +423,13 @@ model Session {
   @@index([userId])
   @@map("sessions")
 }
+
+/// Single row (id = 1): counter the ERP bumps on every save the catalog shows. Open catalog pages
+/// poll it and refresh when it changes.
+model CatalogVersion {
+  id        Int      @id @default(1)
+  version   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("catalog_version")
+}
