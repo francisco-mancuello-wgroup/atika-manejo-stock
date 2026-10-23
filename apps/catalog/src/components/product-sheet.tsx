@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CatalogProductDetail } from "../lib/catalog-view";
-import { objectPosition } from "../lib/focus";
 import { discountedPriceLabel } from "../lib/price";
 import { buildWhatsappUrl } from "../lib/whatsapp";
 import { BankPromosBlock } from "./bank-promos-block";
+import { FramedPhoto } from "./framed-photo";
 import { CloseIcon, WhatsappIcon } from "./icons";
 import { Price } from "./price";
 import { ProductPhoto } from "./product-photo";
@@ -120,17 +120,11 @@ export function ProductSheet({
                     aria-pressed={index === photo}
                     onClick={() => setPhoto(index)}
                     className={cn(
-                      "block h-[88px] w-[66px] overflow-hidden border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
+                      "relative block h-[88px] w-[66px] overflow-hidden border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
                       index === photo ? "border-[1.5px] border-ink" : "border-line",
                     )}
                   >
-                    {/* biome-ignore lint/performance/noImgElement: tiny fixed-size thumbnail */}
-                    <img
-                      src={image.url}
-                      alt=""
-                      className="size-full object-cover"
-                      style={{ objectPosition: objectPosition(image) }}
-                    />
+                    <FramedPhoto src={image.url} alt="" sizes="66px" focus={image} />
                   </button>
                 </li>
               ))}

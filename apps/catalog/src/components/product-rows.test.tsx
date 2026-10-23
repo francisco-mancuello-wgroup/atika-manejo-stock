@@ -143,7 +143,7 @@ describe("ProductRows", () => {
       encodeURIComponent("/media/products/atika/top.webp"),
     );
     expect(photo).toHaveClass("object-cover");
-    expect(photo.parentElement?.className).toContain("var(--color-sand)");
+    expect(photo.closest("[class*=sand]")?.className).toContain("var(--color-sand)");
   });
 
   it("crops the cover around its focal point", () => {

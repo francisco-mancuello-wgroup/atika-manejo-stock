@@ -226,6 +226,8 @@ model ProductImage {
   /// Focal point in percent (0-100, 50 = center): the part kept visible when a frame crops the photo.
   focusX    Int     @default(50)
   focusY    Int     @default(50)
+  /// Zoom in percent (0-100): 0 shows the whole photo, 100 fills the frame. Null = automatic (landscape photos whole, others fill).
+  fit       Int?
 
   @@index([productId, position])
   @@map("product_images")

@@ -149,7 +149,7 @@ describe("ProductSheet", () => {
     renderSheet();
     const photo = () => screen.getAllByRole("img", { name: "Vestido Lino" })[0];
     expect(photo()?.getAttribute("src")).toContain(encodeURIComponent("/media/products/a.webp"));
-    expect(photo()?.parentElement?.className).toContain("var(--color-sand)");
+    expect(photo()?.closest("[class*=sand]")?.className).toContain("var(--color-sand)");
     const thumbs = screen.getAllByRole("button", { name: /Ver foto/ });
     expect(thumbs).toHaveLength(2);
     expect(thumbs[0]).toHaveAttribute("aria-pressed", "true");

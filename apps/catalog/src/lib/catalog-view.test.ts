@@ -15,7 +15,7 @@ const row = {
   ],
   images: [
     { url: "/media/products/b.webp", position: 1, focusX: 10, focusY: 90 },
-    { url: "/media/products/a.webp", position: 0, focusX: 50, focusY: 20 },
+    { url: "/media/products/a.webp", position: 0, focusX: 50, focusY: 20, fit: 40 },
   ],
 };
 const open = { showPrices: true, showSoldOutSizes: false };
@@ -36,7 +36,7 @@ describe("toCatalogProduct", () => {
       ],
       inStock: true,
       imageUrl: "/media/products/a.webp",
-      imageFocus: { focusX: 50, focusY: 20 },
+      imageFocus: { focusX: 50, focusY: 20, fit: 40 },
       detail: null,
     });
   });
@@ -81,9 +81,17 @@ describe("toCatalogProduct", () => {
   });
 
   it("carries the focal point of the cover, centered when there is none", () => {
-    expect(toCatalogProduct(row, open).imageFocus).toEqual({ focusX: 50, focusY: 20 });
+    expect(toCatalogProduct(row, open).imageFocus).toEqual({
+      focusX: 50,
+      focusY: 20,
+      fit: 40,
+    });
     const bare = { ...row, images: [{ url: "/media/products/a.webp", position: 0 }] };
-    expect(toCatalogProduct(bare, open).imageFocus).toEqual({ focusX: 50, focusY: 50 });
+    expect(toCatalogProduct(bare, open).imageFocus).toEqual({
+      focusX: 50,
+      focusY: 50,
+      fit: null,
+    });
   });
 
   it("includes sold-out sizes (marked unavailable) only when the setting allows it", () => {
@@ -165,8 +173,8 @@ describe("toCatalogProduct", () => {
       { ...open, showSoldOutSizes: true },
     );
     expect(detail.images).toEqual([
-      { url: "/media/products/a.webp", alt: "Vestido Lino", focusX: 50, focusY: 20 },
-      { url: "/media/products/b.webp", alt: "Vestido Lino", focusX: 10, focusY: 90 },
+      { url: "/media/products/a.webp", alt: "Vestido Lino", focusX: 50, focusY: 20, fit: 40 },
+      { url: "/media/products/b.webp", alt: "Vestido Lino", focusX: 10, focusY: 90, fit: null },
     ]);
     expect(detail.color).toBe("Verde");
     expect(detail.description).toBe("Lino fresco");

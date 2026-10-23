@@ -76,7 +76,7 @@ const productFields = {
   description: true,
   priceGs: true,
   images: {
-    select: { url: true, position: true, focusX: true, focusY: true },
+    select: { url: true, position: true, focusX: true, focusY: true, fit: true },
     orderBy: { position: "asc" },
     take: 1,
   },
@@ -89,7 +89,7 @@ const detailSelect = (now: Date) =>
   ({
     ...productSelect(now),
     images: {
-      select: { url: true, position: true, focusX: true, focusY: true },
+      select: { url: true, position: true, focusX: true, focusY: true, fit: true },
       orderBy: { position: "asc" },
     },
   }) satisfies Prisma.ProductSelect;

@@ -83,4 +83,38 @@ describe.skipIf(!hasDatabase)("ProductImage focal point", () => {
       }),
     ).rejects.toThrow();
   });
+
+  it("leaves the zoom automatic (null) until one is chosen", async () => {
+    await withRollback(async (tx) => {
+      const image = await tx.productImage.create({
+        data: { productId: await productId(tx), url: "/a.jpg", position: 0 },
+      });
+      expect(image.fit).toBeNull();
+    });
+  });
+
+  it("stores a zoom from 0 (whole photo) to 100 (fill the frame)", async () => {
+    await withRollback(async (tx) => {
+      const id = await productId(tx);
+      const whole = await tx.productImage.create({
+        data: { productId: id, url: "/a.jpg", position: 0, fit: 0 },
+      });
+      const fill = await tx.productImage.create({
+        data: { productId: id, url: "/b.jpg", position: 1, fit: 100 },
+      });
+      expect([whole.fit, fill.fit]).toEqual([0, 100]);
+    });
+  });
+
+  it("rejects a zoom outside 0-100", async () => {
+    for (const fit of [101, -1]) {
+      await expect(
+        withRollback(async (tx) => {
+          await tx.productImage.create({
+            data: { productId: await productId(tx), url: "/a.jpg", position: 0, fit },
+          });
+        }),
+      ).rejects.toThrow();
+    }
+  });
 });

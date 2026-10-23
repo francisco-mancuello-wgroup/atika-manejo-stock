@@ -2,10 +2,17 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { objectPosition } from "../../lib/focus";
+import { FramedPhoto } from "../framed-photo";
 import { CloseIcon } from "./icons";
 
-type Photo = { url: string; alt: string; pieceId?: string; focusX?: number; focusY?: number };
+type Photo = {
+  url: string;
+  alt: string;
+  pieceId?: string;
+  focusX?: number;
+  focusY?: number;
+  fit?: number | null;
+};
 
 /**
  * The photos of a lookbook page: swipe sideways when there are several, tap one to see it full
@@ -56,15 +63,13 @@ export function PiecePhotos({
               aria-label={`Ver en grande: ${photo.alt}`}
               className="relative block size-full cursor-zoom-in"
             >
-              <Image
+              {/* Every photo takes the same frame, framed by its focal point and zoom; the dialog below shows it whole */}
+              <FramedPhoto
                 src={photo.url}
                 alt={photo.alt}
-                fill
                 priority={priority && index === 0}
                 sizes="(orientation: landscape) and (min-width: 1024px) 55vw, 100vw"
-                // Every photo fills the same frame around its focal point; the zoom below shows it uncropped
-                className="object-cover"
-                style={{ objectPosition: objectPosition(photo) }}
+                focus={photo}
               />
             </button>
           </li>

@@ -32,7 +32,7 @@ function row(id: number, overrides: Partial<LookbookRow> = {}): LookbookRow {
     ],
     images: [
       { url: `/media/products/p${id}-2.webp`, position: 1, focusX: 10, focusY: 90 },
-      { url: `/media/products/p${id}.webp`, position: 0, focusX: 50, focusY: 20 },
+      { url: `/media/products/p${id}.webp`, position: 0, focusX: 50, focusY: 20, fit: 40 },
     ],
     ...overrides,
   };
@@ -78,8 +78,8 @@ describe("lookbookPages", () => {
         },
       ],
       photos: [
-        { url: "/media/products/p1.webp", alt: "Pieza 1", focusX: 50, focusY: 20 },
-        { url: "/media/products/p1-2.webp", alt: "Pieza 1", focusX: 10, focusY: 90 },
+        { url: "/media/products/p1.webp", alt: "Pieza 1", focusX: 50, focusY: 20, fit: 40 },
+        { url: "/media/products/p1-2.webp", alt: "Pieza 1", focusX: 10, focusY: 90, fit: null },
       ],
     });
   });

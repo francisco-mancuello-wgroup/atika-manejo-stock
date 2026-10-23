@@ -121,16 +121,17 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
             position: 0,
             focusX: 30,
             focusY: 10,
+            fit: 40,
           },
           { productId: id ?? "", url: "/media/products/x/second.webp", position: 1 },
         ],
       });
       const product = await getProduct(tx, open, id ?? "");
-      expect(product?.imageFocus).toEqual({ focusX: 30, focusY: 10 });
+      expect(product?.imageFocus).toEqual({ focusX: 30, focusY: 10, fit: 40 });
       const detail = await getProductDetail(tx, open, id ?? "");
-      expect(detail?.images.map((image) => [image.focusX, image.focusY])).toEqual([
-        [30, 10],
-        [50, 50],
+      expect(detail?.images.map((image) => [image.focusX, image.focusY, image.fit])).toEqual([
+        [30, 10, 40],
+        [50, 50, null],
       ]);
     });
   });

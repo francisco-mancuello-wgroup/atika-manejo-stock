@@ -32,11 +32,11 @@ describe("searchEntriesOf", () => {
       section: null,
       pieces: [],
       items: [],
-      photos: [{ url: "/a.webp", alt: "", pieceId: "p", focusX: 20, focusY: 70 }],
+      photos: [{ url: "/a.webp", alt: "", pieceId: "p", focusX: 20, focusY: 70, fit: 30 }],
       page: 1,
     };
     const [found] = searchEntriesOf({ slug: "milonga", name: "Milonga" }, [page]);
-    expect(found?.photoFocus).toEqual({ focusX: 20, focusY: 70 });
+    expect(found?.photoFocus).toEqual({ focusX: 20, focusY: 70, fit: 30 });
   });
 });
 

@@ -1,5 +1,5 @@
-import Image from "next/image";
-import { type Focus, objectPosition } from "../lib/focus";
+import type { Focus } from "../lib/focus";
+import { FramedPhoto } from "./framed-photo";
 
 interface ProductPhotoProps {
   /** Cover photo URL, or null for the placeholder. */
@@ -9,7 +9,7 @@ interface ProductPhotoProps {
   sizes: string;
   /** Offset of the sand block: list row (6px), detail sheet (8px) or product page (12px). */
   size?: "row" | "sheet" | "page";
-  /** Focal point kept visible by the 3:4 crop; the center when omitted. */
+  /** Focal point and zoom of the photo in the 3:4 frame; centered and automatic when omitted. */
   focus?: Partial<Focus>;
   priority?: boolean;
 }
@@ -38,15 +38,7 @@ export function ProductPhoto({
   }
   return (
     <div className={frame}>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes={sizes}
-        priority={priority}
-        className="object-cover"
-        style={{ objectPosition: objectPosition(focus ?? {}) }}
-      />
+      <FramedPhoto src={src} alt={alt} sizes={sizes} priority={priority} focus={focus} />
     </div>
   );
 }

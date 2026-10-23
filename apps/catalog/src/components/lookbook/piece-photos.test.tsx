@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { PiecePhotos } from "./piece-photos";
 
 const photos = [
@@ -44,6 +44,20 @@ describe("PiecePhotos", () => {
     expect(within(dialog).getByRole("img", { hidden: true }).getAttribute("style")).not.toContain(
       "object-position",
     );
+  });
+
+  it("applies the zoom of each photo inside the same frame", async () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(400);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(400);
+    const zoomed = [{ url: "/media/a.webp", alt: "Costa Coco", fit: 0 }];
+    render(<PiecePhotos photos={zoomed} label="Fotos de Costa Coco" priority={false} />);
+    const [image] = within(screen.getByRole("list")).getAllByRole("img");
+    Object.defineProperty(image, "naturalWidth", { value: 400, configurable: true });
+    Object.defineProperty(image, "naturalHeight", { value: 600, configurable: true });
+    fireEvent.load(image as HTMLElement);
+    await waitFor(() => expect(image?.parentElement?.style.height).toBe("400px"));
+    expect(image?.parentElement?.style.width).toBe(`${400 * (400 / 600)}px`);
+    vi.restoreAllMocks();
   });
 
   it("keeps the photo frame the same height on every page, whatever the text below it", () => {

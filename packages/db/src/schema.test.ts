@@ -38,6 +38,10 @@ describe("schema", () => {
     );
   });
 
+  it("keeps an optional zoom (fit) on every product photo", () => {
+    expect(Object.values(Prisma.ProductImageScalarFieldEnum)).toContain("fit");
+  });
+
   it("keeps the exchange rate of the day and the lot defaults in AppSettings", () => {
     expect(Object.values(Prisma.AppSettingsScalarFieldEnum)).toEqual(
       expect.arrayContaining(["id", "exchangeRate", "saleFactor", "vatRate", "costRate"]),
