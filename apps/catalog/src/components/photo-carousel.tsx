@@ -79,7 +79,8 @@ export function PhotoCarousel({
                 fill
                 sizes="(min-width: 1024px) 55vw, 100vw"
                 priority={priority && index === 0}
-                className="object-contain p-4 sm:p-8"
+                // Every photo fills the same frame; the zoom shows it uncropped
+                className="object-cover"
               />
             </button>
           </div>

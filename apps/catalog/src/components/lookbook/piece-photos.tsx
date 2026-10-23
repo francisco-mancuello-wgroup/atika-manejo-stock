@@ -58,7 +58,8 @@ export function PiecePhotos({
                 fill
                 priority={priority && index === 0}
                 sizes="(orientation: landscape) and (min-width: 1024px) 55vw, 100vw"
-                className="object-contain"
+                // Every photo fills the same frame; the zoom below shows it uncropped
+                className="object-cover"
               />
             </button>
           </li>

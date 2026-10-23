@@ -26,6 +26,15 @@ describe("PhotoCarousel", () => {
     expect(within(group).getAllByRole("button", { name: /Ampliar foto/ })).toHaveLength(3);
   });
 
+  it("fills the same frame with every photo, whatever its size", () => {
+    render(<PhotoCarousel photos={photos} name="Vestido" />);
+    const group = screen.getByRole("group", { name: "Fotos de Vestido" });
+    for (const image of within(group).getAllByRole("img")) {
+      expect(image).toHaveClass("object-cover");
+      expect(image).not.toHaveClass("object-contain");
+    }
+  });
+
   it("shows dots only when there is more than one photo", () => {
     const { rerender } = render(<PhotoCarousel photos={photos} name="Vestido" />);
     expect(screen.getAllByRole("button", { name: /Ir a la foto/ })).toHaveLength(3);
