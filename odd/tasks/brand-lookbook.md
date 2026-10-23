@@ -35,6 +35,7 @@ User decision 2026-10-23 ("adelante") on this design:
 - [x] T1 — Data: `Brand` model + migration (backfill from products + "Otras marcas"), brand ensured on product save, tests.
 - [x] T2 — Catalog: lookbook and Pink-only sections by brand, ordering rule, covers, old slugs, inactive brands hidden everywhere, tests.
 - [x] T3 — ERP: "Marcas" page (switch, order, cover), nav, lookbook form without "Catálogo", tests.
+- [ ] T4 — ERP cleanup (user 2026-10-23, "adelante"): remove the per-product "Lookbook" button/modal (Página, Sección, Nombre en el lookbook) and its action; page order inside a brand stays automatic (stored `catalogOrder` first, the rest newest first); replace the Prendas "Filtro por lookbook" (old `Product.catalog`) with a "Filtro por marca" over every brand; group-candidate filter by catalog → by brand too.
 
 ## Progress / evidence
 
