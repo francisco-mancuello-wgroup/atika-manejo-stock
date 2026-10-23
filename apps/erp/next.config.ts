@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
 import type { NextConfig } from "next";
+import { siteRedirects } from "../../packages/ui/src/lib/site-redirect";
 
 // Next.js only loads .env files from the app directory; the shared DATABASE_URL lives in the
 // repository root .env (gitignored, same file the seed uses). Existing variables win, and a
@@ -29,6 +30,8 @@ const nextConfig: NextConfig = {
   // Discounts moved under Promos; old links keep working.
   async redirects() {
     return [
+      // On the old Vercel project REDIRECT_TO_ORIGIN sends everything to the server it moved to.
+      ...siteRedirects(process.env.REDIRECT_TO_ORIGIN),
       { source: "/descuentos/:path*", destination: "/promos/descuentos/:path*", permanent: true },
     ];
   },

@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
 import type { NextConfig } from "next";
+import { siteRedirects } from "../../packages/ui/src/lib/site-redirect";
 
 // Next.js only loads .env files from the app directory; the shared DATABASE_URL lives in the
 // repository root .env (gitignored, same file the seed and the ERP use). Existing variables win,
@@ -26,6 +27,8 @@ const nextConfig: NextConfig = {
   // The rows list moved from the site root to /ver-todo; old category links keep working.
   async redirects() {
     return [
+      // On the old Vercel project REDIRECT_TO_ORIGIN sends everything to the server it moved to.
+      ...siteRedirects(process.env.REDIRECT_TO_ORIGIN),
       {
         source: "/:categoria(novedades|vestidos|tops|faldas-y-shorts|accesorios)",
         destination: "/ver-todo/:categoria",
