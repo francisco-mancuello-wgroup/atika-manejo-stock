@@ -2,9 +2,17 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { FramedPhoto } from "../framed-photo";
 import { CloseIcon } from "./icons";
 
-type Photo = { url: string; alt: string; pieceId?: string };
+type Photo = {
+  url: string;
+  alt: string;
+  pieceId?: string;
+  focusX?: number;
+  focusY?: number;
+  fit?: number | null;
+};
 
 /**
  * The photos of a lookbook page: swipe sideways when there are several, tap one to see it full
@@ -33,7 +41,10 @@ export function PiecePhotos({
     <>
       <ul
         aria-label={label}
-        className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-surface [scrollbar-width:none]"
+        // Same portrait (3:4) frame on every page so the text below never shrinks it: as tall as
+        // 60% of the screen, or the full width on narrow phones, centered. Side by side on wide
+        // screens it fills the page height instead
+        className="flex aspect-[3/4] h-[min(60svh,133vw)] max-w-full min-h-0 flex-none self-center snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-surface [scrollbar-width:none] landscape:lg:aspect-auto landscape:lg:h-auto landscape:lg:self-stretch"
       >
         {photos.map((photo, index) => (
           <li
@@ -52,13 +63,13 @@ export function PiecePhotos({
               aria-label={`Ver en grande: ${photo.alt}`}
               className="relative block size-full cursor-zoom-in"
             >
-              <Image
+              {/* Every photo takes the same frame, framed by its focal point and zoom; the dialog below shows it whole */}
+              <FramedPhoto
                 src={photo.url}
                 alt={photo.alt}
-                fill
                 priority={priority && index === 0}
                 sizes="(orientation: landscape) and (min-width: 1024px) 55vw, 100vw"
-                className="object-contain"
+                focus={photo}
               />
             </button>
           </li>

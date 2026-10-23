@@ -82,6 +82,7 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
         "discountPercent",
         "discountedPriceGs",
         "id",
+        "imageFocus",
         "imageUrl",
         "inStock",
         "name",
@@ -106,6 +107,32 @@ describe.skipIf(!hasDatabase)("catalog queries (database)", () => {
       const product = await getProduct(tx, open, id ?? "");
       expect(product?.imageUrl).toBe("/media/products/x/cover.webp");
       expect(JSON.stringify(product)).not.toContain("second.webp");
+    });
+  });
+
+  it("exposes the focal point of the cover and of every sheet photo", async () => {
+    await isolated(async (tx) => {
+      const [id] = await createProducts(tx, [{ name: "Focus", variants: [["S", 1]] }]);
+      await tx.productImage.createMany({
+        data: [
+          {
+            productId: id ?? "",
+            url: "/media/products/x/cover.webp",
+            position: 0,
+            focusX: 30,
+            focusY: 10,
+            fit: 40,
+          },
+          { productId: id ?? "", url: "/media/products/x/second.webp", position: 1 },
+        ],
+      });
+      const product = await getProduct(tx, open, id ?? "");
+      expect(product?.imageFocus).toEqual({ focusX: 30, focusY: 10, fit: 40 });
+      const detail = await getProductDetail(tx, open, id ?? "");
+      expect(detail?.images.map((image) => [image.focusX, image.focusY, image.fit])).toEqual([
+        [30, 10, 40],
+        [50, 50, null],
+      ]);
     });
   });
 

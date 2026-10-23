@@ -75,7 +75,11 @@ const productFields = {
   color: true,
   description: true,
   priceGs: true,
-  images: { select: { url: true, position: true }, orderBy: { position: "asc" }, take: 1 },
+  images: {
+    select: { url: true, position: true, focusX: true, focusY: true, fit: true },
+    orderBy: { position: "asc" },
+    take: 1,
+  },
 } satisfies Prisma.ProductSelect;
 
 const productSelect = (now: Date) => ({ ...productFields, ...stockSelect(now) });
@@ -84,7 +88,10 @@ const productSelect = (now: Date) => ({ ...productFields, ...stockSelect(now) })
 const detailSelect = (now: Date) =>
   ({
     ...productSelect(now),
-    images: { select: { url: true, position: true }, orderBy: { position: "asc" } },
+    images: {
+      select: { url: true, position: true, focusX: true, focusY: true, fit: true },
+      orderBy: { position: "asc" },
+    },
   }) satisfies Prisma.ProductSelect;
 
 /** The settings that decide which products and sizes are shown. */

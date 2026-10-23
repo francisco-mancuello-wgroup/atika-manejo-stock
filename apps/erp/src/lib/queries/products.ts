@@ -56,7 +56,7 @@ export interface ProductEdit {
   description: string | null;
   originalValueUsd: number;
   sizes: { size: string; unitsBought: number; stock: number; barcode: string }[];
-  photos: { id: string; url: string }[];
+  photos: { id: string; url: string; focusX: number; focusY: number; fit: number | null }[];
   lot: LotPricingContext;
 }
 
@@ -65,7 +65,10 @@ export async function getProductForEdit(id: string): Promise<ProductEdit | null>
     where: { id },
     include: {
       variants: true,
-      images: { orderBy: { position: "asc" }, select: { id: true, url: true } },
+      images: {
+        orderBy: { position: "asc" },
+        select: { id: true, url: true, focusX: true, focusY: true, fit: true },
+      },
       lot: { select: lotSelect },
     },
   });

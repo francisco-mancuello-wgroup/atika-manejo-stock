@@ -28,6 +28,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     <section className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:grid-cols-2">
       <ProductPhoto
         src={product.imageUrl}
+        focus={product.imageFocus}
         alt={product.name}
         sizes="(min-width: 768px) 50vw, 100vw"
         size="page"

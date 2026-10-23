@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { type SearchEntry, searchEntries } from "../../lib/search";
+import { FramedPhoto } from "../framed-photo";
 import { CloseIcon, SearchIcon } from "./icons";
 
 /**
@@ -80,12 +80,11 @@ export function LookbookSearch({ entries }: { entries: SearchEntry[] }) {
                     >
                       <span className="relative size-16 shrink-0 overflow-hidden rounded-[3px] bg-surface">
                         {entry.photo && (
-                          <Image
+                          <FramedPhoto
                             src={entry.photo}
                             alt=""
-                            fill
                             sizes="64px"
-                            className="object-cover"
+                            focus={entry.photoFocus}
                           />
                         )}
                       </span>

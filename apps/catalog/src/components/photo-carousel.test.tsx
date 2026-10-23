@@ -26,6 +26,32 @@ describe("PhotoCarousel", () => {
     expect(within(group).getAllByRole("button", { name: /Ampliar foto/ })).toHaveLength(3);
   });
 
+  it("fills the same frame with every photo, whatever its size", () => {
+    render(<PhotoCarousel photos={photos} name="Vestido" />);
+    const group = screen.getByRole("group", { name: "Fotos de Vestido" });
+    for (const image of within(group).getAllByRole("img")) {
+      expect(image).toHaveClass("object-cover");
+      expect(image).not.toHaveClass("object-contain");
+    }
+  });
+
+  it("keeps each photo's focal point in the frame, not in the zoom", () => {
+    const focused = [
+      { url: "/media/a.webp", alt: "Vestido", focusX: 30, focusY: 70 },
+      { url: "/media/b.webp", alt: "Vestido" },
+    ];
+    render(<PhotoCarousel photos={focused} name="Vestido" />);
+    const group = screen.getByRole("group", { name: "Fotos de Vestido" });
+    const [first, second] = within(group).getAllByRole("img");
+    expect(first?.getAttribute("style")).toContain("object-position: 30% 70%");
+    expect(second?.getAttribute("style")).toContain("object-position: 50% 50%");
+    fireEvent.click(screen.getAllByRole("button", { name: /Ampliar foto/ })[0] as HTMLElement);
+    const dialog = screen.getByRole("dialog", { hidden: true });
+    expect(within(dialog).getByRole("img", { hidden: true }).getAttribute("style")).not.toContain(
+      "object-position",
+    );
+  });
+
   it("shows dots only when there is more than one photo", () => {
     const { rerender } = render(<PhotoCarousel photos={photos} name="Vestido" />);
     expect(screen.getAllByRole("button", { name: /Ir a la foto/ })).toHaveLength(3);
