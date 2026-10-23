@@ -34,9 +34,10 @@ export function PiecePhotos({
     <>
       <ul
         aria-label={label}
-        // Fixed height so the frame does not shrink with longer text below it; side by side on
-        // wide screens it fills the page height instead
-        className="flex h-[48svh] min-h-0 flex-none snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-surface [scrollbar-width:none] landscape:lg:h-auto"
+        // Fixed height so the frame does not shrink with longer text below it. Tablets get a taller
+        // portrait (3:4) frame, centered, so portrait photos are not cut to a wide strip; side by
+        // side on wide screens it fills the page height instead
+        className="flex h-[48svh] min-h-0 flex-none snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-surface [scrollbar-width:none] sm:aspect-[3/4] sm:h-[62svh] sm:max-w-full sm:self-center landscape:lg:aspect-auto landscape:lg:h-auto landscape:lg:self-stretch"
       >
         {photos.map((photo, index) => (
           <li

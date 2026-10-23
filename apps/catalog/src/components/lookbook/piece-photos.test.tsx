@@ -53,6 +53,12 @@ describe("PiecePhotos", () => {
     expect(list).not.toHaveClass("flex-1");
   });
 
+  it("keeps a portrait frame on tablets so portrait photos are not cut", () => {
+    render(<PiecePhotos photos={photos} label="Fotos de Costa Coco" priority={false} />);
+    const list = screen.getByRole("list", { name: "Fotos de Costa Coco" });
+    expect(list).toHaveClass("sm:h-[62svh]", "sm:aspect-[3/4]", "sm:self-center");
+  });
+
   it("shows the whole photo, uncropped, when zoomed", () => {
     render(<PiecePhotos photos={photos} label="Fotos de Costa Coco" priority={false} />);
     fireEvent.click(
