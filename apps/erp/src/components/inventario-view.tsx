@@ -14,11 +14,14 @@ export function InventarioView({
   lots,
   filters,
   display = { currency: "gs" },
+  notice,
 }: {
   products: InventoryProduct[];
   lots: { id: string; name: string }[];
   filters: InventoryFilters;
   display?: CurrencyDisplay;
+  /** Name of the product just deleted, shown as a confirmation. */
+  notice?: string;
 }) {
   const money = moneyFormatter(display.currency, display.exchangeRate);
   const filtered = Boolean(filters.lotId || filters.query);
@@ -33,6 +36,12 @@ export function InventarioView({
           </Link>
         }
       />
+
+      {notice ? (
+        <p role="status" className="border border-line bg-surface px-4 py-3 text-sm text-ink">
+          Producto eliminado: {notice}.
+        </p>
+      ) : null}
 
       <search>
         <form

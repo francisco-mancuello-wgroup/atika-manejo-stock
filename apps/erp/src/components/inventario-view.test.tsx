@@ -133,4 +133,13 @@ describe("InventarioView barcode scanning", () => {
     expect(form?.querySelector('button[type="submit"]')).not.toBeNull();
     expect(input).toHaveAttribute("placeholder", expect.stringContaining("código de barras"));
   });
+
+  it("shows the deleted-product notice, and none without it", () => {
+    const { rerender } = render(
+      <InventarioView products={products} lots={lots} filters={{}} notice="Vestido Lino" />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Producto eliminado: Vestido Lino.");
+    rerender(<InventarioView products={products} lots={lots} filters={{}} />);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
 });
