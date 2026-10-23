@@ -228,16 +228,16 @@ export async function addProductsToGroup(
   if (!UUID.test(groupId)) return NOT_FOUND;
   const { productIds, lotId, category, brand } = filter;
   if (!productIds?.length && !lotId && !category && !brand) {
-    return error("Elegí un lote, categoría o marca.");
+    return error("Elegí una marca, categoría o marca de la prenda.");
   }
-  if (lotId && !UUID.test(lotId)) return error("No se encontró el lote.");
+  if (lotId && !UUID.test(lotId)) return error("No se encontró la marca.");
   if (productIds?.some((id) => !UUID.test(id))) return error("Ese producto ya no existe.");
 
   return db.$transaction(async (tx): Promise<FormState> => {
     const group = await tx.publicationGroup.findUnique({ where: { id: groupId } });
     if (!group) return NOT_FOUND;
     const brandWhere = brand ? await brandProductWhere(tx, brand) : {};
-    if (!brandWhere) return error("No se encontró la marca.");
+    if (!brandWhere) return error("No se encontró la marca de la prenda.");
     const variants = await tx.productVariant.findMany({
       where: {
         stock: { gt: 0 },

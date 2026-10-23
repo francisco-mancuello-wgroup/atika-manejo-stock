@@ -55,7 +55,7 @@ export const EMPTY_PRODUCT: ProductFormInitial = {
 const TEXT_FIELDS = [
   { name: "name", label: "Nombre" },
   { name: "code", label: "Código" },
-  { name: "brand", label: "Marca" },
+  { name: "brand", label: "Marca de la prenda" },
   { name: "color", label: "Color" },
 ] as const;
 
@@ -127,7 +127,7 @@ export function ProductForm({
     <form action={formAction} className="flex flex-col gap-6">
       <section className="grid grid-cols-1 gap-4 border border-line bg-surface p-5 md:grid-cols-2">
         {mode === "new" ? (
-          <Field label="Lote" htmlFor="lotId" error={errors.lotId}>
+          <Field label="Marca" htmlFor="lotId" error={errors.lotId}>
             <Select
               id="lotId"
               name="lotId"
@@ -136,7 +136,7 @@ export function ProductForm({
               aria-invalid={errors.lotId ? true : undefined}
               aria-describedby={errors.lotId ? "lotId-error" : undefined}
             >
-              <option value="">Elegí un lote</option>
+              <option value="">Elegí una marca</option>
               {lots.map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.name}
@@ -146,7 +146,7 @@ export function ProductForm({
           </Field>
         ) : (
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-ink">Lote</span>
+            <span className="text-xs font-medium text-ink">Marca</span>
             <span className="flex h-10 items-center text-sm text-ink">{lot?.name}</span>
           </div>
         )}

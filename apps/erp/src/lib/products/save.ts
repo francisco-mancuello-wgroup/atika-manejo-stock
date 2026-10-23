@@ -280,7 +280,7 @@ export async function createProduct(
   try {
     outcome = await db.$transaction(async (tx) => {
       const lot = await tx.lot.findUnique({ where: { id: input.lotId }, select: { id: true } });
-      if (!lot) return invalid({ lotId: "Elegí un lote." }, raw);
+      if (!lot) return invalid({ lotId: "Elegí una marca." }, raw);
       await tx.product.create({
         data: {
           id: productId,

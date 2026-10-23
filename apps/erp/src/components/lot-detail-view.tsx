@@ -61,7 +61,7 @@ export function LotDetailView({
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-2xl text-ink">Stock por modelo y talle</h2>
           {lot.rows.length === 0 ? (
-            <p className="text-sm text-muted">Este lote no tiene productos.</p>
+            <p className="text-sm text-muted">Esta marca no tiene productos.</p>
           ) : (
             <LotGrid sizes={lot.sizes} rows={lot.rows} display={display} />
           )}

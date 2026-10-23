@@ -62,13 +62,13 @@ export function ProductPicker({
             onChange={(event) => setFilters({ ...filters, query: event.target.value })}
           />
         </Field>
-        <Field label="Lote" htmlFor="picker-lot">
+        <Field label="Marca" htmlFor="picker-lot">
           <Select
             id="picker-lot"
             value={filters.lotId}
             onChange={(event) => setFilters({ ...filters, lotId: event.target.value })}
           >
-            <option value="">Todos los lotes</option>
+            <option value="">Todas las marcas</option>
             {lots.map(([id, name]) => (
               <option key={id} value={id}>
                 {name}

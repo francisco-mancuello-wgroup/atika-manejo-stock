@@ -24,6 +24,6 @@ export function formatPromoScope(promo: {
   productCount: number;
 }): string {
   if (promo.scope === "all") return "Todos los productos";
-  if (promo.scope === "lots") return plural(promo.lotCount, "lote", "lotes");
+  if (promo.scope === "lots") return plural(promo.lotCount, "marca", "marcas");
   return plural(promo.productCount, "producto", "productos");
 }

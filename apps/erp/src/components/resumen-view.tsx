@@ -40,12 +40,12 @@ export function ResumenView({
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-2xl text-ink">Compras por lote</h2>
+        <h2 className="font-display text-2xl text-ink">Compras por marca</h2>
         <div className={table.wrapper}>
           <table className={table.root}>
             <thead className={table.head}>
               <tr>
-                <th className={table.th}>Lote</th>
+                <th className={table.th}>Marca</th>
                 <th className={table.th}>Compra</th>
                 <th className={table.th}>Vendidas / compradas</th>
                 <th className={`${table.th} ${table.num}`}>Stock</th>

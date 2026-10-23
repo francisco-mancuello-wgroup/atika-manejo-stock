@@ -13,7 +13,7 @@ export default async function NewProductPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Nuevo producto"
-        description="Elegí el lote y completá los datos. Queda oculto en el catálogo hasta que lo publiques."
+        description="Elegí la marca y completá los datos. Queda oculto en el catálogo hasta que lo publiques."
       />
       <ProductForm mode="new" lots={lots} brandNames={brandNames} action={createProductAction} />
     </div>

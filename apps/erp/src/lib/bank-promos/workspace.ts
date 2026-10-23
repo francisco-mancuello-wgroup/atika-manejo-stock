@@ -156,10 +156,10 @@ function scopeText(draft: PromoDraft, lots: readonly LotOption[]): string {
   if (draft.scope === "all") return "En todos los productos";
   if (draft.scope === "lots") {
     const names = lots.filter((lot) => draft.lotIds.includes(lot.id)).map((lot) => lot.name);
-    if (names.length === 0) return "Solo en prendas de los lotes elegidos";
+    if (names.length === 0) return "Solo en prendas de las marcas elegidas";
     return names.length === 1
-      ? `Solo en prendas del lote ${names[0]}`
-      : `Solo en prendas de los lotes ${joinAnd(names)}`;
+      ? `Solo en prendas de la marca ${names[0]}`
+      : `Solo en prendas de las marcas ${joinAnd(names)}`;
   }
   if (draft.productCount === 0) return "Solo en los productos elegidos";
   return `Solo en ${draft.productCount} ${draft.productCount === 1 ? "producto elegido" : "productos elegidos"}`;

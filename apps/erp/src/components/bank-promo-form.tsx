@@ -57,7 +57,7 @@ const KIND_OPTIONS = [
 
 const SCOPE_OPTIONS = [
   ["all", "Todos los productos"],
-  ["lots", "Lotes"],
+  ["lots", "Marcas"],
   ["products", "Productos"],
 ] as const;
 
@@ -316,9 +316,9 @@ export function BankPromoForm({
 
           {scope === "lots" ? (
             <fieldset className="flex min-w-0 flex-col gap-2 border border-line bg-surface p-4">
-              <legend className="px-2 text-xs font-medium text-ink">Lotes de la promoción</legend>
+              <legend className="px-2 text-xs font-medium text-ink">Marcas de la promoción</legend>
               {lots.length === 0 ? (
-                <p className="text-sm text-muted">Todavía no hay lotes.</p>
+                <p className="text-sm text-muted">Todavía no hay marcas.</p>
               ) : null}
               <ul className="flex max-h-72 flex-col overflow-y-auto">
                 {lots.map((lot) => (

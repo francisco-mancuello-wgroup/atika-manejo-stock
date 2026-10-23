@@ -55,9 +55,9 @@ export function InventarioView({
           className="flex flex-wrap items-end gap-4 border border-line bg-surface p-4"
         >
           <div className="w-56">
-            <Field label="Lote" htmlFor="lot">
+            <Field label="Marca" htmlFor="lot">
               <Select id="lot" name="lot" defaultValue={filters.lotId ?? ""}>
-                <option value="">Todos los lotes</option>
+                <option value="">Todas las marcas</option>
                 {lots.map((lot) => (
                   <option key={lot.id} value={lot.id}>
                     {lot.name}
@@ -101,7 +101,7 @@ export function InventarioView({
             <thead className={table.head}>
               <tr>
                 <th className={table.th}>Producto</th>
-                <th className={table.th}>Lote</th>
+                <th className={table.th}>Marca</th>
                 <th className={table.th}>Código</th>
                 <th className={table.th}>Stock por talle</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>

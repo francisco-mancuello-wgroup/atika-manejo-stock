@@ -35,9 +35,9 @@ export function proposedUnits(
 export type Criterion = "lote" | "categoria" | "marca";
 
 export const CRITERIA: readonly [Criterion, string][] = [
-  ["lote", "Lote"],
+  ["lote", "Marca"],
   ["categoria", "Categoría"],
-  ["marca", "Marca"],
+  ["marca", "Marca de la prenda"],
 ];
 
 /** The bulk-add filter for a criterion and one of its values. */

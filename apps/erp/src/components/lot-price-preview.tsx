@@ -54,7 +54,7 @@ export function LotPricePreview({
             aria-controls="lot-price-preview"
             className="flex w-full items-center justify-between gap-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
-            Ver cálculo por lote
+            Ver cálculo por marca
             <span
               aria-hidden="true"
               className={cn("text-base text-muted transition-transform", open && "rotate-180")}
@@ -71,13 +71,13 @@ export function LotPricePreview({
       </div>
       {!open ? null : lot === undefined ? (
         <p id="lot-price-preview" className="text-sm text-muted">
-          Todavía no hay lotes.
+          Todavía no hay marcas.
         </p>
       ) : (
         <div id="lot-price-preview" className="flex flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="w-full max-w-xs">
-              <Field label="Lote" htmlFor="preview-lot">
+              <Field label="Marca" htmlFor="preview-lot">
                 <Select
                   id="preview-lot"
                   value={lot.id}
@@ -106,12 +106,12 @@ export function LotPricePreview({
           {preview?.status === "invalid" ? (
             <p className="text-sm text-muted">Completá los parámetros para ver el cálculo.</p>
           ) : preview?.status === "empty" ? (
-            <p className="text-sm text-muted">Este lote no tiene unidades compradas.</p>
+            <p className="text-sm text-muted">Esta marca no tiene unidades compradas.</p>
           ) : preview?.status === "ok" && rows.length === 0 ? (
             <p className="text-sm text-muted">Ninguna prenda coincide con la búsqueda.</p>
           ) : preview?.status === "ok" ? (
             <div className={table.wrapper}>
-              <table aria-label="Cálculo por lote" className={table.root}>
+              <table aria-label="Cálculo por marca" className={table.root}>
                 <thead className={table.head}>
                   <tr>
                     <th className={table.th}>Producto</th>

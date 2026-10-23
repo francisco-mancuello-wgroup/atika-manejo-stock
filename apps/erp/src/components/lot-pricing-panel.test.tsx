@@ -33,10 +33,10 @@ describe("LotPricingPanel", () => {
   describe("global mode", () => {
     it("shows the values read-only with a link to Parámetros", () => {
       renderPanel();
-      const region = screen.getByRole("region", { name: "Precios del lote" });
+      const region = screen.getByRole("region", { name: "Precios de la marca" });
       expect(region).toHaveTextContent("2,5");
       expect(region).toHaveTextContent("55");
-      expect(screen.queryByLabelText("TC del lote (₲ / US$)")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("TC de la marca (₲ / US$)")).not.toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Editar en Parámetros" })).toHaveAttribute(
         "href",
         "/parametros",
@@ -58,7 +58,7 @@ describe("LotPricingPanel", () => {
       const modeAction = vi.fn(
         async (_p: FormState, _d: FormData): Promise<FormState> => ({
           status: "success",
-          message: "El lote ahora usa parámetros propios. Parámetros ya no lo modifica.",
+          message: "La marca ahora usa parámetros propios. Parámetros ya no la modifica.",
         }),
       );
       renderPanel({ modeAction });
@@ -97,7 +97,7 @@ describe("LotPricingPanel", () => {
 
     it("shows an editable form with the lot's values and no link to Parámetros", () => {
       renderPanel({ mode: "custom" });
-      expect(screen.getByLabelText("TC del lote (₲ / US$)")).toHaveValue(7400);
+      expect(screen.getByLabelText("TC de la marca (₲ / US$)")).toHaveValue(7400);
       expect(screen.getByLabelText("Factor de venta")).toHaveValue(2.5);
       expect(screen.getByLabelText("IVA (%)")).toHaveValue(10);
       expect(screen.getByLabelText("Costo sobre valor original (%)")).toHaveValue(55);
@@ -114,7 +114,7 @@ describe("LotPricingPanel", () => {
 
     it("updates the flags as the values are typed", () => {
       renderPanel({ mode: "custom" });
-      fireEvent.change(screen.getByLabelText("TC del lote (₲ / US$)"), {
+      fireEvent.change(screen.getByLabelText("TC de la marca (₲ / US$)"), {
         target: { value: "7500" },
       });
       expect(screen.getAllByText(/Difiere del global/)).toHaveLength(2);

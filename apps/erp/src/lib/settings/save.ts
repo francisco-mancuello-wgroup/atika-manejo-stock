@@ -50,13 +50,13 @@ export async function saveAndApplySettings(
 
   return {
     status: "success",
-    message: `Parámetros guardados. ${outcome.lots === 1 ? "Se actualizó" : "Se actualizaron"} ${countOf(outcome.lots, "lote", "lotes")} y ${outcome.products === 1 ? "se recalculó" : "se recalcularon"} ${countOf(outcome.products, "precio", "precios")}.${untouchedNote(outcome.untouched)}`,
+    message: `Parámetros guardados. ${outcome.lots === 1 ? "Se actualizó" : "Se actualizaron"} ${countOf(outcome.lots, "marca", "marcas")} y ${outcome.products === 1 ? "se recalculó" : "se recalcularon"} ${countOf(outcome.products, "precio", "precios")}.${untouchedNote(outcome.untouched)}`,
   };
 }
 
 function untouchedNote(count: number): string {
   if (count === 0) return "";
   return count === 1
-    ? " 1 lote con parámetros propios no se modificó."
-    : ` ${count} lotes con parámetros propios no se modificaron.`;
+    ? " 1 marca con parámetros propios no se modificó."
+    : ` ${count} marcas con parámetros propios no se modificaron.`;
 }

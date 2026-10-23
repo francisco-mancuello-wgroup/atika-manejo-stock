@@ -20,7 +20,7 @@ const FIELDS = [
 ] as const satisfies readonly { name: string; label: string; key: keyof AppSettingsView }[];
 
 const FORMULA_STEPS = [
-  { label: "Envío por unidad", formula: "Envío total del lote ÷ unidades compradas" },
+  { label: "Envío por unidad", formula: "Envío total de la marca ÷ unidades compradas" },
   { label: "Costo unitario", formula: "Valor original × % costo + envío por unidad" },
   {
     label: "Precio de venta",
@@ -64,8 +64,8 @@ export function SettingsForm({
   const products = globalLots.reduce((sum, lot) => sum + lot.products.length, 0);
   const lotsSummary =
     customLots.length === 0
-      ? countOf(globalLots.length, "lote", "lotes")
-      : `${globalLots.length} de ${countOf(lots.length, "lote", "lotes")}`;
+      ? countOf(globalLots.length, "marca", "marcas")
+      : `${globalLots.length} de ${countOf(lots.length, "marca", "marcas")}`;
 
   return (
     <div className="flex max-w-5xl flex-col gap-6">
@@ -107,7 +107,7 @@ export function SettingsForm({
           </p>
           {customLots.length > 0 ? (
             <p className="text-sm text-muted">
-              {`${countOf(customLots.length, "lote con parámetros propios no se modifica", "lotes con parámetros propios no se modifican")}: ${customLots.map((lot) => lot.name).join(", ")}.`}
+              {`${countOf(customLots.length, "marca con parámetros propios no se modifica", "marcas con parámetros propios no se modifican")}: ${customLots.map((lot) => lot.name).join(", ")}.`}
             </p>
           ) : null}
           <Button type="submit" disabled={pending}>
@@ -133,7 +133,7 @@ export function SettingsForm({
               <p className="text-sm text-ink">
                 {globalLots.length > 0
                   ? `Se recalculan (modo Global): ${globalLots.map((lot) => lot.name).join(", ")}.`
-                  : "No hay lotes en modo Global: solo se guardan los valores por defecto."}
+                  : "No hay marcas en modo Global: solo se guardan los valores por defecto."}
               </p>
               {customLots.length > 0 ? (
                 <p className="text-sm text-muted">
@@ -171,8 +171,8 @@ export function SettingsForm({
             ))}
           </ol>
           <p className="text-xs text-muted">
-            Al guardar, los lotes en modo Global toman de acá el TC, el factor, el IVA y el % de
-            costo, y conservan su propio envío. Los lotes con parámetros propios no cambian.
+            Al guardar, las marcas en modo Global toman de acá el TC, el factor, el IVA y el % de
+            costo, y conservan su propio envío. Las marcas con parámetros propios no cambian.
           </p>
         </section>
       </div>

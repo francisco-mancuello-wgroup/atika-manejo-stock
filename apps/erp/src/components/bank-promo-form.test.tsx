@@ -54,7 +54,7 @@ const renderForm = (props: Partial<Parameters<typeof BankPromoForm>[0]> = {}) =>
     />,
   );
 
-const lotsGroup = () => screen.getByRole("group", { name: "Lotes de la promoción" });
+const lotsGroup = () => screen.getByRole("group", { name: "Marcas de la promoción" });
 const productsGroup = () => screen.getByRole("group", { name: "Productos de la promoción" });
 const preview = () => screen.getByRole("region", { name: "Así lo ve el cliente" });
 const pressed = (name: string) => screen.getByRole("button", { name });
@@ -73,7 +73,7 @@ describe("BankPromoForm", () => {
     for (const day of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]) {
       expect(pressed(day)).toHaveAttribute("aria-pressed", "false");
     }
-    expect(screen.queryByRole("group", { name: "Lotes de la promoción" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Marcas de la promoción" })).not.toBeInTheDocument();
     expect(
       screen.queryByRole("group", { name: "Productos de la promoción" }),
     ).not.toBeInTheDocument();
@@ -135,7 +135,7 @@ describe("BankPromoForm", () => {
     expect(pressed("Lunes")).toHaveAttribute("aria-pressed", "true");
     expect(pressed("Jueves")).toHaveAttribute("aria-pressed", "true");
     expect(pressed("Martes")).toHaveAttribute("aria-pressed", "false");
-    expect(pressed("Lotes")).toHaveAttribute("aria-pressed", "true");
+    expect(pressed("Marcas")).toHaveAttribute("aria-pressed", "true");
     expect(within(lotsGroup()).getByLabelText(/Lote invierno/)).toBeChecked();
     expect(within(lotsGroup()).getByLabelText(/Lote verano/)).not.toBeChecked();
   });
@@ -145,9 +145,9 @@ describe("BankPromoForm", () => {
     expect(screen.getByText("Primero cargá al menos un banco.")).toBeInTheDocument();
   });
 
-  it("shows the lots checklist for 'Lotes' and the picker for 'Productos'", () => {
+  it("shows the lots checklist for 'Marcas' and the picker for 'Productos'", () => {
     renderForm();
-    fireEvent.click(pressed("Lotes"));
+    fireEvent.click(pressed("Marcas"));
     const row = (name: RegExp) =>
       within(lotsGroup()).getByLabelText(name).closest("label") as HTMLElement;
     expect(row(/Lote verano/)).toHaveTextContent("12 productos");
@@ -157,7 +157,7 @@ describe("BankPromoForm", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(pressed("Productos"));
     expect(productsGroup()).toBeInTheDocument();
-    expect(screen.queryByRole("group", { name: "Lotes de la promoción" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Marcas de la promoción" })).not.toBeInTheDocument();
     fireEvent.click(pressed("Todos los productos"));
     expect(
       screen.queryByRole("group", { name: "Productos de la promoción" }),
@@ -199,13 +199,13 @@ describe("BankPromoForm", () => {
     fireEvent.change(screen.getByLabelText("Porcentaje"), { target: { value: "20" } });
     fireEvent.change(screen.getByLabelText("Tope (₲)"), { target: { value: "200.000" } });
     fireEvent.click(pressed("Jueves"));
-    fireEvent.click(pressed("Lotes"));
+    fireEvent.click(pressed("Marcas"));
     fireEvent.click(within(lotsGroup()).getByLabelText(/Lote verano/));
     fireEvent.change(screen.getByLabelText("Desde"), { target: { value: "2026-11-01" } });
     fireEvent.change(screen.getByLabelText("Hasta"), { target: { value: "2026-11-30" } });
     expect(view.getByText("20 % de reintegro · Jueves · Tope ₲ 200.000")).toBeInTheDocument();
     expect(
-      view.getByText("Solo en prendas del lote Lote verano, los jueves del 01/11 al 30/11."),
+      view.getByText("Solo en prendas de la marca Lote verano, los jueves del 01/11 al 30/11."),
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Porcentaje"), { target: { value: "500" } });
@@ -222,7 +222,7 @@ describe("BankPromoForm", () => {
     fireEvent.click(pressed("Itaú"));
     fireEvent.click(pressed("Jueves"));
     fireEvent.click(pressed("Lunes"));
-    fireEvent.click(pressed("Lotes"));
+    fireEvent.click(pressed("Marcas"));
     fireEvent.click(within(lotsGroup()).getByLabelText(/Lote verano/));
     fireEvent.change(screen.getByLabelText("Bases y condiciones"), {
       target: { value: "Crédito." },
@@ -271,17 +271,17 @@ describe("BankPromoForm", () => {
       fieldErrors: {
         value: "Las cuotas deben estar entre 2 y 48.",
         bankIds: "Elegí al menos un banco.",
-        lotIds: "Elegí al menos un lote.",
+        lotIds: "Elegí al menos una marca.",
       },
       values: { kind: "installments", value: "99", scope: "lots" },
     });
     renderForm({ action });
     fireEvent.change(screen.getByLabelText("Cuotas"), { target: { value: "99" } });
-    fireEvent.click(pressed("Lotes"));
+    fireEvent.click(pressed("Marcas"));
     fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
     expect(await screen.findByText("Las cuotas deben estar entre 2 y 48.")).toBeInTheDocument();
     expect(screen.getByText("Elegí al menos un banco.")).toBeInTheDocument();
-    expect(screen.getByText("Elegí al menos un lote.")).toBeInTheDocument();
+    expect(screen.getByText("Elegí al menos una marca.")).toBeInTheDocument();
     expect(screen.getByLabelText("Cuotas")).toHaveValue("99");
   });
 

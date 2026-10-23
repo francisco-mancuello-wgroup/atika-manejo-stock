@@ -149,7 +149,7 @@ export function CatalogoWebView({
             <thead className={table.head}>
               <tr>
                 <th className={table.th}>Producto</th>
-                <th className={table.th}>Lote</th>
+                <th className={table.th}>Marca</th>
                 <th className={table.th}>Talles disponibles</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>
                 <th className={table.th}>Categoría</th>

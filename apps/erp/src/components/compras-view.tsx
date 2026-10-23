@@ -10,7 +10,7 @@ export function ComprasView({ lots }: { lots: LotSummary[] }) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Compras"
-        description="Lotes comprados a proveedores y sus parámetros de precio."
+        description="Marcas compradas a proveedores y sus parámetros de precio."
       />
       {lots.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay compras cargadas.</p>
@@ -19,7 +19,7 @@ export function ComprasView({ lots }: { lots: LotSummary[] }) {
           <table className={table.root}>
             <thead className={table.head}>
               <tr>
-                <th className={table.th}>Lote</th>
+                <th className={table.th}>Marca</th>
                 <th className={table.th}>Proveedor</th>
                 <th className={table.th}>Compra</th>
                 <th className={`${table.th} ${table.num}`}>TC</th>

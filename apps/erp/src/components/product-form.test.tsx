@@ -97,7 +97,7 @@ describe("ProductForm (edit)", () => {
     renderEdit();
     expect(screen.getByLabelText("Nombre")).toHaveValue("Vestido Lino");
     expect(screen.getByLabelText("Código")).toHaveValue("V-1");
-    expect(screen.getByLabelText("Marca")).toHaveValue("Casa");
+    expect(screen.getByLabelText("Marca de la prenda")).toHaveValue("Casa");
     expect(screen.getByLabelText("Color")).toHaveValue("Lila");
     expect(screen.getByLabelText("Categoría")).toHaveValue("vestidos");
     expect(screen.getByLabelText("Descripción")).toHaveValue("Lino");
@@ -286,12 +286,12 @@ describe("ProductForm (new)", () => {
 
   it("asks for a lot and has one empty size row", () => {
     renderNew();
-    const select = screen.getByLabelText("Lote");
+    const select = screen.getByLabelText("Marca");
     expect(
       within(select)
         .getAllByRole("option")
         .map((o) => o.textContent),
-    ).toEqual(["Elegí un lote", "Lote Uno", "Lote Dos"]);
+    ).toEqual(["Elegí una marca", "Lote Uno", "Lote Dos"]);
     expect(screen.getAllByRole("row").slice(1)).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Cancelar" })).toHaveAttribute("href", "/inventario");
   });
@@ -299,7 +299,7 @@ describe("ProductForm (new)", () => {
   it("prices with the chosen lot parameters and units", async () => {
     renderNew();
     expect(screen.getByLabelText("Precio (₲)")).toHaveValue("–");
-    fireEvent.change(screen.getByLabelText("Lote"), { target: { value: "lot-1" } });
+    fireEvent.change(screen.getByLabelText("Marca"), { target: { value: "lot-1" } });
     fireEvent.change(screen.getByLabelText("Valor original US$"), { target: { value: "100" } });
     fireEvent.change(screen.getByLabelText("Unidades compradas fila 1"), {
       target: { value: "2" },
@@ -311,7 +311,7 @@ describe("ProductForm (new)", () => {
 });
 
 describe("ProductForm brand suggestions", () => {
-  it("offers the registered brands as suggestions of the free-text Marca field", () => {
+  it("offers the registered brands as suggestions of the free-text Marca de la prenda field", () => {
     const { container } = render(
       <ProductForm
         mode="new"
@@ -320,7 +320,7 @@ describe("ProductForm brand suggestions", () => {
         action={idle}
       />,
     );
-    const input = screen.getByLabelText("Marca");
+    const input = screen.getByLabelText("Marca de la prenda");
     expect(input).toHaveAttribute("list", "brand-suggestions");
     const options = container.querySelectorAll("datalist#brand-suggestions option");
     expect([...options].map((option) => option.getAttribute("value"))).toEqual([

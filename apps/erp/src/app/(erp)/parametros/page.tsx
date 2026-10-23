@@ -17,7 +17,7 @@ export default async function ParametrosPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Parámetros"
-        description="Único lugar donde se definen los precios: TC, factor, IVA y % de costo, y se aplican a los lotes en modo Global."
+        description="Único lugar donde se definen los precios: TC, factor, IVA y % de costo, y se aplican a las marcas en modo Global."
       />
       <SettingsForm settings={settings} lots={lots} display={display} action={saveSettingsAction} />
     </div>

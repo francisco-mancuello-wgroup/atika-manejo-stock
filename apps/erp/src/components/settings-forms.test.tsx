@@ -56,7 +56,7 @@ describe("SettingsForm", () => {
     renderForm();
     expect(
       screen.getByText(
-        "Al guardar, los lotes en modo Global toman de acá el TC, el factor, el IVA y el % de costo, y conservan su propio envío. Los lotes con parámetros propios no cambian.",
+        "Al guardar, las marcas en modo Global toman de acá el TC, el factor, el IVA y el % de costo, y conservan su propio envío. Las marcas con parámetros propios no cambian.",
       ),
     ).toBeInTheDocument();
   });
@@ -69,7 +69,7 @@ describe("SettingsForm", () => {
     expect(screen.getByLabelText("Costo sobre valor original (%)")).toHaveValue(100);
     expect(screen.queryByRole("radio")).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-    expect(screen.getByText("Se recalculan 2 lotes · 6 productos")).toBeInTheDocument();
+    expect(screen.getByText("Se recalculan 2 marcas · 6 productos")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Aplicar" })).toBeInTheDocument();
   });
 
@@ -83,7 +83,7 @@ describe("SettingsForm", () => {
         products: [product("p1", 1)],
       },
     ]);
-    expect(screen.getByText("Se recalcula 1 lote · 1 producto")).toBeInTheDocument();
+    expect(screen.getByText("Se recalcula 1 marca · 1 producto")).toBeInTheDocument();
   });
 
   it("applies only to lots that follow the global values and lists the others as untouched", () => {
@@ -97,13 +97,13 @@ describe("SettingsForm", () => {
         products: [product("p7", 1)],
       },
     ]);
-    expect(screen.getByText("Se recalculan 2 de 3 lotes · 6 productos")).toBeInTheDocument();
+    expect(screen.getByText("Se recalculan 2 de 3 marcas · 6 productos")).toBeInTheDocument();
     expect(
-      screen.getByText("1 lote con parámetros propios no se modifica: Lote C."),
+      screen.getByText("1 marca con parámetros propios no se modifica: Lote C."),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Ver cálculo por lote" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ver cálculo por marca" }));
     expect(
-      within(screen.getByLabelText("Lote"))
+      within(screen.getByLabelText("Marca"))
         .getAllByRole("option")
         .map((o) => o.textContent),
     ).toEqual(["Lote A", "Lote B"]);
@@ -113,14 +113,14 @@ describe("SettingsForm", () => {
     const action = vi.fn(
       async (_p: FormState, _d: FormData): Promise<FormState> => ({
         status: "success",
-        message: "Parámetros guardados. Se actualizaron 2 lotes y se recalcularon 17 precios.",
+        message: "Parámetros guardados. Se actualizaron 2 marcas y se recalcularon 17 precios.",
       }),
     );
     renderForm(action);
     fireEvent.change(screen.getByLabelText("IVA (%)"), { target: { value: "5" } });
     submit();
     confirm();
-    expect(await screen.findByRole("status")).toHaveTextContent("Se actualizaron 2 lotes");
+    expect(await screen.findByRole("status")).toHaveTextContent("Se actualizaron 2 marcas");
     const data = action.mock.calls[0]?.[1] as FormData;
     expect(data.get("vatPercent")).toBe("5");
     expect(data.has("scope")).toBe(false);
@@ -148,28 +148,28 @@ describe("SettingsForm", () => {
     ).getAllByRole("listitem");
     expect(steps).toHaveLength(3);
     expect(steps[0]).toHaveTextContent("Envío por unidad");
-    expect(steps[0]).toHaveTextContent("Envío total del lote ÷ unidades compradas");
+    expect(steps[0]).toHaveTextContent("Envío total de la marca ÷ unidades compradas");
     expect(steps[1]).toHaveTextContent("Costo unitario");
     expect(steps[2]).toHaveTextContent("Precio de venta");
     expect(steps[2]).toHaveTextContent("Al guaraní, sin redondeo");
   });
 
-  describe("Ver cálculo por lote", () => {
-    const table = () => screen.getByRole("table", { name: "Cálculo por lote" });
-    const toggle = () => screen.getByRole("button", { name: "Ver cálculo por lote" });
+  describe("Ver cálculo por marca", () => {
+    const table = () => screen.getByRole("table", { name: "Cálculo por marca" });
+    const toggle = () => screen.getByRole("button", { name: "Ver cálculo por marca" });
 
     it("starts collapsed and expands on demand", () => {
       renderForm();
       expect(toggle()).toHaveAttribute("aria-expanded", "false");
-      expect(screen.queryByLabelText("Lote")).not.toBeInTheDocument();
-      expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Marca")).not.toBeInTheDocument();
+      expect(screen.queryByRole("table", { name: "Cálculo por marca" })).not.toBeInTheDocument();
 
       fireEvent.click(toggle());
       expect(toggle()).toHaveAttribute("aria-expanded", "true");
       expect(table()).toBeInTheDocument();
 
       fireEvent.click(toggle());
-      expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("table", { name: "Cálculo por marca" })).not.toBeInTheDocument();
     });
 
     it("expands when the hint under the title is clicked too", () => {
@@ -190,14 +190,14 @@ describe("SettingsForm", () => {
 
       fireEvent.change(search, { target: { value: "zzz" } });
       expect(screen.getByText("Ninguna prenda coincide con la búsqueda.")).toBeInTheDocument();
-      expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("table", { name: "Cálculo por marca" })).not.toBeInTheDocument();
     });
 
     it("lists a select with every lot, defaulting to the first one", () => {
       renderForm();
       fireEvent.click(toggle());
-      expect(screen.getByRole("heading", { name: "Ver cálculo por lote" })).toBeInTheDocument();
-      const select = screen.getByLabelText("Lote");
+      expect(screen.getByRole("heading", { name: "Ver cálculo por marca" })).toBeInTheDocument();
+      const select = screen.getByLabelText("Marca");
       expect(select).toHaveValue("lot-a");
       expect(
         within(select)
@@ -256,7 +256,7 @@ describe("SettingsForm", () => {
     it("switches the lot with the select", () => {
       renderForm();
       fireEvent.click(toggle());
-      fireEvent.change(screen.getByLabelText("Lote"), { target: { value: "lot-b" } });
+      fireEvent.change(screen.getByLabelText("Marca"), { target: { value: "lot-b" } });
       expect(within(table()).getByText("Producto p3")).toBeInTheDocument();
       expect(within(table()).queryByText("Remera")).not.toBeInTheDocument();
     });
@@ -266,7 +266,7 @@ describe("SettingsForm", () => {
       fireEvent.click(toggle());
       fireEvent.change(screen.getByLabelText("TC del día (₲ / US$)"), { target: { value: "" } });
       expect(screen.getByText("Completá los parámetros para ver el cálculo.")).toBeInTheDocument();
-      expect(screen.queryByRole("table", { name: "Cálculo por lote" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("table", { name: "Cálculo por marca" })).not.toBeInTheDocument();
     });
 
     it("shows prices in dollars with the exchange rate of the day", () => {
@@ -282,14 +282,14 @@ describe("SettingsForm", () => {
         { id: "x", name: "Vacío", pricingMode: "global", totalShippingUsd: 5, products: [] },
       ]);
       fireEvent.click(toggle());
-      expect(screen.getByText("Este lote no tiene unidades compradas.")).toBeInTheDocument();
+      expect(screen.getByText("Esta marca no tiene unidades compradas.")).toBeInTheDocument();
     });
 
     it("explains there are no lots yet", () => {
       renderForm(idle, []);
       fireEvent.click(toggle());
-      expect(screen.getByText("Todavía no hay lotes.")).toBeInTheDocument();
-      expect(screen.queryByLabelText("Lote")).not.toBeInTheDocument();
+      expect(screen.getByText("Todavía no hay marcas.")).toBeInTheDocument();
+      expect(screen.queryByLabelText("Marca")).not.toBeInTheDocument();
     });
   });
 

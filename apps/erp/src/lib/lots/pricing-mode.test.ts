@@ -82,7 +82,7 @@ describe.skipIf(!hasDatabase)("lot pricing mode (database)", () => {
         const state = await saveLotParams(dbOver(tx), lot.id, form);
         expect(state).toMatchObject({
           status: "error",
-          message: "Este lote sigue los Parámetros globales. Pasalo a Propio para editarlo acá.",
+          message: "Esta marca sigue los Parámetros globales. Pasala a Propio para editarla acá.",
         });
         const stored = await tx.lot.findUniqueOrThrow({ where: { id: lot.id } });
         expect(stored.exchangeRate.toNumber()).toBe(7000);
@@ -94,7 +94,7 @@ describe.skipIf(!hasDatabase)("lot pricing mode (database)", () => {
       async (id) => {
         await withRollback(async (tx) => {
           const state = await saveLotParams(dbOver(tx), id, form);
-          expect(state).toMatchObject({ status: "error", message: "No se encontró el lote." });
+          expect(state).toMatchObject({ status: "error", message: "No se encontró la marca." });
         });
       },
     );
@@ -109,7 +109,7 @@ describe.skipIf(!hasDatabase)("lot pricing mode (database)", () => {
         const state = await setLotPricingMode(dbOver(tx), lot.id, "custom");
         expect(state).toEqual({
           status: "success",
-          message: "El lote ahora usa parámetros propios. Parámetros ya no lo modifica.",
+          message: "La marca ahora usa parámetros propios. Parámetros ya no la modifica.",
         });
         const stored = await tx.lot.findUniqueOrThrow({ where: { id: lot.id } });
         expect(stored.pricingMode).toBe("custom");
@@ -132,7 +132,7 @@ describe.skipIf(!hasDatabase)("lot pricing mode (database)", () => {
         const state = await setLotPricingMode(dbOver(tx), lot.id, "global");
         expect(state).toEqual({
           status: "success",
-          message: "El lote vuelve a seguir los Parámetros globales. Se recalculó 1 precio.",
+          message: "La marca vuelve a seguir los Parámetros globales. Se recalculó 1 precio.",
         });
         const stored = await tx.lot.findUniqueOrThrow({ where: { id: lot.id } });
         expect(stored.pricingMode).toBe("global");
@@ -165,7 +165,7 @@ describe.skipIf(!hasDatabase)("lot pricing mode (database)", () => {
       async (id) => {
         await withRollback(async (tx) => {
           const state = await setLotPricingMode(dbOver(tx), id, "global");
-          expect(state).toMatchObject({ status: "error", message: "No se encontró el lote." });
+          expect(state).toMatchObject({ status: "error", message: "No se encontró la marca." });
         });
       },
     );

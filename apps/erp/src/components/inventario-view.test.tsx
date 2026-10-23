@@ -93,13 +93,13 @@ describe("InventarioView", () => {
       />,
     );
     // jsdom has no implicit role for <search>, so look the element up directly.
-    const search = screen.getByLabelText("Lote").closest("search") as HTMLElement;
+    const search = screen.getByLabelText("Marca").closest("search") as HTMLElement;
     expect(search).toBeInTheDocument();
     expect(search.querySelector("form")).toHaveAttribute("method", "get");
     const form = search;
-    expect(within(form).getByLabelText("Lote")).toHaveValue("lot-2");
+    expect(within(form).getByLabelText("Marca")).toHaveValue("lot-2");
     expect(within(form).getByLabelText("Buscar")).toHaveValue("pant");
-    expect(within(form).getByRole("option", { name: "Todos los lotes" })).toHaveValue("");
+    expect(within(form).getByRole("option", { name: "Todas las marcas" })).toHaveValue("");
     expect(screen.getByRole("link", { name: "Limpiar" })).toHaveAttribute("href", "/inventario");
   });
 

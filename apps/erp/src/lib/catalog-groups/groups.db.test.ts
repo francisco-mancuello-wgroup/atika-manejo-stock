@@ -377,7 +377,7 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
         const id = await newGroup(tx);
         expect(await addProductsToGroup(dbOver(tx), id, { brand: "no-such-brand" }, NOW)).toEqual({
           status: "error",
-          message: "No se encontró la marca.",
+          message: "No se encontró la marca de la prenda.",
         });
       });
     });
@@ -388,7 +388,7 @@ describe.skipIf(!hasDatabase)("catalog groups (database)", () => {
         const state = await addProductsToGroup(dbOver(tx), id, {}, NOW);
         expect(state).toEqual({
           status: "error",
-          message: "Elegí un lote, categoría o marca.",
+          message: "Elegí una marca, categoría o marca de la prenda.",
         });
       });
     });
