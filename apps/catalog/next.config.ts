@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@atika/ui", "@atika/pricing", "@atika/db"],
   // Photos and logos uploaded from the ERP live in Vercel Blob (the server disk is not kept).
   images: {
+    // With MEDIA_DIR (VPS) photos are runtime uploads that the web server serves from disk, but the
+    // image optimizer fetches `/media/...` from Next itself, which only knows the `public/` files
+    // present at build time (uploads would 404). They are already shrunk to webp before upload.
+    unoptimized: Boolean(process.env.MEDIA_DIR?.trim()),
     remotePatterns: ["products", "banks"].map((folder) => ({
       protocol: "https" as const,
       hostname: "*.public.blob.vercel-storage.com",
