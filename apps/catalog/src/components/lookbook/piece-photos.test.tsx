@@ -27,6 +27,13 @@ describe("PiecePhotos", () => {
     }
   });
 
+  it("keeps the photo frame the same height on every page, whatever the text below it", () => {
+    render(<PiecePhotos photos={photos} label="Fotos de Costa Coco" priority={false} />);
+    const list = screen.getByRole("list", { name: "Fotos de Costa Coco" });
+    expect(list).toHaveClass("h-[48svh]", "flex-none");
+    expect(list).not.toHaveClass("flex-1");
+  });
+
   it("shows the whole photo, uncropped, when zoomed", () => {
     render(<PiecePhotos photos={photos} label="Fotos de Costa Coco" priority={false} />);
     fireEvent.click(

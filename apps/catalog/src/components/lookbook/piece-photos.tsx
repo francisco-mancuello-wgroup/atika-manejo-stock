@@ -33,7 +33,9 @@ export function PiecePhotos({
     <>
       <ul
         aria-label={label}
-        className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-surface [scrollbar-width:none]"
+        // Fixed height so the frame does not shrink with longer text below it; side by side on
+        // wide screens it fills the page height instead
+        className="flex h-[48svh] min-h-0 flex-none snap-x snap-mandatory overflow-x-auto overflow-y-hidden bg-surface [scrollbar-width:none] landscape:lg:h-auto"
       >
         {photos.map((photo, index) => (
           <li
