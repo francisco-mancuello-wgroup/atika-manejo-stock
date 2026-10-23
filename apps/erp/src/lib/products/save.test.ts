@@ -210,6 +210,15 @@ describe.skipIf(!hasDatabase)("product edit and create (database)", () => {
     });
   });
 
+  it("creates the product visible on the web when asked to", async () => {
+    await withRollback(async (tx) => {
+      const { lot } = await fixture(tx);
+      const state = await createProduct(dbOver(tx), form({ lotId: lot.id, isPublished: "true" }));
+      const id = state.status === "success" && "productId" in state ? state.productId : "";
+      expect((await tx.product.findUniqueOrThrow({ where: { id } })).isPublished).toBe(true);
+    });
+  });
+
   it("rejects creating without a size or in an unknown lot", async () => {
     await withRollback(async (tx) => {
       const { lot } = await fixture(tx);

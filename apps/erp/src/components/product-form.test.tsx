@@ -308,6 +308,35 @@ describe("ProductForm (new)", () => {
       expect(screen.getByLabelText("Precio (₲)")).toHaveValue(expectedPrice(100, 2).price),
     );
   });
+
+  it("starts hidden from the web and submits the visibility chosen with the switch", async () => {
+    const action = vi.fn(
+      async (_p: FormState, _d: FormData): Promise<FormState> => ({ status: "idle" }),
+    );
+    render(<ProductForm mode="new" lots={lots} action={action} />);
+    const toggle = screen.getByRole("switch", { name: "Visible en la web" });
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-checked", "true");
+    fireEvent.submit(toggle.closest("form") as HTMLFormElement);
+    await waitFor(() => expect(action).toHaveBeenCalled());
+    const data = action.mock.calls[0]?.[1] as FormData;
+    expect(data.get("isPublished")).toBe("true");
+  });
+
+  it("has no web switch when editing (Catálogo web handles it)", () => {
+    render(
+      <ProductForm
+        mode="edit"
+        lots={[lots[0] as LotContext]}
+        lotId="lot-1"
+        initial={initial}
+        photos={photos}
+        action={idle}
+      />,
+    );
+    expect(screen.queryByRole("switch", { name: "Visible en la web" })).not.toBeInTheDocument();
+  });
 });
 
 describe("ProductForm brand suggestions", () => {

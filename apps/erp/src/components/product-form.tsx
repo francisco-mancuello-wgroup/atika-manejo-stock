@@ -2,7 +2,7 @@
 
 import { CATALOG_CATEGORIES } from "@atika/db/categories";
 import type { LotPricingParams } from "@atika/pricing";
-import { Button, Input } from "@atika/ui";
+import { Button, Input, Switch } from "@atika/ui";
 import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
@@ -90,6 +90,8 @@ export function ProductForm({
   const errors = state.status === "error" ? (state.fieldErrors ?? {}) : {};
   const values = state.status === "error" ? (state.values ?? {}) : {};
   const [chosenLot, setChosenLot] = useState(values.lotId ?? lotId ?? "");
+  // New products only: whether it shows on the web right away (off keeps it hidden, as before)
+  const [published, setPublished] = useState(values.isPublished === "true");
   const [original, setOriginal] = useState(initial.originalValueUsd);
   const [nextKey, setNextKey] = useState(initial.sizes.length);
   const [rows, setRows] = useState(initial.sizes.map((row, key) => ({ ...row, key })));
@@ -150,6 +152,27 @@ export function ProductForm({
             <span className="flex h-10 items-center text-sm text-ink">{lot?.name}</span>
           </div>
         )}
+        {mode === "new" ? (
+          <div className="flex flex-col gap-1.5">
+            <span id="isPublished-label" className="text-xs font-medium text-ink">
+              Visible en la web
+            </span>
+            <div className="flex h-10 items-center gap-3">
+              <Switch
+                checked={published}
+                aria-labelledby="isPublished-label"
+                aria-describedby="isPublished-help"
+                onCheckedChange={setPublished}
+              />
+              <input type="hidden" name="isPublished" value={published ? "true" : "false"} />
+              <span id="isPublished-help" className="text-xs text-muted">
+                {published
+                  ? "Se publica al guardar, si tiene stock y foto."
+                  : "Se guarda oculto; lo podés publicar después en Catálogo web."}
+              </span>
+            </div>
+          </div>
+        ) : null}
         {TEXT_FIELDS.map((field) => (
           <Field
             key={field.name}

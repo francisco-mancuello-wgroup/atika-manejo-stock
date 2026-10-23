@@ -89,6 +89,11 @@ export const productSchema = z.object(productFields);
 export const newProductSchema = z.object({
   lotId: z.string({ error: "Elegí una marca." }).regex(UUID, { error: "Elegí una marca." }),
   ...productFields,
+  // The "Visible en la web" switch; anything but "true" keeps the new product hidden.
+  isPublished: z
+    .string()
+    .optional()
+    .transform((value) => value === "true"),
 });
 
 export type ProductInput = z.output<typeof productSchema>;

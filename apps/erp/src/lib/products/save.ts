@@ -287,7 +287,7 @@ export async function createProduct(
           lotId: input.lotId,
           ...productData(input, await brandName(tx, input.brand)),
           priceGs: 0,
-          isPublished: false,
+          isPublished: input.isPublished,
           variants: { create: input.sizes },
         },
       });
