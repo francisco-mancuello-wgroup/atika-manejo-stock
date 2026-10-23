@@ -38,3 +38,5 @@ The ERP routes are dynamic Server Components that query the database. No route h
 
 - T1 done: commit 99d6805 `feat(ui): add Skeleton primitive` (author fvera).
 - T2 done: commit 9090944 `feat(erp): add loading skeleton compositions` (author fvera).
+- T3 done: commit 8f76360 `feat(erp): add loading.tsx skeletons to every ERP route` (author fvera). `promos` and `promos/bancos/nueva` only redirect, so they have no `loading.tsx`.
+- Pre-existing failure, not from this feature: `src/app/actions-guard.test.ts` expects 10 action modules and finds 11 (`(erp)/ventas/pedidos/actions.ts` is not in its list).
