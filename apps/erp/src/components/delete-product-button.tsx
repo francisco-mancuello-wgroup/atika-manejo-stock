@@ -11,19 +11,23 @@ const BLOCK_REASON: Record<DeletionBlock, string> = {
 };
 
 /**
- * Danger button under the product form. Disabled with the reason when sales or orders reference
- * the product; otherwise it asks for confirmation. On success the action redirects to the inventory.
+ * Danger button under the product form (or, `compact`, in an inventory row). Disabled with the
+ * reason when sales or orders reference the product; otherwise it asks for confirmation. On
+ * success the action redirects to the inventory.
  */
 export function DeleteProductButton({
   productId,
   name,
   block,
   action,
+  compact = false,
 }: {
   productId: string;
   name: string;
   block: DeletionBlock | null;
   action: (productId: string) => Promise<FormState>;
+  /** Small text button for a table row; the reason is announced and shown on hover. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,19 +48,31 @@ export function DeleteProductButton({
   };
 
   return (
-    <div className="flex flex-col items-start gap-2 border-t border-line pt-6">
+    <div
+      className={
+        compact
+          ? "relative z-10 inline-flex"
+          : "flex flex-col items-start gap-2 border-t border-line pt-6"
+      }
+    >
       <button
         ref={triggerRef}
         type="button"
         disabled={block !== null}
+        aria-label={compact ? `Eliminar ${name}` : undefined}
         aria-describedby={block ? reasonId : undefined}
+        title={compact && block ? BLOCK_REASON[block] : undefined}
         onClick={() => setOpen(true)}
-        className="h-10 border border-warn bg-surface px-4 text-sm font-medium text-warn hover:bg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-surface"
+        className={
+          compact
+            ? "text-sm text-warn underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
+            : "h-10 border border-warn bg-surface px-4 text-sm font-medium text-warn hover:bg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-surface"
+        }
       >
-        Eliminar producto
+        {compact ? "Eliminar" : "Eliminar producto"}
       </button>
       {block ? (
-        <p id={reasonId} className="text-sm text-muted">
+        <p id={reasonId} className={compact ? "sr-only" : "text-sm text-muted"}>
           {BLOCK_REASON[block]}
         </p>
       ) : null}

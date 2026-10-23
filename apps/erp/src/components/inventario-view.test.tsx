@@ -1,4 +1,6 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { vi } from "vitest";
+import type { FormState } from "../lib/action-state";
 import type { InventoryProduct } from "../lib/view-models";
 import { InventarioView } from "./inventario-view";
 
@@ -17,6 +19,7 @@ const products: InventoryProduct[] = [
     ],
     totalStock: 3,
     imageUrl: "/media/products/casa-icona/vestido-lino.webp",
+    deletionBlock: null,
   },
   {
     id: "p2",
@@ -29,8 +32,11 @@ const products: InventoryProduct[] = [
     sizes: [{ size: "U", stock: 5 }],
     totalStock: 5,
     imageUrl: null,
+    deletionBlock: "sales",
   },
 ];
+
+const deleteAction = vi.fn(async (): Promise<FormState> => ({ status: "idle" }));
 
 const lots = [
   { id: "lot-1", name: "Casa Icona" },
@@ -39,7 +45,9 @@ const lots = [
 
 describe("InventarioView", () => {
   it("lists the products with lot, code, price and the count", () => {
-    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    render(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
     expect(screen.getByRole("heading", { level: 1, name: "Inventario" })).toBeInTheDocument();
     const row = screen.getByText("Vestido Lino").closest("tr") as HTMLElement;
     expect(within(row).getByText("Casa Icona")).toBeInTheDocument();
@@ -49,7 +57,9 @@ describe("InventarioView", () => {
   });
 
   it("shows a 40x52 thumbnail of the cover, or a sand placeholder", () => {
-    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    render(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
     const withPhoto = screen.getByText("Vestido Lino").closest("tr") as HTMLElement;
     const img = within(withPhoto).getByRole("img", { name: "Vestido Lino" });
     expect(img).toHaveAttribute("width", "40");
@@ -63,7 +73,9 @@ describe("InventarioView", () => {
   });
 
   it("shows a stock chip per size and marks sold-out sizes", () => {
-    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    render(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
     const row = screen.getByText("Vestido Lino").closest("tr") as HTMLElement;
     const soldOut = within(row).getByText("S 0");
     expect(soldOut).toHaveClass("bg-warnbg", "text-warn");
@@ -77,6 +89,7 @@ describe("InventarioView", () => {
         products={products}
         lots={lots}
         filters={{ lotId: "lot-2", query: "pant" }}
+        deleteAction={deleteAction}
       />,
     );
     // jsdom has no implicit role for <search>, so look the element up directly.
@@ -91,12 +104,21 @@ describe("InventarioView", () => {
   });
 
   it("explains when nothing matches", () => {
-    render(<InventarioView products={[]} lots={lots} filters={{ query: "zzz" }} />);
+    render(
+      <InventarioView
+        products={[]}
+        lots={lots}
+        filters={{ query: "zzz" }}
+        deleteAction={deleteAction}
+      />,
+    );
     expect(screen.getByText("No hay productos que coincidan con el filtro.")).toBeInTheDocument();
   });
 
   it("lets the whole row open the product while the lot link stays clickable", () => {
-    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    render(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
     const productLink = screen.getByRole("link", { name: "Vestido Lino" });
     // Stretched link: its ::after covers the row, which is the positioning context.
     expect(productLink).toHaveClass("after:absolute", "after:inset-0");
@@ -106,7 +128,9 @@ describe("InventarioView", () => {
   });
 
   it("links each product to its edit page and offers a new product button", () => {
-    render(<InventarioView products={products} lots={lots} filters={{}} />);
+    render(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
     expect(screen.getByRole("link", { name: "Vestido Lino" })).toHaveAttribute(
       "href",
       "/inventario/p1",
@@ -124,7 +148,14 @@ describe("InventarioView", () => {
 
 describe("InventarioView barcode scanning", () => {
   it("searches with a GET form whose submit button makes Enter work for a scanner", () => {
-    render(<InventarioView products={[]} lots={[]} filters={{ query: "AT000123" }} />);
+    render(
+      <InventarioView
+        products={[]}
+        lots={[]}
+        filters={{ query: "AT000123" }}
+        deleteAction={deleteAction}
+      />,
+    );
     const input = screen.getByLabelText("Buscar");
     expect(input).toHaveValue("AT000123");
     const form = input.closest("form");
@@ -136,10 +167,44 @@ describe("InventarioView barcode scanning", () => {
 
   it("shows the deleted-product notice, and none without it", () => {
     const { rerender } = render(
-      <InventarioView products={products} lots={lots} filters={{}} notice="Vestido Lino" />,
+      <InventarioView
+        products={products}
+        lots={lots}
+        filters={{}}
+        deleteAction={deleteAction}
+        notice="Vestido Lino"
+      />,
     );
     expect(screen.getByRole("status")).toHaveTextContent("Producto eliminado: Vestido Lino.");
-    rerender(<InventarioView products={products} lots={lots} filters={{}} />);
+    rerender(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("offers Eliminar on every row, above the row link, asking first", () => {
+    render(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
+    const row = screen.getByText("Vestido Lino").closest("tr") as HTMLElement;
+    fireEvent.click(within(row).getByRole("button", { name: "Eliminar Vestido Lino" }));
+    expect(
+      screen.getByRole("dialog", {
+        name: "¿Eliminar «Vestido Lino»? Esta acción no se puede deshacer.",
+      }),
+    ).toBeInTheDocument();
+    expect(deleteAction).not.toHaveBeenCalled();
+  });
+
+  it("shows Eliminar disabled, with the reason, for a product with sales", () => {
+    render(
+      <InventarioView products={products} lots={lots} filters={{}} deleteAction={deleteAction} />,
+    );
+    const row = screen.getByText("Pantalón").closest("tr") as HTMLElement;
+    const button = within(row).getByRole("button", { name: "Eliminar Pantalón" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleDescription(
+      "No se puede eliminar porque tiene ventas: las ventas conservan su historial.",
+    );
   });
 });

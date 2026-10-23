@@ -17,6 +17,16 @@ export type DeleteProductResult =
   | Extract<FormState, { status: "error" }>
   | { status: "success"; name: string };
 
+/** The block for a product's counts: sales and sold group units first, then web order lines. */
+export function blockFromCounts(counts: {
+  sales: number;
+  sold: number;
+  orders: number;
+}): DeletionBlock | null {
+  if (counts.sales > 0 || counts.sold > 0) return "sales";
+  return counts.orders > 0 ? "orders" : null;
+}
+
 /**
  * Why a product can't be deleted, or null when it can. Sales and sold group units are history
  * ("sales"); web order lines keep a variant reference too ("orders").
@@ -31,8 +41,7 @@ export async function deletionBlock(
     tx.groupAllocation.count({ where: { variant: variants, sold: { gt: 0 } } }),
     tx.orderItem.count({ where: { variant: variants } }),
   ]);
-  if (sales > 0 || sold > 0) return "sales";
-  return ordered > 0 ? "orders" : null;
+  return blockFromCounts({ sales, sold, orders: ordered });
 }
 
 const fail = (message: string) => ({ status: "error", message }) as const;

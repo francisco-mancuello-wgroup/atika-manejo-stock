@@ -2,6 +2,7 @@ import { InventarioView } from "../../../components/inventario-view";
 import { getCurrencyDisplay } from "../../../lib/display-currency";
 import { parseInventoryFilters } from "../../../lib/inventory-filters";
 import { getInventory, getLotOptions } from "../../../lib/queries/inventory";
+import { deleteProductAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function InventarioPage({
       filters={filters}
       display={display}
       notice={deleted?.trim().slice(0, 200) || undefined}
+      deleteAction={deleteProductAction}
     />
   );
 }

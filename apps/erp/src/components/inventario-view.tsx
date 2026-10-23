@@ -1,9 +1,11 @@
 import { Button, buttonVariants, cn, Input } from "@atika/ui";
 import Link from "next/link";
+import type { FormState } from "../lib/action-state";
 import type { CurrencyDisplay } from "../lib/currency";
 import { moneyFormatter } from "../lib/format";
 import type { InventoryFilters } from "../lib/inventory-filters";
 import type { InventoryProduct } from "../lib/view-models";
+import { DeleteProductButton } from "./delete-product-button";
 import { Field, Select } from "./form-controls";
 import { PageHeader } from "./page-header";
 import { ProductThumb } from "./product-thumb";
@@ -15,6 +17,7 @@ export function InventarioView({
   filters,
   display = { currency: "gs" },
   notice,
+  deleteAction,
 }: {
   products: InventoryProduct[];
   lots: { id: string; name: string }[];
@@ -22,6 +25,8 @@ export function InventarioView({
   display?: CurrencyDisplay;
   /** Name of the product just deleted, shown as a confirmation. */
   notice?: string;
+  /** Deletes a product without sales (server action; redirects back here). */
+  deleteAction: (productId: string) => Promise<FormState>;
 }) {
   const money = moneyFormatter(display.currency, display.exchangeRate);
   const filtered = Boolean(filters.lotId || filters.query);
@@ -100,6 +105,9 @@ export function InventarioView({
                 <th className={table.th}>Código</th>
                 <th className={table.th}>Stock por talle</th>
                 <th className={`${table.th} ${table.num}`}>Precio</th>
+                <th className={table.th}>
+                  <span className="sr-only">Acciones</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -150,6 +158,15 @@ export function InventarioView({
                     </ul>
                   </td>
                   <td className={`${table.td} ${table.num}`}>{money(product.priceGs)}</td>
+                  <td className={cn(table.td, "text-right")}>
+                    <DeleteProductButton
+                      compact
+                      productId={product.id}
+                      name={product.name}
+                      block={product.deletionBlock}
+                      action={deleteAction}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

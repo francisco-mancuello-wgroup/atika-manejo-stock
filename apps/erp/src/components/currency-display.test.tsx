@@ -64,12 +64,14 @@ describe("views in US$", () => {
       sizes: [{ size: "M", stock: 1 }],
       totalStock: 1,
       imageUrl: null,
+      deletionBlock: null,
     };
     render(
       <InventarioView
         products={[product]}
         lots={[{ id: "lot-1", name: "Lote Uno" }]}
         filters={{}}
+        deleteAction={async () => ({ status: "idle" })}
         display={usd}
       />,
     );

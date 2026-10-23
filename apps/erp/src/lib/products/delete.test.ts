@@ -9,7 +9,7 @@ import {
   withRollback,
 } from "../../test/db";
 import { memoryPhotoStorage } from "../../test/photo-storage";
-import { deleteProduct, deletionBlock } from "./delete";
+import { blockFromCounts, deleteProduct, deletionBlock } from "./delete";
 
 const MISSING = "00000000-0000-7000-8000-000000000000";
 
@@ -131,5 +131,14 @@ describe.skipIf(!hasDatabase)("deleteProduct (database)", () => {
       const { a } = await fixture(tx);
       expect(await deletionBlock(tx, a)).toBeNull();
     });
+  });
+});
+
+describe("blockFromCounts", () => {
+  it("blocks on sales or sold group units first, then on web orders", () => {
+    expect(blockFromCounts({ sales: 0, sold: 0, orders: 0 })).toBeNull();
+    expect(blockFromCounts({ sales: 1, sold: 0, orders: 1 })).toBe("sales");
+    expect(blockFromCounts({ sales: 0, sold: 2, orders: 0 })).toBe("sales");
+    expect(blockFromCounts({ sales: 0, sold: 0, orders: 3 })).toBe("orders");
   });
 });
