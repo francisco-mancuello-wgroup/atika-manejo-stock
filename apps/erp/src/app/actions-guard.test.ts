@@ -31,6 +31,7 @@ describe("Server Actions require a session", () => {
   it("finds every action module (the guard test is not vacuous)", () => {
     expect(guarded.map(([path]) => path).sort()).toEqual([
       "./(erp)/catalogo-web/actions.ts",
+      "./(erp)/catalogo-web/marcas/actions.ts",
       "./(erp)/compras/[lotId]/actions.ts",
       "./(erp)/datos-bancarios/actions.ts",
       "./(erp)/inventario/actions.ts",
@@ -40,6 +41,7 @@ describe("Server Actions require a session", () => {
       "./(erp)/promos/descuentos/actions.ts",
       "./(erp)/seguridad/actions.ts",
       "./(erp)/ventas/actions.ts",
+      "./(erp)/ventas/pedidos/actions.ts",
     ]);
   });
 
@@ -56,6 +58,16 @@ describe("Server Actions require a session", () => {
         "deleteGroupAction",
       ]),
     );
+  });
+
+  it("guards every brand action of the catalog", () => {
+    const names = Object.keys(modules["./(erp)/catalogo-web/marcas/actions.ts"] ?? {});
+    expect(names.sort()).toEqual([
+      "moveBrandAction",
+      "removeBrandCoverAction",
+      "saveBrandCoverAction",
+      "setBrandActiveAction",
+    ]);
   });
 
   for (const [path, module] of guarded) {

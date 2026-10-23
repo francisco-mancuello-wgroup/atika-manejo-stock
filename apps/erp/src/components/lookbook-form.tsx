@@ -3,13 +3,12 @@
 import { Button, Input } from "@atika/ui";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { type FormState, IDLE } from "../lib/action-state";
-import { CATALOG_OPTIONS } from "../lib/catalog/schema";
 import type { CatalogProduct } from "../lib/queries/catalog";
-import { Field, FormMessage, Select } from "./form-controls";
+import { Field, FormMessage } from "./form-controls";
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
-/** Per-product lookbook placement. */
+/** Per-product lookbook placement: the page inside its brand's catalog and its section. */
 export function LookbookForm({
   product,
   action,
@@ -27,7 +26,6 @@ export function LookbookForm({
   const values = state.status === "error" ? (state.values ?? {}) : {};
   const id = (name: string) => `${name}-${product.id}`;
   const initial = {
-    catalog: product.catalog ?? "",
     catalogOrder: product.catalogOrder?.toString() ?? "",
     catalogSection: product.catalogSection ?? "",
     catalogName: product.catalogName ?? "",
@@ -43,17 +41,7 @@ export function LookbookForm({
   return (
     <form action={formAction} className="flex w-full flex-col gap-2">
       <input type="hidden" name="productId" value={product.id} />
-      <div className="grid grid-cols-[1fr_5rem_1fr] gap-2">
-        <Field label="Catálogo" htmlFor={id("catalog")} error={errors.catalog}>
-          <Select className="h-8" {...field("catalog")}>
-            <option value="">Fuera del lookbook</option>
-            {CATALOG_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
+      <div className="grid grid-cols-[5rem_1fr] gap-2">
         <Field label="Página" htmlFor={id("catalogOrder")} error={errors.catalogOrder}>
           <Input className="h-8" inputMode="numeric" {...field("catalogOrder")} />
         </Field>
@@ -81,11 +69,9 @@ export function LookbookForm({
 }
 
 function placementSummary(product: CatalogProduct): string {
-  const catalog = CATALOG_OPTIONS.find((option) => option.value === product.catalog);
-  if (!catalog) return "Sin lookbook";
-  return product.catalogOrder != null
-    ? `${catalog.label} · p. ${product.catalogOrder}`
-    : catalog.label;
+  if (product.catalogOrder == null) return "Sin página";
+  const section = product.catalogSection?.trim();
+  return section ? `Página ${product.catalogOrder} · ${section}` : `Página ${product.catalogOrder}`;
 }
 
 /** Compact button showing the placement; opens the lookbook form in a modal. */
@@ -97,7 +83,7 @@ export function LookbookButton({ product, action }: { product: CatalogProduct; a
 
   useEffect(() => {
     if (!open) return;
-    panelRef.current?.querySelector<HTMLElement>("select, input")?.focus();
+    panelRef.current?.querySelector<HTMLElement>("input:not([type=hidden])")?.focus();
   }, [open]);
 
   const close = () => {

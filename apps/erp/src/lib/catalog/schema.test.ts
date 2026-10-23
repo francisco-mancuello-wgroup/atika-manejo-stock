@@ -52,7 +52,6 @@ describe("parseCategory", () => {
 
 describe("parseLookbook", () => {
   const filled = {
-    catalog: "casa_icona",
     catalogOrder: "12",
     catalogSection: " Vestidos ",
     catalogName: " Vestido Lino ",
@@ -62,7 +61,6 @@ describe("parseLookbook", () => {
     expect(parseLookbook(filled)).toEqual({
       success: true,
       data: {
-        catalog: "casa_icona",
         catalogOrder: 12,
         catalogSection: "Vestidos",
         catalogName: "Vestido Lino",
@@ -72,7 +70,6 @@ describe("parseLookbook", () => {
 
   it("stores blank or missing fields as null (not in the lookbook)", () => {
     const empty = {
-      catalog: "",
       catalogOrder: " ",
       catalogSection: "",
       catalogName: "  ",
@@ -80,7 +77,6 @@ describe("parseLookbook", () => {
     const expected = {
       success: true,
       data: {
-        catalog: null,
         catalogOrder: null,
         catalogSection: null,
         catalogName: null,
@@ -90,13 +86,12 @@ describe("parseLookbook", () => {
     expect(parseLookbook({})).toEqual(expected);
   });
 
-  it("accepts each of the three catalogs and rejects anything else", () => {
-    for (const catalog of ["casa_icona", "milonga", "sordo"]) {
-      expect(parseLookbook({ ...filled, catalog }).success).toBe(true);
-    }
+  it("no longer reads a catalog: the lookbook is built by brand", () => {
     const result = parseLookbook({ ...filled, catalog: "verano" });
-    expect(result.success).toBe(false);
-    if (!result.success) expect(Object.keys(result.fieldErrors)).toEqual(["catalog"]);
+    expect(result).toEqual({
+      success: true,
+      data: expect.not.objectContaining({ catalog: expect.anything() }),
+    });
   });
 
   it("requires the page to be a positive whole number", () => {

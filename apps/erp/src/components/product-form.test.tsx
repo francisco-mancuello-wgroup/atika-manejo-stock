@@ -309,3 +309,32 @@ describe("ProductForm (new)", () => {
     );
   });
 });
+
+describe("ProductForm brand suggestions", () => {
+  it("offers the registered brands as suggestions of the free-text Marca field", () => {
+    const { container } = render(
+      <ProductForm
+        mode="new"
+        lots={lots}
+        brandNames={["Casa Icona", "Milonga", "Sordo"]}
+        action={idle}
+      />,
+    );
+    const input = screen.getByLabelText("Marca");
+    expect(input).toHaveAttribute("list", "brand-suggestions");
+    const options = container.querySelectorAll("datalist#brand-suggestions option");
+    expect([...options].map((option) => option.getAttribute("value"))).toEqual([
+      "Casa Icona",
+      "Milonga",
+      "Sordo",
+    ]);
+    // Still free text: a new brand can be typed
+    fireEvent.change(input, { target: { value: "Marca nueva" } });
+    expect(input).toHaveValue("Marca nueva");
+  });
+
+  it("works without suggestions", () => {
+    const { container } = render(<ProductForm mode="new" lots={lots} action={idle} />);
+    expect(container.querySelector("datalist")).toBeNull();
+  });
+});

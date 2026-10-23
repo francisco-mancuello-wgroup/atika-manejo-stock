@@ -145,6 +145,8 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
         { name: "A", originalValueUsd: 10, priceGs: 12_000, variants: [["M", 1, 1]] },
       ]);
       const id = products[0]?.id ?? "";
+      // A legacy hand-set catalog is kept as is: the form no longer edits it
+      await tx.product.update({ where: { id }, data: { catalog: "milonga" } });
       const state = await saveProductLookbook(dbOver(tx), {
         productId: id,
         catalog: "sordo",
@@ -155,7 +157,7 @@ describe.skipIf(!hasDatabase)("catalog management (database)", () => {
       expect(state).toMatchObject({ status: "success", message: "Guardado." });
       const stored = await tx.product.findUniqueOrThrow({ where: { id } });
       expect(stored).toMatchObject({
-        catalog: "sordo",
+        catalog: "milonga",
         catalogOrder: 3,
         catalogSection: "Aros",
         catalogName: "Cubagua",

@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { LabelPrinter } from "../../../../components/label-printer";
 import { PageHeader } from "../../../../components/page-header";
 import { ProductForm } from "../../../../components/product-form";
+import { listBrandNames } from "../../../../lib/brands/save";
+import { getDb } from "../../../../lib/db";
 import { getProductForEdit } from "../../../../lib/queries/products";
 import { sortSizes } from "../../../../lib/sizes";
 import { saveProductAction } from "../actions";
@@ -12,7 +14,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = UUID.test(id) ? await getProductForEdit(id) : null;
+  const [product, brandNames] = await Promise.all([
+    UUID.test(id) ? getProductForEdit(id) : null,
+    listBrandNames(getDb()),
+  ]);
   if (!product) notFound();
   return (
     <div className="flex flex-col gap-6">
@@ -22,6 +27,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         lots={[product.lot]}
         lotId={product.lot.id}
         photos={product.photos}
+        brandNames={brandNames}
         initial={{
           name: product.name,
           code: product.code ?? "",

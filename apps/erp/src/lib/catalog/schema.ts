@@ -1,4 +1,3 @@
-import type { Catalog } from "@atika/db";
 import { isCatalogCategory } from "@atika/db/categories";
 import { z } from "zod";
 import { fieldErrors } from "../form";
@@ -54,15 +53,6 @@ export function parseCategory(
   return isCatalogCategory(raw) ? { success: true, data: raw } : { success: false };
 }
 
-/** The three lookbooks, in display order (values are the Prisma `Catalog` enum). */
-export const CATALOG_OPTIONS = [
-  { value: "casa_icona", label: "Casa Icona" },
-  { value: "milonga", label: "Milonga" },
-  { value: "sordo", label: "Sordo" },
-] as const satisfies readonly { value: Catalog; label: string }[];
-
-const CATALOG_VALUES = CATALOG_OPTIONS.map((option) => option.value) as [Catalog, ...Catalog[]];
-
 /** Blank or missing text becomes null, anything else is trimmed. */
 function blankToNull(value: unknown): unknown {
   if (value === undefined || value === null) return null;
@@ -87,12 +77,11 @@ function optionalText(label: string, max: number) {
   );
 }
 
-/** One product's lookbook placement; blank fields are stored as null. */
+/**
+ * One product's lookbook placement (page and section); blank fields are stored as null. The
+ * lookbook is built by brand, so the legacy `catalog` column is no longer edited here.
+ */
 export const lookbookSchema = z.object({
-  catalog: z.preprocess(
-    blankToNull,
-    z.enum(CATALOG_VALUES, { error: "Elegí un catálogo de la lista." }).nullable(),
-  ),
   catalogOrder: z.preprocess(
     blankToNumber,
     z

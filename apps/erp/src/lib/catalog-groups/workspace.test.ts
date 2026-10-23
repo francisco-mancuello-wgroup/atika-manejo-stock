@@ -13,6 +13,11 @@ describe("parseCatalogTab", () => {
     expect(parseCatalogTab({ tab: "otra" })).toBe("prendas");
   });
 
+  it("reads the Marcas tab", () => {
+    expect(parseCatalogTab({ tab: "marcas" })).toBe("marcas");
+    expect(legacyGroupRedirect({ tab: "marcas", grupo: "abc" })).toBeNull();
+  });
+
   it("reads the Grupos tab", () => {
     expect(parseCatalogTab({ tab: "grupos" })).toBe("grupos");
     expect(parseCatalogTab({ tab: ["grupos", "x"] })).toBe("grupos");

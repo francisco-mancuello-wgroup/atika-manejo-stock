@@ -73,6 +73,7 @@ export function ProductForm({
   lotId,
   initial = EMPTY_PRODUCT,
   photos = [],
+  brandNames = [],
   action,
 }: {
   mode: "edit" | "new";
@@ -81,6 +82,8 @@ export function ProductForm({
   lotId?: string;
   initial?: ProductFormInitial;
   photos?: FocusablePhoto[];
+  /** Registered brands, offered while typing so a typo doesn't create a duplicate brand. */
+  brandNames?: string[];
   action: Action;
 }) {
   const [state, formAction, pending] = useActionState(action, IDLE);
@@ -154,9 +157,21 @@ export function ProductForm({
             htmlFor={field.name}
             error={errors[field.name]}
           >
-            <Input {...text(field.name)} />
+            <Input
+              {...text(field.name)}
+              {...(field.name === "brand" && brandNames.length > 0
+                ? { list: "brand-suggestions", autoComplete: "off" }
+                : {})}
+            />
           </Field>
         ))}
+        {brandNames.length > 0 ? (
+          <datalist id="brand-suggestions">
+            {brandNames.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
+        ) : null}
         <Field label="Categoría" htmlFor="category" error={errors.category}>
           <Select id="category" name="category" defaultValue={values.category ?? initial.category}>
             <option value="">Sin categoría</option>

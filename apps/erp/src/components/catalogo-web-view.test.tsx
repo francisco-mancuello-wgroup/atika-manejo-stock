@@ -225,11 +225,11 @@ describe("CatalogoWebView", () => {
     const first = within(rows[0] as HTMLElement);
     expect(first.queryByLabelText("Catálogo")).not.toBeInTheDocument();
     expect(first.getByRole("button", { name: "Lookbook: Vestido Lino" })).toHaveTextContent(
-      "Casa Icona · p. 4",
+      "Página 4 · Vestidos",
     );
     const second = within(rows[1] as HTMLElement);
     expect(second.getByRole("button", { name: "Lookbook: Top Seda" })).toHaveTextContent(
-      "Sin lookbook",
+      "Sin página",
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -245,16 +245,12 @@ describe("CatalogoWebView", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Lookbook: Vestido Lino" }));
     const dialog = within(screen.getByRole("dialog", { name: "Lookbook · Vestido Lino" }));
-    expect(dialog.getByLabelText("Catálogo")).toHaveValue("casa_icona");
+    // The lookbook is built by brand: no catalog to choose here
+    expect(dialog.queryByLabelText("Catálogo")).not.toBeInTheDocument();
     expect(dialog.getByLabelText("Página")).toHaveValue("4");
     expect(dialog.getByLabelText("Sección")).toHaveValue("Vestidos");
     expect(dialog.getByLabelText("Nombre en el lookbook")).toHaveValue("Vestido Lino Icona");
     expect(dialog.queryByRole("checkbox", { name: /Pink/ })).not.toBeInTheDocument();
-    expect(
-      within(dialog.getByLabelText("Catálogo"))
-        .getAllByRole("option")
-        .map((option) => option.textContent),
-    ).toEqual(["Fuera del lookbook", "Casa Icona", "Milonga", "Sordo"]);
     fireEvent.click(dialog.getByRole("button", { name: "Cerrar" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -290,13 +286,12 @@ describe("CatalogoWebView", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Lookbook: Top Seda" }));
     const dialog = within(screen.getByRole("dialog", { name: "Lookbook · Top Seda" }));
-    fireEvent.change(dialog.getByLabelText("Catálogo"), { target: { value: "sordo" } });
     fireEvent.change(dialog.getByLabelText("Página"), { target: { value: "2" } });
     fireEvent.click(dialog.getByRole("button", { name: "Guardar lookbook: Top Seda" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     const data = saveLookbook.mock.calls[0]?.[1] as FormData;
     expect(data.get("productId")).toBe("p2");
-    expect(data.get("catalog")).toBe("sordo");
+    expect(data.has("catalog")).toBe(false);
     expect(data.get("catalogOrder")).toBe("2");
     expect(data.get("catalogSection")).toBe("");
   });

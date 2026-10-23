@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { BrandsView } from "../../../components/brands-view";
 import { CatalogoWebView } from "../../../components/catalogo-web-view";
 import { GroupsView } from "../../../components/groups-view";
+import { listBrands } from "../../../lib/brands/save";
 import { parseCatalogFilters } from "../../../lib/catalog/filters";
 import { legacyGroupRedirect, parseCatalogTab } from "../../../lib/catalog-groups/workspace";
 import { getDb } from "../../../lib/db";
@@ -16,6 +18,12 @@ import {
   setVisibilityAction,
   setVisibilityManyAction,
 } from "./actions";
+import {
+  moveBrandAction,
+  removeBrandCoverAction,
+  saveBrandCoverAction,
+  setBrandActiveAction,
+} from "./marcas/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +35,9 @@ export default async function CatalogoWebPage({
   const params = await searchParams;
   const legacy = legacyGroupRedirect(params);
   if (legacy) redirect(legacy);
-  if (parseCatalogTab(params) === "grupos") return <GroupsTab />;
+  const tab = parseCatalogTab(params);
+  if (tab === "grupos") return <GroupsTab />;
+  if (tab === "marcas") return <BrandsTab />;
   const filters = parseCatalogFilters(params);
   const [products, settings, display, activeGroupNames] = await Promise.all([
     getCatalogProducts(filters),
@@ -57,4 +67,19 @@ export default async function CatalogoWebPage({
 async function GroupsTab() {
   const groups = await getGroupList(getDb(), new Date());
   return <GroupsView groups={groups} actions={{ setActive: setGroupActiveAction }} />;
+}
+
+async function BrandsTab() {
+  const brands = await listBrands(getDb(), new Date());
+  return (
+    <BrandsView
+      brands={brands}
+      actions={{
+        setActive: setBrandActiveAction,
+        move: moveBrandAction,
+        saveCover: saveBrandCoverAction,
+        removeCover: removeBrandCoverAction,
+      }}
+    />
+  );
 }
