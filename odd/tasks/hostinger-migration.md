@@ -47,6 +47,8 @@ User request 2026-10-23: "quiero tener todo en hostinger y mis datos de BD tambi
 - T5 (2026-10-23, user: free domain only for later; test first): sslip.io hostnames `atika.200-141-25-190.sslip.io` (catalog) and `erp.200-141-25-190.sslip.io` (ERP); `/etc/caddy/Caddyfile` with `/media/*` file_server from `/var/lib/atika/media`, reverse_proxy, 60 MB body limit on ERP; Let's Encrypt certificates obtained for both. Public checks: `/` 200, `/login` 200, seed logo and an uploaded photo 200 image/webp, `/api/catalog-version` {"version":2}, catalog page renders `/media/...` images and prices from the VPS DB.
 - Data note: VPS copy reflects Supabase at copy time — all 4 lots were already `custom` there (Casa Icona fx 6300, Zunilda 6500, Milonga ×3), edited in the ERP on 2026-10-23.
 
+- Deploy 2 (2026-10-23 ~21:45 UTC): VPS had hung (no ping/SSH while `running`); API restart stuck in `stopping` ~38 min, finished 20:47 UTC. No logs of the hang (volatile journal) → enabled persistent journald (`/etc/systemd/journald.conf.d/persistent.conf`, 500M). Server switched to `main` 8afe41d; `prisma migrate deploy` applied product_image_focus, product_image_fit, brands on the VPS DB (same 3 applied on Supabase before the GitHub push); build OK; services active. Public checks: `/`, `/catalogos/milonga`, `/catalogos/zunilda-gutierrez`, `/ver-todo` 200, unknown brand 404, seed logo + uploaded photo 200, ERP `/login` 200; lookbook frame 380x506 on all 12 pages at 390x844; 9 brands active.
+
 ## Next step
 
 User tests the VPS apps. Then T6: final data + photo re-copy, final domain, cut-over, retire Vercel/Supabase/Blob (user + Francisco decide). Pending: fix/product-save-form not deployed; `.env.example` MEDIA_DIR line.
