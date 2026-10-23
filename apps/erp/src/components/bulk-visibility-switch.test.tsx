@@ -17,10 +17,13 @@ describe("BulkVisibilitySwitch", () => {
     expect(toggle).toHaveAttribute("aria-checked", "true");
   });
 
-  it("applies the new visibility to every listed product", async () => {
+  it("asks before showing every listed product, and shows them only once confirmed", async () => {
     const action = vi.fn(ok);
     render(<BulkVisibilitySwitch productIds={["a", "b"]} allVisible={false} action={action} />);
     fireEvent.click(screen.getByRole("switch", { name: "Visibles: todos los de la lista" }));
+    const dialog = screen.getByRole("dialog", { name: "¿Mostrar los 2 productos de la lista?" });
+    expect(action).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Mostrar" }));
     await waitFor(() => expect(action).toHaveBeenCalledWith(["a", "b"], true));
   });
 
@@ -50,6 +53,7 @@ describe("BulkVisibilitySwitch", () => {
     const failing = async (): Promise<FormState> => ({ status: "error", message: "Falló." });
     render(<BulkVisibilitySwitch productIds={["a"]} allVisible={false} action={failing} />);
     fireEvent.click(screen.getByRole("switch", { name: "Visibles: todos los de la lista" }));
+    fireEvent.click(screen.getByRole("button", { name: "Mostrar" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Falló.");
   });
 });

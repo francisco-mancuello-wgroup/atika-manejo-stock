@@ -6,7 +6,7 @@ import type { FormState } from "../lib/action-state";
 
 /**
  * Header toggle that shows or hides every product of the current (filtered) list at once.
- * Showing applies at once; hiding asks first, since it takes the whole list off the web.
+ * Both ways ask first, since they change what the web shows for the whole list.
  */
 export function BulkVisibilitySwitch({
   productIds,
@@ -19,13 +19,14 @@ export function BulkVisibilitySwitch({
 }) {
   const [checked, setChecked] = useOptimistic(allVisible);
   const [error, setError] = useState<string | null>(null);
-  const [confirming, setConfirming] = useState(false);
+  // The visibility waiting for confirmation (null: no dialog)
+  const [confirming, setConfirming] = useState<boolean | null>(null);
   const [pending, startTransition] = useTransition();
   const titleId = useId();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (confirming) cancelRef.current?.focus();
+    if (confirming !== null) cancelRef.current?.focus();
   }, [confirming]);
 
   const apply = (next: boolean) =>
@@ -33,61 +34,62 @@ export function BulkVisibilitySwitch({
       setChecked(next);
       const state = await action(productIds, next);
       setError(state.status === "error" ? state.message : null);
-      setConfirming(false);
+      setConfirming(null);
     });
 
   const count = productIds.length;
+  const verb = confirming ? "Mostrar" : "Ocultar";
   const title =
     count === 1
-      ? "¿Ocultar el producto de la lista?"
-      : `¿Ocultar los ${count} productos de la lista?`;
+      ? `¿${verb} el producto de la lista?`
+      : `¿${verb} los ${count} productos de la lista?`;
+  const detail = confirming
+    ? "Pasan a verse en la web, con el stock que tengan."
+    : "Dejan de verse en la web. Los que estén en un grupo activo se siguen mostrando con el grupo.";
 
   return (
     <div className="flex flex-col items-start gap-1">
       <Switch
         checked={checked}
         aria-label="Visibles: todos los de la lista"
-        onCheckedChange={(next) => (next ? apply(true) : setConfirming(true))}
+        onCheckedChange={(next) => setConfirming(next)}
       />
       {error ? (
         <span role="alert" className="text-xs normal-case tracking-normal text-warn">
           {error}
         </span>
       ) : null}
-      {confirming ? (
+      {confirming !== null ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 normal-case tracking-normal">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
             onKeyDown={(event) => {
-              if (event.key === "Escape" && !pending) setConfirming(false);
+              if (event.key === "Escape" && !pending) setConfirming(null);
             }}
             className="flex w-full max-w-md flex-col gap-4 border border-line bg-bg p-6 text-left font-normal shadow-lg"
           >
             <h2 id={titleId} className="font-display text-xl text-ink">
               {title}
             </h2>
-            <p className="text-sm text-muted">
-              Dejan de verse en la web. Los que estén en un grupo activo se siguen mostrando con el
-              grupo.
-            </p>
+            <p className="text-sm text-muted">{detail}</p>
             <div className="flex justify-end gap-3">
               <Button
                 ref={cancelRef}
                 variant="secondary"
                 disabled={pending}
-                onClick={() => setConfirming(false)}
+                onClick={() => setConfirming(null)}
               >
                 Cancelar
               </Button>
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => apply(false)}
+                onClick={() => apply(confirming)}
                 className="h-10 bg-warn px-4 text-sm font-medium text-surface hover:bg-warn/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50"
               >
-                {pending ? "Ocultando…" : "Ocultar"}
+                {pending ? (confirming ? "Mostrando…" : "Ocultando…") : verb}
               </button>
             </div>
           </div>

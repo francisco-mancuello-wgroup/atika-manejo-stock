@@ -206,6 +206,8 @@ describe("CatalogoWebView", () => {
     const bulk = within(header).getByRole("switch", { name: "Visibles: todos los de la lista" });
     expect(bulk).toHaveAttribute("aria-checked", "false");
     fireEvent.click(bulk);
+    expect(actions.setVisibilityMany).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Mostrar" }));
     expect(actions.setVisibilityMany).toHaveBeenCalledWith(["p1", "p2"], true);
   });
 
