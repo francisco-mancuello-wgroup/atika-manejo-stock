@@ -53,7 +53,8 @@ export function FocalPointPicker({ photo, index }: { photo: FocusablePhoto; inde
   }, []);
 
   // What the slider shows: the chosen zoom, or the one automatic resolves to for this photo
-  const effectiveFit = fit ?? (natural ? autoFit(natural.width, natural.height) : 100);
+  // (automatic depends on the frame shape; the slider shows it for the desktop frame)
+  const effectiveFit = fit ?? (natural ? autoFit(natural.width, natural.height, 100, 120) : 100);
 
   const place = (nextX: number, nextY: number) => {
     setX(clamp(nextX));
@@ -77,7 +78,7 @@ export function FocalPointPicker({ photo, index }: { photo: FocusablePhoto; inde
   };
 
   const previews = [
-    { label: "Celular", frame: "aspect-square w-14", ratio: { width: 100, height: 100 } },
+    { label: "Celular", frame: "aspect-[3/4] w-12", ratio: { width: 75, height: 100 } },
     { label: "Escritorio", frame: "aspect-[5/6] w-12", ratio: { width: 100, height: 120 } },
   ];
 
@@ -91,7 +92,7 @@ export function FocalPointPicker({ photo, index }: { photo: FocusablePhoto; inde
       imageH: natural.height,
       focusX: x,
       focusY: y,
-      fit: effectiveFit,
+      fit: fit ?? autoFit(natural.width, natural.height, width, height),
     });
     return {
       left: `${(layout.left / width) * 100}%`,

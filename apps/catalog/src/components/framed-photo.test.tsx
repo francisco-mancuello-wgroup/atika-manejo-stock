@@ -47,22 +47,23 @@ describe("FramedPhoto", () => {
     expect(wrapper(image).style.width).toBe("");
   });
 
-  it("shows a landscape photo whole when the zoom is automatic", async () => {
+  it("keeps the whole height of a wide photo and crops only its sides when automatic", async () => {
     render(<FramedPhoto src="/a.webp" alt="Vestido" sizes="100vw" focus={{}} />);
     const image = screen.getByRole("img");
     await load(image, 600, 400);
     const box = wrapper(image).style;
-    expect([box.width, box.height]).toEqual(["400px", `${400 * (400 / 600)}px`]);
-    expect(box.left).toBe("0px");
+    expect([box.width, box.height, box.left, box.top]).toEqual(["600px", "400px", "-100px", "0px"]);
     expect(image).toHaveClass("object-cover");
   });
 
-  it("fills the frame with a portrait photo when the zoom is automatic", async () => {
+  it("keeps the whole height of a tall photo, with bands at its sides, when automatic", async () => {
     render(<FramedPhoto src="/a.webp" alt="Vestido" sizes="100vw" focus={{ focusY: 80 }} />);
     const image = screen.getByRole("img");
     await load(image, 400, 600);
     const box = wrapper(image).style;
-    expect([box.width, box.height, box.left, box.top]).toEqual(["400px", "600px", "0px", "-160px"]);
+    expect(box.height).toBe("400px");
+    expect(box.top).toBe("0px");
+    expect(Number.parseFloat(box.width)).toBeCloseTo(400 * (400 / 600));
   });
 
   it("follows the chosen zoom over the automatic rule", async () => {

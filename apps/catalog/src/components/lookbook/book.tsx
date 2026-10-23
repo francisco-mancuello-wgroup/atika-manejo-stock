@@ -131,7 +131,7 @@ function PiecePage({
         priority={page.page <= 2}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-5 pb-8 sm:px-10 landscape:lg:justify-center landscape:lg:gap-6 landscape:lg:px-16">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 pt-4 pb-4 sm:gap-4 sm:px-10 sm:pt-5 sm:pb-8 landscape:lg:justify-center landscape:lg:gap-6 landscape:lg:px-16">
         <div className="flex items-baseline justify-between gap-4">
           <p className="text-[11px] tracking-[2.4px] text-fg-muted uppercase">
             {[page.brand ?? catalogName, page.section].filter(Boolean).join(" · ")}

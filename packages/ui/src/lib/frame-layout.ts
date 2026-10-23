@@ -59,8 +59,9 @@ export function frameLayout({
   };
 }
 
-/** The zoom of a photo without one: landscape photos whole (they lose most of their width
- * otherwise), every other shape fills the frame. */
-export function autoFit(imageW: number, imageH: number): number {
-  return imageW > imageH ? 0 : 100;
+/** The zoom of a photo without one, for a given frame: it always keeps the whole height. A photo
+ * narrower than the frame is shown whole (bands at its sides); a wider one fills the frame and
+ * loses only its sides. Either way the photo is exactly as tall as the frame. */
+export function autoFit(imageW: number, imageH: number, frameW: number, frameH: number): number {
+  return imageW * frameH <= frameW * imageH ? 0 : 100;
 }

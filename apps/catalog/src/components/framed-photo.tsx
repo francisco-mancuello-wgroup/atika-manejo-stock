@@ -71,7 +71,7 @@ export function FramedPhoto({ src, alt, sizes, priority, focus, className }: Fra
           imageW: known.width,
           imageH: known.height,
           ...point,
-          fit: focus?.fit ?? autoFit(known.width, known.height),
+          fit: focus?.fit ?? autoFit(known.width, known.height, frame.width, frame.height),
         })
       : null;
 

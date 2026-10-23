@@ -58,14 +58,14 @@ describe("FocalPointPicker", () => {
     expect(point(50, 50)).toBeInTheDocument();
   });
 
-  it("previews the crop on a phone (square) and on a desktop (5:6) around the point", () => {
+  it("previews the crop on a phone (3:4) and on a desktop (5:6) around the point", () => {
     renderPicker({ focusX: 50, focusY: 20 });
     for (const label of ["Celular", "Escritorio"]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
     const previews = screen.getAllByTestId("crop-preview");
     expect(previews).toHaveLength(2);
-    expect(previews[0]).toHaveClass("aspect-square");
+    expect(previews[0]).toHaveClass("aspect-[3/4]");
     expect(previews[1]).toHaveClass("aspect-[5/6]");
     for (const preview of previews) {
       const image = preview.querySelector("img");
@@ -124,27 +124,29 @@ describe("FocalPointPicker", () => {
         const { style } = previewImage(index);
         return [style.width, style.height, style.left, style.top].map(Number.parseFloat);
       };
-      // square frame: 600x400 whole -> 100% wide, 66.7% tall, centered
+      // 3:4 phone frame (75 x 100): 600x400 whole -> 100% wide, 50% tall, centered
       expect(box(0)[0]).toBeCloseTo(100, 3);
-      expect(box(0)[1]).toBeCloseTo(66.667, 2);
-      expect(box(0)[3]).toBeCloseTo(16.667, 2);
+      expect(box(0)[1]).toBeCloseTo(50, 3);
+      expect(box(0)[3]).toBeCloseTo(25, 3);
       // 5:6 frame (100 x 120): 600x400 whole -> 100% wide, 55.6% tall
       expect(box(1)[1]).toBeCloseTo(55.556, 2);
       fireEvent.change(slider(), { target: { value: "100" } });
       // filled: as tall as the frame, cropped sideways around the focus (50%)
       expect(box(0)[1]).toBeCloseTo(100, 3);
-      expect(box(0)[0]).toBeCloseTo(150, 3);
-      expect(box(0)[2]).toBeCloseTo(-25, 3);
+      expect(box(0)[0]).toBeCloseTo(200, 3);
+      expect(box(0)[2]).toBeCloseTo(-50, 3);
     });
 
-    it("resolves automatic from the photo's shape", () => {
+    it("resolves automatic keeping the whole height of the photo", () => {
       renderPicker();
       const source = document.querySelector("img") as HTMLImageElement;
       Object.defineProperty(source, "naturalWidth", { value: 600, configurable: true });
       Object.defineProperty(source, "naturalHeight", { value: 400, configurable: true });
       fireEvent.load(source);
+      // a 600x400 photo is wider than the 3:4 frame: as tall as the frame, sides cropped
       const { style } = previewImage(0);
-      expect(Number.parseFloat(style.height)).toBeCloseTo(66.667, 2);
+      expect(Number.parseFloat(style.height)).toBeCloseTo(100, 3);
+      expect(Number.parseFloat(style.top)).toBeCloseTo(0, 3);
       // the stored value stays automatic
       expect(document.querySelector<HTMLInputElement>("input[name='fit.img-1']")?.value).toBe("");
     });

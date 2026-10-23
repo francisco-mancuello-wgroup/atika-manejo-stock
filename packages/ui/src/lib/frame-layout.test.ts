@@ -102,9 +102,31 @@ describe("frameLayout", () => {
 });
 
 describe("autoFit", () => {
-  it("shows landscape photos whole and fills the frame with the rest", () => {
-    expect(autoFit(600, 400)).toBe(0);
-    expect(autoFit(400, 400)).toBe(100);
-    expect(autoFit(400, 600)).toBe(100);
+  it("always keeps the whole height: narrower photos whole, wider ones crop only their sides", () => {
+    // 3:4 frame
+    expect(autoFit(400, 600, 300, 400)).toBe(0);
+    expect(autoFit(300, 400, 300, 400)).toBe(0);
+    expect(autoFit(400, 400, 300, 400)).toBe(100);
+    expect(autoFit(600, 400, 300, 400)).toBe(100);
+  });
+
+  it("gives the photo the frame height in both cases", () => {
+    for (const [imageW, imageH] of [
+      [400, 600],
+      [600, 400],
+    ] as const) {
+      const fit = autoFit(imageW, imageH, 300, 400);
+      const layout = frameLayout({
+        frameW: 300,
+        frameH: 400,
+        imageW,
+        imageH,
+        focusX: 50,
+        focusY: 50,
+        fit,
+      });
+      expect(layout.height).toBeCloseTo(400);
+      expect(layout.top).toBeCloseTo(0);
+    }
   });
 });

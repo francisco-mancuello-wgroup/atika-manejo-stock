@@ -52,6 +52,8 @@ User request 2026-10-23: lookbook photos now fill a fixed-height frame with `obj
 
 - T5 done. RED: 10 failed (picker zoom x6, product-form zoom save, `parseFitFields` x2, save.test zoom). GREEN: erp components+lib/products 46 files / 338 passed. UX: per photo "Zoom" range (step 5, labelled "Zoom de la foto N", ends Completa/Llenar, value as %), "Automático" checkbox (null) and helper "Bajá el zoom para ver la foto completa en la web."; Celular/Escritorio previews use `frameLayout` from `@atika/ui` in percent of the frame. Hidden `fit.<imageId>` = integer 0-100 or empty (auto); `updateProduct` saves it with the focus in the same transaction, only this product's remaining photos, invalid ignored, missing keeps the stored value; `getProductForEdit` loads `fit`. Commit: `feat(erp): zoom slider for each product photo`.
 
+- Height-first (2026-10-23, user: "me interesa más no perder el alto que el ancho"): `autoFit(imageW, imageH, frameW, frameH)` now keeps the whole height (narrower photo → whole with side bands, wider → fills, only sides cropped); 3:4 frame on phones too, `h-[min(60svh,133vw)]`, centered; phone panel spacing tightened; ERP Celular preview 3:4. RED: ui 2, catalog 4, erp 1 failed; GREEN: ui 48, catalog components 126, erp components+products 338. Browser: 12 pages identical per viewport — 390x844 → 380x506, 820x1085 → 488x651, 1440x900 → 762x900; Zamba Pitaya shown full height. On a 844px phone, pages with a colour selector need a small scroll of the info panel to reach the button.
+
 ## Next step
 
 Deploy: run `prisma migrate deploy` on the VPS DB (migration 20261023191157_product_image_focus) before the new build, then `20261023194500_product_image_fit`.

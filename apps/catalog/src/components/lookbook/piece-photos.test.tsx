@@ -63,14 +63,14 @@ describe("PiecePhotos", () => {
   it("keeps the photo frame the same height on every page, whatever the text below it", () => {
     render(<PiecePhotos photos={photos} label="Fotos de Costa Coco" priority={false} />);
     const list = screen.getByRole("list", { name: "Fotos de Costa Coco" });
-    expect(list).toHaveClass("h-[48svh]", "flex-none");
+    expect(list).toHaveClass("h-[min(60svh,133vw)]", "flex-none");
     expect(list).not.toHaveClass("flex-1");
   });
 
-  it("keeps a portrait frame on tablets so portrait photos are not cut", () => {
+  it("keeps a portrait (3:4) frame on phones and tablets so portrait photos keep their height", () => {
     render(<PiecePhotos photos={photos} label="Fotos de Costa Coco" priority={false} />);
     const list = screen.getByRole("list", { name: "Fotos de Costa Coco" });
-    expect(list).toHaveClass("sm:h-[62svh]", "sm:aspect-[3/4]", "sm:self-center");
+    expect(list).toHaveClass("aspect-[3/4]", "self-center");
   });
 
   it("shows the whole photo, uncropped, when zoomed", () => {
