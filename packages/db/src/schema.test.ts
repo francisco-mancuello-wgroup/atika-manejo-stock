@@ -13,6 +13,7 @@ describe("schema", () => {
       "BankPromoLot",
       "BankPromoProduct",
       "CatalogSettings",
+      "CatalogVersion",
       "Discount",
       "DiscountProduct",
       "GroupAllocation",
@@ -29,6 +30,12 @@ describe("schema", () => {
       "Supplier",
       "User",
     ]);
+  });
+
+  it("keeps a focal point on every product photo", () => {
+    expect(Object.values(Prisma.ProductImageScalarFieldEnum)).toEqual(
+      expect.arrayContaining(["focusX", "focusY"]),
+    );
   });
 
   it("keeps the exchange rate of the day and the lot defaults in AppSettings", () => {

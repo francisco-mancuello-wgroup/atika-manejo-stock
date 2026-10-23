@@ -223,6 +223,9 @@ model ProductImage {
   alt       String?
   /// 0 is the cover image.
   position  Int
+  /// Focal point in percent (0-100, 50 = center): the part kept visible when a frame crops the photo.
+  focusX    Int     @default(50)
+  focusY    Int     @default(50)
 
   @@index([productId, position])
   @@map("product_images")

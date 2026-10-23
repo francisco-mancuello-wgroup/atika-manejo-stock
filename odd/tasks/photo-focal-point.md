@@ -26,7 +26,7 @@ User request 2026-10-23: lookbook photos now fill a fixed-height frame with `obj
 
 ## Tasks
 
-- [ ] T1 — Data: `focusX`/`focusY` on `ProductImage` (default 50, 0–100), migration, schema test.
+- [x] T1 — Data: `focusX`/`focusY` on `ProductImage` (default 50, 0–100), migration, schema test.
 - [ ] T2 — Catalog: queries return the focal point; photo components use it as `object-position`.
 - [ ] T3 — ERP: focal point picker in the product form, previews, saved by `updateProduct`, tests.
 
@@ -40,6 +40,8 @@ User request 2026-10-23: lookbook photos now fill a fixed-height frame with `obj
 
 - Branch `feat/photo-focal-point` from `feat/uniform-catalog-photos` (34684c0).
 
+- T1 done. RED: `product-image-focus.db.test.ts` 2 failed | 1 passed (focusX/focusY unknown). GREEN: `pnpm --filter @atika/db test` 37 files / 250 passed (also fixed stale model list in schema.test.ts: CatalogVersion). Migration `20261023191157_product_image_focus` (ADD COLUMN focusX/focusY INTEGER NOT NULL DEFAULT 50 + CHECK 0-100); `migrate status` up to date locally. Commit: see git log (`feat(db): ProductImage focal point`).
+
 ## Next step
 
-T1.
+T2.
