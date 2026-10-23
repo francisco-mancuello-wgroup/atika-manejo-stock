@@ -20,6 +20,7 @@ const conti = { id: "b2", name: "Continental", logoUrl: null };
 const promos: BankPromoSummary[] = [
   {
     id: "p1",
+    name: "Cuotas Itaú y Continental",
     kind: "installments",
     value: 12,
     days: [],
@@ -34,6 +35,7 @@ const promos: BankPromoSummary[] = [
   },
   {
     id: "p2",
+    name: null,
     kind: "refund",
     value: 20,
     days: [4],
@@ -48,6 +50,7 @@ const promos: BankPromoSummary[] = [
   },
   {
     id: "p3",
+    name: null,
     kind: "discount",
     value: 15,
     days: [],
@@ -64,6 +67,7 @@ const promos: BankPromoSummary[] = [
 
 const detailOf = (promo: BankPromoSummary): BankPromoDetail => ({
   id: promo.id,
+  name: promo.name,
   kind: promo.kind,
   value: promo.value,
   days: promo.days,
@@ -131,9 +135,11 @@ describe("BankPromosWorkspace list", () => {
     const links = within(list()).getAllByRole("link");
     expect(links).toHaveLength(3);
     const first = within(links[0] as HTMLElement);
-    expect(first.getByText("Hasta 12 cuotas sin intereses")).toBeInTheDocument();
+    expect(first.getByText("Cuotas Itaú y Continental")).toBeInTheDocument();
+    expect(
+      first.getByText("Hasta 12 cuotas sin intereses · Itaú, Continental"),
+    ).toBeInTheDocument();
     expect(first.getByText("Vigente")).toBeInTheDocument();
-    expect(first.getByText("Itaú, Continental")).toBeInTheDocument();
     expect(links[0]).toHaveAttribute("href", "/promos/bancos?promo=p1");
 
     const second = within(links[1] as HTMLElement);
@@ -252,9 +258,7 @@ describe("BankPromosWorkspace promos pane", () => {
       selection: { tab: "promos", id: "p1", isNew: false },
       actions: a,
     });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Eliminar: Hasta 12 cuotas sin intereses" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar: Cuotas Itaú y Continental" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/promos/bancos"));
   });
 });

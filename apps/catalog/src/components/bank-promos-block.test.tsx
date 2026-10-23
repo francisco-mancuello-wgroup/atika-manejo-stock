@@ -39,6 +39,30 @@ describe("BankPromosBlock", () => {
     expect(within(items[1] as HTMLElement).getByText("20 % de reintegro · Jueves")).toBeVisible();
   });
 
+  it("titles a named promo with its name and keeps the benefit as secondary text", () => {
+    render(
+      <BankPromosBlock
+        groups={[{ ...(groups[1] as PromoGroup), name: "Itaú jueves de reintegro" }]}
+      />,
+    );
+    const item = within(screen.getByRole("listitem"));
+    expect(item.getByText("Itaú jueves de reintegro")).toBeVisible();
+    expect(item.getByText("20 % de reintegro · Jueves")).toBeVisible();
+  });
+
+  it("shows two promos with the same benefit separately when they have different names", () => {
+    const same = groups[1] as PromoGroup;
+    render(
+      <BankPromosBlock
+        groups={[
+          { ...same, name: "Itaú jueves" },
+          { ...same, name: "Continental jueves" },
+        ]}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+  });
+
   it("links to the terms and conditions page", () => {
     render(<BankPromosBlock groups={groups} />);
     expect(screen.getByRole("link", { name: "Ver bases y condiciones" })).toHaveAttribute(

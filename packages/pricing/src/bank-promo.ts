@@ -12,6 +12,8 @@ export interface PromoBank {
 
 /** A bank promotion as the catalog and the ERP read it. Informational: it never changes prices. */
 export interface BankPromoRule {
+  /** Display name set in the ERP; null or absent for promos without one. */
+  name?: string | null;
   kind: BankPromoKind;
   /** Installments: integer 2-48. Refund and discount: integer percent 1-100. */
   value: number;
@@ -34,6 +36,8 @@ export interface BankPromoRule {
 }
 
 export interface PromoGroup {
+  /** Name of the promo, when it has one; groups only merge when headline and name both match. */
+  name?: string | null;
   headline: string;
   kind: BankPromoKind;
   /** Installments or percent of the benefit (orders the groups). */
@@ -130,18 +134,20 @@ export function sortPromosForDisplay<T extends Orderable>(promos: readonly T[]):
 export function mergePromoGroups(groups: readonly PromoGroup[]): PromoGroup[] {
   const merged = new Map<string, PromoGroup>();
   for (const group of groups) {
-    const found = merged.get(group.headline) ?? { ...group, banks: [] };
+    const key = `${group.name ?? ""}\u0000${group.headline}`;
+    const found = merged.get(key) ?? { ...group, banks: [] };
     for (const bank of group.banks) {
       if (!found.banks.some((b) => b.id === bank.id)) found.banks.push(bank);
     }
-    merged.set(group.headline, found);
+    merged.set(key, found);
   }
   return [...merged.values()]
     .sort(
       (a, b) =>
         KIND_ORDER[a.kind] - KIND_ORDER[b.kind] ||
         b.value - a.value ||
-        a.headline.localeCompare(b.headline, "es"),
+        a.headline.localeCompare(b.headline, "es") ||
+        (a.name ?? "").localeCompare(b.name ?? "", "es"),
     )
     .map((group) => ({
       ...group,
@@ -153,6 +159,7 @@ export function mergePromoGroups(groups: readonly PromoGroup[]): PromoGroup[] {
 export function groupPromosForDisplay(promos: readonly BankPromoRule[]): PromoGroup[] {
   return mergePromoGroups(
     promos.map((promo) => ({
+      ...(promo.name ? { name: promo.name } : {}),
       headline: promoHeadline(promo),
       kind: promo.kind,
       value: promo.value,

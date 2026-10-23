@@ -6,6 +6,7 @@ const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 
 const promo: BankPromoRule & { id: string } = {
   id: "p1",
+  name: "Itaú jueves",
   kind: "refund",
   value: 20,
   days: [4],
@@ -24,6 +25,7 @@ describe("toPublicPromo", () => {
   it("keeps what the public page shows and nothing about lots or products", () => {
     expect(toPublicPromo(promo)).toEqual({
       id: "p1",
+      name: "Itaú jueves",
       headline: "20 % de reintegro · Jueves · Tope ₲ 200.000",
       kind: "refund",
       banks: [{ id: "b1", name: "Itaú", logoUrl: "/media/banks/uploads/b1/a.webp" }],
@@ -32,6 +34,11 @@ describe("toPublicPromo", () => {
       terms: "Solo tarjetas de crédito.",
       appliesTo: "selected",
     });
+  });
+
+  it("has a null name when the promo was never named", () => {
+    expect(toPublicPromo({ ...promo, name: null }).name).toBeNull();
+    expect(toPublicPromo({ ...promo, name: undefined }).name).toBeNull();
   });
 
   it("says 'all' for promos that cover every product", () => {

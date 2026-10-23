@@ -310,6 +310,8 @@ model Bank {
 /// Informational card promotion (installments, refund or discount); never changes prices or sales.
 model BankPromo {
   id        String             @id @default(uuid(7)) @db.Uuid
+  /// Display name (e.g. "Itaú 20% fines de semana"); null on promos created before names existed.
+  name      String?
   kind      BankPromoKind
   /// Installments: integer 2-48. Refund and discount: integer percent 1-100.
   value     Int

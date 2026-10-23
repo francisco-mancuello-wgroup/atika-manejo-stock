@@ -54,6 +54,7 @@ const TABS: readonly [WorkspaceTab, string][] = [
 
 function initialOf(promo: BankPromoDetail): BankPromoFormInitial {
   return {
+    name: promo.name ?? "",
     kind: promo.kind,
     value: String(promo.value),
     capGs: promo.capGs === null ? "" : String(promo.capGs),
@@ -206,7 +207,7 @@ export function BankPromosWorkspace({
                     selected={!selection.isNew && selection.id === promo.id}
                   >
                     <span className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-medium text-ink">{row.benefit}</span>
+                      <span className="text-sm font-medium text-ink">{row.title}</span>
                       <span
                         className={cn(
                           "shrink-0 px-2 py-0.5 text-[11px] font-medium",
@@ -216,7 +217,7 @@ export function BankPromosWorkspace({
                         {row.status}
                       </span>
                     </span>
-                    <span className="text-xs text-muted">{row.detail}</span>
+                    <span className="text-xs text-muted">{row.subtitle}</span>
                   </ListItem>
                 ))}
           </ul>
@@ -245,7 +246,11 @@ export function BankPromosWorkspace({
           <BankPromoForm
             key={selection.isNew ? "new" : selectedPromo?.id}
             promoId={selection.isNew ? null : (selectedPromo?.id ?? null)}
-            savedHeadline={selection.isNew || !selectedPromo ? null : promoHeadline(selectedPromo)}
+            savedHeadline={
+              selection.isNew || !selectedPromo
+                ? null
+                : (selectedPromo.name ?? promoHeadline(selectedPromo))
+            }
             banks={banks}
             lots={lots}
             products={products}

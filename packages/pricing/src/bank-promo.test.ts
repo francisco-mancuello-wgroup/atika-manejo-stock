@@ -189,6 +189,36 @@ describe("groupPromosForDisplay", () => {
   });
 });
 
+describe("promo names in groups", () => {
+  it("carries the promo name on its group and omits it when the promo has none", () => {
+    const [named] = groupPromosForDisplay([promo({ name: "Itaú viernes", banks: [itau] })]);
+    expect(named?.name).toBe("Itaú viernes");
+    const [plain] = groupPromosForDisplay([promo({ name: null })]);
+    expect(plain).not.toHaveProperty("name");
+  });
+
+  it("keeps promos with the same benefit apart when their names differ", () => {
+    const groups = groupPromosForDisplay([
+      promo({ name: "Itaú viernes", banks: [itau] }),
+      promo({ name: "Continental viernes", banks: [continental] }),
+      promo({ banks: [itau] }),
+    ]);
+    expect(groups.map((group) => group.name ?? null).sort()).toEqual([
+      "Continental viernes",
+      "Itaú viernes",
+      null,
+    ]);
+  });
+
+  it("still merges the same named promo seen on several products", () => {
+    const a = groupPromosForDisplay([promo({ name: "Itaú viernes", banks: [itau] })]);
+    const b = groupPromosForDisplay([promo({ name: "Itaú viernes", banks: [itau] })]);
+    const merged = mergePromoGroups([...a, ...b]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.name).toBe("Itaú viernes");
+  });
+});
+
 describe("groupPromosForDisplay value", () => {
   it("carries the value of the benefit of each group", () => {
     const groups = groupPromosForDisplay([

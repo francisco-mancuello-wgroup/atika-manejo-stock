@@ -24,6 +24,7 @@ describe.skipIf(!hasDatabase)("bank promo queries (database)", () => {
       });
       const newest = await tx.bankPromo.create({
         data: {
+          name: "Reintegro jueves",
           kind: "refund",
           value: 20,
           days: [4],
@@ -41,6 +42,7 @@ describe.skipIf(!hasDatabase)("bank promo queries (database)", () => {
       const list = await getBankPromoList(tx);
       expect(list[0]).toEqual({
         id: newest.id,
+        name: "Reintegro jueves",
         kind: "refund",
         value: 20,
         days: [4],
@@ -56,7 +58,12 @@ describe.skipIf(!hasDatabase)("bank promo queries (database)", () => {
           { id: itau.id, name: "Itaú list", logoUrl: "/l.webp" },
         ],
       });
-      expect(list[1]).toMatchObject({ kind: "installments", startsAt: null, productCount: 0 });
+      expect(list[1]).toMatchObject({
+        name: null,
+        kind: "installments",
+        startsAt: null,
+        productCount: 0,
+      });
     });
   });
 
@@ -68,6 +75,7 @@ describe.skipIf(!hasDatabase)("bank promo queries (database)", () => {
       const bank = await tx.bank.create({ data: { name: "Banco edit" } });
       const promo = await tx.bankPromo.create({
         data: {
+          name: "Descuento Banco edit",
           kind: "discount",
           value: 15,
           days: [1, 4],
@@ -80,6 +88,7 @@ describe.skipIf(!hasDatabase)("bank promo queries (database)", () => {
       });
       expect(await getBankPromoForEdit(tx, promo.id)).toEqual({
         id: promo.id,
+        name: "Descuento Banco edit",
         kind: "discount",
         value: 15,
         days: [1, 4],
