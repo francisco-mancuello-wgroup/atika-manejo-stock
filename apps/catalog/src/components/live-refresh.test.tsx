@@ -1,118 +1,134 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { refresh, createClient, removeChannel, subscribe, on, channel } = vi.hoisted(() => ({
-  refresh: vi.fn(),
-  createClient: vi.fn(),
-  removeChannel: vi.fn(),
-  subscribe: vi.fn(),
-  on: vi.fn(),
-  channel: vi.fn(),
-}));
+const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
-vi.mock("@supabase/supabase-js", () => ({ createClient }));
 
 import { LiveRefresh } from "./live-refresh";
 
-/** Delivers a broadcast to the handler the component registered. */
-function broadcast() {
-  const handler = on.mock.calls[0]?.[2] as () => void;
-  act(() => handler());
+const fetchMock = vi.fn();
+let visibility: DocumentVisibilityState = "visible";
+
+function answerWith(version: number) {
+  fetchMock.mockResolvedValue(Response.json({ version }));
 }
 
-function advance(ms: number) {
-  act(() => {
-    vi.advanceTimersByTime(ms);
+/** Runs the timers and the promise chain of the fetch they trigger. */
+async function advance(ms: number) {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+}
+
+async function setVisibility(state: DocumentVisibilityState) {
+  visibility = state;
+  await act(async () => {
+    document.dispatchEvent(new Event("visibilitychange"));
   });
 }
 
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
-  vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_test");
-  for (const mock of [refresh, createClient, removeChannel, subscribe, on, channel])
-    mock.mockReset();
-  const realtimeChannel = { on, subscribe };
-  on.mockReturnValue(realtimeChannel);
-  subscribe.mockReturnValue(realtimeChannel);
-  channel.mockReturnValue(realtimeChannel);
-  createClient.mockReturnValue({ channel, removeChannel });
+  visibility = "visible";
+  vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility);
+  refresh.mockReset();
+  fetchMock.mockReset();
+  answerWith(1);
+  vi.stubGlobal("fetch", fetchMock);
 });
 
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
-  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("LiveRefresh", () => {
-  it("listens to the catalog changed broadcast", () => {
-    render(<LiveRefresh />);
-
-    expect(createClient).toHaveBeenCalledWith(
-      "https://project.supabase.co",
-      "sb_publishable_test",
-      expect.anything(),
-    );
-    expect(channel).toHaveBeenCalledWith("catalog");
-    expect(on).toHaveBeenCalledWith("broadcast", { event: "changed" }, expect.any(Function));
-    expect(subscribe).toHaveBeenCalled();
-  });
-
   it("renders nothing", () => {
     const { container } = render(<LiveRefresh />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("refreshes the page as soon as the ERP signals a change", () => {
+  it("reads the version right away without refreshing the page", async () => {
     render(<LiveRefresh />);
+    await advance(0);
 
-    broadcast();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/catalog-version");
+    expect(refresh).not.toHaveBeenCalled();
+  });
 
+  it("does not refresh while the version stays the same", async () => {
+    render(<LiveRefresh />);
+    await advance(12000);
+
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("refreshes once when the version changes", async () => {
+    render(<LiveRefresh />);
+    await advance(0);
+
+    answerWith(2);
+    await advance(4000);
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    await advance(4000);
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("collapses a burst into the first refresh plus one trailing refresh", () => {
+  it("ignores failed requests and keeps polling", async () => {
     render(<LiveRefresh />);
+    await advance(0);
 
-    for (let i = 0; i < 20; i++) broadcast();
+    fetchMock.mockRejectedValue(new TypeError("offline"));
+    await advance(4000);
+    fetchMock.mockResolvedValue(new Response("nope", { status: 500 }));
+    await advance(4000);
+    expect(refresh).not.toHaveBeenCalled();
+
+    answerWith(2);
+    await advance(4000);
     expect(refresh).toHaveBeenCalledTimes(1);
-
-    advance(5000);
-    expect(refresh).toHaveBeenCalledTimes(2);
   });
 
-  it("refreshes again on a later change once the pause has passed", () => {
+  it("does not poll while the tab is hidden", async () => {
+    visibility = "hidden";
     render(<LiveRefresh />);
-    broadcast();
+    await advance(20000);
 
-    advance(5000);
-    broadcast();
-
-    expect(refresh).toHaveBeenCalledTimes(2);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it.each(["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"])(
-    "does not subscribe without %s",
-    (name) => {
-      vi.stubEnv(name, "");
+  it("stops polling when the tab is hidden and checks at once when it is shown again", async () => {
+    render(<LiveRefresh />);
+    await advance(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
 
-      render(<LiveRefresh />);
+    await setVisibility("hidden");
+    await advance(20000);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
 
-      expect(createClient).not.toHaveBeenCalled();
-    },
-  );
+    answerWith(2);
+    await setVisibility("visible");
+    await advance(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
 
-  it("unsubscribes on unmount and drops a pending refresh", () => {
+  it("stops polling and drops its listener on unmount", async () => {
     const { unmount } = render(<LiveRefresh />);
-    broadcast();
-    broadcast();
+    await advance(0);
 
     unmount();
-    advance(5000);
+    answerWith(2);
+    await advance(20000);
+    await setVisibility("visible");
 
-    expect(removeChannel).toHaveBeenCalledTimes(1);
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
