@@ -51,6 +51,8 @@ User request 2026-10-23: "quiero tener todo en hostinger y mis datos de BD tambi
 
 - Domain (2026-10-24 UTC): user registered `atika.digital` (free domain, expires 2027-10-24) after sslip.io was blocked by some Wi-Fi filters. DNS via Hostinger API: `@` and `erp` A → 200.141.25.190, `www` CNAME `@`. Caddy serves `atika.digital, www.atika.digital` (catalog) and `erp.atika.digital` (ERP) plus the old sslip.io names; Let's Encrypt certs obtained for all three (old Caddyfile kept as `/etc/caddy/Caddyfile.sslip.bak`). `SITE_URL`/`STORE_URL` = https://atika.digital; og image URLs now on the domain. Checks: `/`, `/catalogos/milonga`, `www`, `erp …/login` 200.
 
+- Domain rollback (2026-10-24, user: "realiza el rollback, deja como tenía antes mi DNS" — new domain still blocked on some Wi-Fi by DNS caches/new-domain filters): `@` A back to 2.57.91.91 (TTL 50, Hostinger parking), `www` CNAME untouched; the `erp` A record could not be deleted through the Hostinger MCP (dns_records_delete drops the `filters` param, 422) — user to delete it in hPanel. Caddyfile restored from `Caddyfile.sslip.bak` (atika.digital version kept as `Caddyfile.digital.bak`); SITE_URL/STORE_URL back to the sslip.io URL; sslip.io web and ERP 200.
+
 ## Next step
 
 User tests the VPS apps. Then T6: final data + photo re-copy, final domain, cut-over, retire Vercel/Supabase/Blob (user + Francisco decide). Pending: fix/product-save-form not deployed; `.env.example` MEDIA_DIR line.
