@@ -57,6 +57,8 @@ User request 2026-10-23: "quiero tener todo en hostinger y mis datos de BD tambi
 
 - IPv6 (2026-10-24): on the user's failing Wi-Fi DNS resolved fine but TCP to 200.141.25.190 (443 and 80) timed out, while the VPS IPv6 2a02:4780:6e:b4ad::1:443 connected — that network cannot reach the VPS over IPv4. Caddy already listens dual-stack and serves all names over IPv6 (verified from the VPS with --resolve: 200/200/307). Added AAAA `@` and `erp` → 2a02:4780:6e:b4ad::1 (TTL 300); `www` follows `@` via CNAME. Published on 1.1.1.1 and 8.8.8.8 within ~15 s (8.8.8.8 still had a cached empty AAAA for the apex right after).
 
+- User confirmed atika.digital loads on the failing Wi-Fi after the router refreshed its DNS (2026-10-24). sslip.io names now 301 to the domain, keeping the path (Caddy `redir https://atika.digital{uri} permanent` / `https://erp.atika.digital{uri}`; previous Caddyfile kept as `Caddyfile.before-sslip-redirect.bak`). Checked: sslip /catalogos/milonga → atika.digital/catalogos/milonga, sslip ERP /inventario → erp.atika.digital/inventario; domain URLs 200.
+
 ## Next step
 
 User tests the VPS apps. Then T6: final data + photo re-copy, final domain, cut-over, retire Vercel/Supabase/Blob (user + Francisco decide). Pending: fix/product-save-form not deployed; `.env.example` MEDIA_DIR line.
