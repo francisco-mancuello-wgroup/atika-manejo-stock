@@ -49,6 +49,8 @@ User request 2026-10-23: "quiero tener todo en hostinger y mis datos de BD tambi
 
 - Deploy 2 (2026-10-23 ~21:45 UTC): VPS had hung (no ping/SSH while `running`); API restart stuck in `stopping` ~38 min, finished 20:47 UTC. No logs of the hang (volatile journal) → enabled persistent journald (`/etc/systemd/journald.conf.d/persistent.conf`, 500M). Server switched to `main` 8afe41d; `prisma migrate deploy` applied product_image_focus, product_image_fit, brands on the VPS DB (same 3 applied on Supabase before the GitHub push); build OK; services active. Public checks: `/`, `/catalogos/milonga`, `/catalogos/zunilda-gutierrez`, `/ver-todo` 200, unknown brand 404, seed logo + uploaded photo 200, ERP `/login` 200; lookbook frame 380x506 on all 12 pages at 390x844; 9 brands active.
 
+- Domain (2026-10-24 UTC): user registered `atika.digital` (free domain, expires 2027-10-24) after sslip.io was blocked by some Wi-Fi filters. DNS via Hostinger API: `@` and `erp` A → 200.141.25.190, `www` CNAME `@`. Caddy serves `atika.digital, www.atika.digital` (catalog) and `erp.atika.digital` (ERP) plus the old sslip.io names; Let's Encrypt certs obtained for all three (old Caddyfile kept as `/etc/caddy/Caddyfile.sslip.bak`). `SITE_URL`/`STORE_URL` = https://atika.digital; og image URLs now on the domain. Checks: `/`, `/catalogos/milonga`, `www`, `erp …/login` 200.
+
 ## Next step
 
 User tests the VPS apps. Then T6: final data + photo re-copy, final domain, cut-over, retire Vercel/Supabase/Blob (user + Francisco decide). Pending: fix/product-save-form not deployed; `.env.example` MEDIA_DIR line.
